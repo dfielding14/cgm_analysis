@@ -184,11 +184,11 @@ while i_file < len(ts):
     profile_pressure_entropy = yt.create_profile( data_source=sphere,
                                  bin_fields=["radius", "Pkb", "Ent"],
                                  fields=fields_total,
-                                 n_bins=(20,50,65),
+                                 n_bins=(20,70,65),
                                  units=dict(radius="kpc",Pkb="K*cm**-3",Ent="K*cm**2"),
                                  logs=dict(radius=False,Pkb=True,Ent=True),
                                  weight_field=None,
-                                 extrema=dict(radius=(0,2*r200m.value), Pkb=(1,1e5), Ent=(1e4,10**10.5)))
+                                 extrema=dict(radius=(0,2*r200m.value), Pkb=(1e-2,1e5), Ent=(1e4,10**10.5)))
 
     profile_density_temperature = yt.create_profile( data_source=sphere,
                                  bin_fields=["radius", "number_density", "temperature"],
@@ -203,11 +203,11 @@ while i_file < len(ts):
     profile_pressure = yt.create_profile( data_source=sphere,
                                  bin_fields=["radius", "Pkb"],
                                  fields=fields_total,
-                                 n_bins=(200,50),
+                                 n_bins=(200,70),
                                  units=dict(radius="kpc",Pkb="K*cm**-3"),
                                  logs=dict(radius=True,Pkb=True),
                                  weight_field=None,
-                                 extrema=dict(radius=(0.02*r200m.value,2.0*r200m.value), Pkb=(1,1e5)))
+                                 extrema=dict(radius=(0.02*r200m.value,2.0*r200m.value), Pkb=(1e-2,1e5)))
     profile_entropy = yt.create_profile( data_source=sphere,
                                  bin_fields=["radius", "Ent"],
                                  fields=fields_total,
@@ -285,7 +285,7 @@ while i_file < len(ts):
         plt.yscale('log')
         plt.xscale('log')
         plt.ylabel(r'$T\,[\mathrm{K}]$')
-        plt.xlabel(r'$\rho\,[\mathrm{g\,cm}^{-3}]$')
+        plt.xlabel(r'$n\,[\mathrm{cm}^{-3}]$')
         plt.title(r'$t='+str(np.round(ds.current_time/Gyr,2))+r'\,\mathrm{Gyr} \quad '+str(np.round(profile_density_temperature.x_bins[ir]/r200m,1))+r'\leq r/r_{\rm vir}\leq'+str(np.round(profile_density_temperature.x_bins[ir+1]/r200m,1))+r'$',fontsize=10)
         plt.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
         plt.savefig('profiles_2d/number_density_temperature_Volume_r_'+str(ir).zfill(3)+'_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
@@ -299,7 +299,7 @@ while i_file < len(ts):
         plt.yscale('log')
         plt.xscale('log')
         plt.ylabel(r'$T\,[\mathrm{K}]$')
-        plt.xlabel(r'$\rho\,[\mathrm{g\,cm}^{-3}]$')
+        plt.xlabel(r'$n\,[\mathrm{cm}^{-3}]$')
         plt.title(r'$t='+str(np.round(ds.current_time/Gyr,2))+r'\,\mathrm{Gyr} \quad '+str(np.round(profile_density_temperature.x_bins[ir]/r200m,1))+r'\leq r/r_{\rm vir}\leq'+str(np.round(profile_density_temperature.x_bins[ir+1]/r200m,1))+r'$',fontsize=10)
         plt.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
         plt.savefig('profiles_2d/number_density_temperature_Mass_r_'+str(ir).zfill(3)+'_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
@@ -336,7 +336,7 @@ while i_file < len(ts):
 
 
     plot=plt.pcolormesh(profile_entropy.x_bins/r200m, profile_entropy.y_bins, 
-        (profile_entropy['cell_volume']/np.sum(profile_entropy['cell_volume'])).T, 
+        (profile_entropy['cell_volume']/np.sum(profile_entropy['cell_volume'],axis=0)).T, 
         norm=colors.LogNorm(vmin=1e-6, vmax=1), cmap='plasma')
     cb = plt.colorbar(plot)
     cb.set_label(r'Volume Fraction',rotation=270,fontsize=12,labelpad=15)
@@ -350,7 +350,7 @@ while i_file < len(ts):
     plt.clf()
 
     plot=plt.pcolormesh(profile_entropy.x_bins/r200m, profile_entropy.y_bins, 
-        (profile_entropy['cell_mass']/np.sum(profile_entropy['cell_mass'])).T, 
+        (profile_entropy['cell_mass']/np.sum(profile_entropy['cell_mass'],axis=0)).T, 
         norm=colors.LogNorm(vmin=1e-6,vmax=1), cmap='viridis')
     cb = plt.colorbar(plot)
     cb.set_label(r'Mass Fraction',rotation=270,fontsize=12,labelpad=15)
@@ -364,7 +364,7 @@ while i_file < len(ts):
     plt.clf()
 
     plot=plt.pcolormesh(profile_pressure.x_bins/r200m, profile_pressure.y_bins, 
-        (profile_pressure['cell_volume']/np.sum(profile_pressure['cell_volume'])).T, 
+        (profile_pressure['cell_volume']/np.sum(profile_pressure['cell_volume'],axis=0)).T, 
         norm=colors.LogNorm(vmin=1e-6, vmax=1), cmap='plasma')
     cb = plt.colorbar(plot)
     cb.set_label(r'Volume Fraction',rotation=270,fontsize=12,labelpad=15)
@@ -378,7 +378,7 @@ while i_file < len(ts):
     plt.clf()
 
     plot=plt.pcolormesh(profile_pressure.x_bins/r200m, profile_pressure.y_bins, 
-        (profile_pressure['cell_mass']/np.sum(profile_pressure['cell_mass'])).T, 
+        (profile_pressure['cell_mass']/np.sum(profile_pressure['cell_mass'],axis=0)).T, 
         norm=colors.LogNorm(vmin=1e-6,vmax=1), cmap='viridis')
     cb = plt.colorbar(plot)
     cb.set_label(r'Mass Fraction',rotation=270,fontsize=12,labelpad=15)
@@ -407,7 +407,7 @@ while i_file < len(ts):
     plt.clf()
 
     plot=plt.pcolormesh(profile_temperature.x_bins/r200m, profile_temperature.y_bins, 
-        (profile_temperature['cell_mass']/np.sum(profile_temperature['cell_mass'])).T, 
+        (profile_temperature['cell_mass']/np.sum(profile_temperature['cell_mass'],axis=0)).T, 
         norm=colors.LogNorm(vmin=1e-6, vmax=1), cmap='viridis')
     cb = plt.colorbar(plot)
     cb.set_label(r'Mass Fraction',rotation=270,fontsize=12,labelpad=15)
@@ -421,7 +421,7 @@ while i_file < len(ts):
     plt.clf()
 
     plot=plt.pcolormesh(profile_number_density.x_bins/r200m, profile_number_density.y_bins, 
-        (profile_number_density['cell_volume']/np.sum(profile_number_density['cell_volume'])).T, 
+        (profile_number_density['cell_volume']/np.sum(profile_number_density['cell_volume'],axis=0)).T, 
         norm=colors.LogNorm(vmin=1e-6, vmax=1), cmap='plasma')
     cb = plt.colorbar(plot)
     cb.set_label(r'Volume Fraction',rotation=270,fontsize=12,labelpad=15)
@@ -435,7 +435,7 @@ while i_file < len(ts):
     plt.clf()
 
     plot=plt.pcolormesh(profile_number_density.x_bins/r200m, profile_number_density.y_bins, 
-        (profile_number_density['cell_mass']/np.sum(profile_number_density['cell_mass'])).T, 
+        (profile_number_density['cell_mass']/np.sum(profile_number_density['cell_mass'],axis=0)).T, 
         norm=colors.LogNorm(vmin=1e-6, vmax=1), cmap='viridis')
     cb = plt.colorbar(plot)
     cb.set_label(r'Mass Fraction',rotation=270,fontsize=12,labelpad=15)
@@ -449,7 +449,7 @@ while i_file < len(ts):
     plt.clf()
 
     plot=plt.pcolormesh(profile_radial_velocity.x_bins/r200m, profile_radial_velocity.y_bins, 
-        (profile_radial_velocity['cell_volume']/np.sum(profile_radial_velocity['cell_volume'])).T, 
+        (profile_radial_velocity['cell_volume']/np.sum(profile_radial_velocity['cell_volume'],axis=0)).T, 
         norm=colors.LogNorm(vmin=1e-6, vmax=1), cmap='plasma')
     cb = plt.colorbar(plot)
     cb.set_label(r'Volume Fraction',rotation=270,fontsize=12,labelpad=15)
@@ -463,7 +463,7 @@ while i_file < len(ts):
     plt.clf()
 
     plot=plt.pcolormesh(profile_radial_velocity.x_bins/r200m, profile_radial_velocity.y_bins, 
-        (profile_radial_velocity['cell_mass']/np.sum(profile_radial_velocity['cell_mass'])).T, 
+        (profile_radial_velocity['cell_mass']/np.sum(profile_radial_velocity['cell_mass'],axis=0)).T, 
         norm=colors.LogNorm(vmin=1e-6, vmax=1), cmap='viridis')
     cb = plt.colorbar(plot)
     cb.set_label(r'Mass Fraction',rotation=270,fontsize=12,labelpad=15)
@@ -477,7 +477,7 @@ while i_file < len(ts):
     plt.clf()
 
     plot=plt.pcolormesh(profile_tcool.x_bins/r200m, profile_tcool.y_bins, 
-        (profile_tcool['cell_volume']/np.sum(profile_tcool['cell_volume'])).T, 
+        (profile_tcool['cell_volume']/np.sum(profile_tcool['cell_volume'],axis=0)).T, 
         norm=colors.LogNorm(vmin=1e-6, vmax=1), cmap='plasma')
     cb = plt.colorbar(plot)
     cb.set_label(r'Volume Fraction',rotation=270,fontsize=12,labelpad=15)
@@ -491,7 +491,7 @@ while i_file < len(ts):
     plt.clf()
 
     plot=plt.pcolormesh(profile_tcool.x_bins/r200m, profile_tcool.y_bins, 
-        (profile_tcool['cell_mass']/np.sum(profile_tcool['cell_mass'])).T, 
+        (profile_tcool['cell_mass']/np.sum(profile_tcool['cell_mass'],axis=0)).T, 
         norm=colors.LogNorm(vmin=1e-6, vmax=1), cmap='viridis')
     cb = plt.colorbar(plot)
     cb.set_label(r'Mass Fraction',rotation=270,fontsize=12,labelpad=15)

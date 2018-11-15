@@ -9,7 +9,7 @@ In spherical annuli with of widths dr = 0.1 r<sub>200m</sub> ranging between 0 a
 
 Bins:
 
-P/kb [K cm<sup>-3</sup>] 	= 1 to 10<sup>5</sup>\
+P/kb [K cm<sup>-3</sup>] 	= 10<sup>-2</sup>\ to 10<sup>5</sup>\
 K    [K cm<sup>2</sup>]  	= 10<sup>4</sup> to 10<sup>10.5</sup>\
 T    [K]       				= 10<sup>3</sup> to 10<sup>8</sup>\
 n    [cm<sup>-3</sup>]   	= 10<sup>-7</sup> to 10<sup>-1</sup>\
