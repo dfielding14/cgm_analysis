@@ -9,28 +9,44 @@ In spherical annuli with of widths dr = 0.1 r<sub>200m</sub> ranging between 0 a
 
 Bins:
 
-P/kb [K cm<sup>-3</sup>] 	= 1 to 10<sup>0.5</sup>    
-K    [K cm<sup>2</sup>]  	= 10<sup>4</sup> to 10<sup>10.5</sup>    
-T    [K]       				= 10<sup>3</sup> to 10<sup>8</sup>     
-n    [cm<sup>-3</sup>]   	= 10<sup>-7</sup> to 1     
+P/kb [K cm<sup>-3</sup>] 	= 1 to 10<sup>0.5</sup>\
+K    [K cm<sup>2</sup>]  	= 10<sup>4</sup> to 10<sup>10.5</sup>\
+T    [K]       				= 10<sup>3</sup> to 10<sup>8</sup>\
+n    [cm<sup>-3</sup>]   	= 10<sup>-7</sup> to 1\
 bin widths = 0.1 dex
+
+note that n = ρ / (μ m<sub>p</sub>), where μ≈0.62 for a fully ionized enriched plasma.
 
 ### Radial distributions
 Measure the mass and volume weighted radial distributions (2d-histogram) of temperature, density, and radial velocity between 0 and 2 r<sub>200m</sub>. 
 
 Bins:
-T    [K]       				= 10<sup>3</sup> to 10<sup>8</sup>    
-n    [cm<sup>-3</sup>]   	= 10<sup>-7</sup> to 1    
-v<sub>r</sub>    [km/s]   	= -500 to 500     
-bin widths = 0.1 dex for T and n, and 10 km/s for v<sub>r</sub>.   
+T    [K]       				= 10<sup>3</sup> to 10<sup>8</sup>\
+n    [cm<sup>-3</sup>]   	= 10<sup>-7</sup> to 1\
+v<sub>r</sub>    [km/s]   	= -500 to 500\
+bin widths = 0.1 dex for T and n, and 10 km/s for v<sub>r</sub>\
 
 The radial bins will likely be resolution/simulation dependent, but a good starting point to try is:
 
-r/r<sub>200m</sub> = log<sub>10</sub> 0.02 to log<sub>10</sub>2
+r/r<sub>200m</sub> = log<sub>10</sub> 0.02 to log<sub>10</sub> 2
 
-with 200 logarithmically spaced bins, corresponding to ∆ log<sub>10</sub> r/r<sub>200m</sub> = 0.01
+with 200 logarithmically spaced bins, corresponding to ∆log<sub>10</sub> r/r<sub>200m</sub> = 0.01
 
 
 ### Storage formatting
-We are going to use `.npz` files for our data storage. 
+We are going to use `.npz` files for our data storage ([basic usage information](https://docs.scipy.org/doc/numpy-1.13.0/reference/generated/numpy.savez.html)). 
+
+It is probably easiest to store all of the analysis products for each simulation output in a single `.npz` file. This can be done as follows:
+
+` np.savez('profiles_my_simulation_name.npz', 
+r_r200m_phase = 1D_array_containing_radial_bins_divided_by_r200m_used_for_phase_diagrams,
+r_r200m_profile = 1D_array_containing_radial_bins_divided_by_r200m_used_for_radial_profiles,
+temperature_bins = temperature_bin_1D_array,
+pressure_bins = pressure_bin_1D_array,
+entropy_bins = entropy_bin_1D_array,
+number_density_bins = number_density_bin_1D_array,
+)
+`
+
+### Plotting
 
