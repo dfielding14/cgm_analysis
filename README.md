@@ -39,25 +39,25 @@ We are going to use `.npz` files for our data storage ([basic usage information]
 It is probably easiest to store all of the analysis products for each simulation output in a single `.npz` file. This can be done as follows:
 
 ```
-np.savez('profiles_my_simulation_name.npz',\
-r_r200m_phase = my_1D_array_containing_radial_bins_divided_by_r200m_used_for_phase_diagrams,\
-r_r200m_profile = my_1D_array_containing_radial_bins_divided_by_r200m_used_for_radial_profiles,\
-temperature_bins = my_temperature_bin_1D_array,\
-pressure_bins = my_pressure_bin_1D_array,\
-entropy_bins = my_entropy_bin_1D_array,\
-number_density_bins = my_number_density_bin_1D_array,\
-radial_velocity_bins = my_radial_velocity_bin_1D_array,\
-pressure_ent_Volume = my_Phase_distribution_in_each_radial_bin_3D_array,\
-pressure_ent_Mass = my_Phase_distribution_in_each_radial_bin_3D_array,\
-density_temperature_Volume = my_Phase_distribution_in_each_radial_bin_3D_array,\
-density_temperature_Mass = my_Phase_distribution_in_each_radial_bin_3D_array,\
-temperature_Volume = my_radial_distribution_2D_array,\
-temperature_Mass = my_radial_distribution_2D_array,\
-number_density_Volume = my_radial_distribution_2D_array,\
-number_density_Mass = my_radial_distribution_2D_array,\
-radial_velocity_Volume = my_radial_distribution_2D_array,\
-radial_velocity_Mass = my_radial_distribution_2D_array,\
-...
+np.savez('profiles_my_simulation_name.npz',
+	r_r200m_phase = my_1D_array_containing_radial_bins_divided_by_r200m_used_for_phase_diagrams,
+	r_r200m_profile = my_1D_array_containing_radial_bins_divided_by_r200m_used_for_radial_profiles,
+	temperature_bins = my_temperature_bin_1D_array,
+	pressure_bins = my_pressure_bin_1D_array,
+	entropy_bins = my_entropy_bin_1D_array,
+	number_density_bins = my_number_density_bin_1D_array,
+	radial_velocity_bins = my_radial_velocity_bin_1D_array,
+	pressure_ent_Volume = my_Phase_distribution_in_each_radial_bin_3D_array,
+	pressure_ent_Mass = my_Phase_distribution_in_each_radial_bin_3D_array,
+	density_temperature_Volume = my_Phase_distribution_in_each_radial_bin_3D_array,
+	density_temperature_Mass = my_Phase_distribution_in_each_radial_bin_3D_array,
+	temperature_Volume = my_radial_distribution_2D_array,
+	temperature_Mass = my_radial_distribution_2D_array,
+	number_density_Volume = my_radial_distribution_2D_array,
+	number_density_Mass = my_radial_distribution_2D_array,
+	radial_velocity_Volume = my_radial_distribution_2D_array,
+	radial_velocity_Mass = my_radial_distribution_2D_array,
+	...
 )
 ```
 
