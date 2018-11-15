@@ -193,11 +193,11 @@ while i_file < len(ts):
     profile_density_temperature = yt.create_profile( data_source=sphere,
                                  bin_fields=["radius", "number_density", "temperature"],
                                  fields=fields_total,
-                                 n_bins=(20,70,50),
+                                 n_bins=(20,60,50),
                                  units=dict(radius="kpc",number_density="cm**-3",temperature="K"),
                                  logs=dict(radius=False,number_density=True,temperature=True),
                                  weight_field=None,
-                                 extrema=dict(radius=(0,2*r200m.value), number_density=(1e-7,1), temperature=(10**3,10**8)))
+                                 extrema=dict(radius=(0,2*r200m.value), number_density=(1e-7,1e-1), temperature=(10**3,10**8)))
 
 
     profile_pressure = yt.create_profile( data_source=sphere,
@@ -227,11 +227,11 @@ while i_file < len(ts):
     profile_number_density = yt.create_profile( data_source=sphere,
                                  bin_fields=["radius", "number_density"],
                                  fields=fields_total,
-                                 n_bins=(200,70),
+                                 n_bins=(200,60),
                                  units=dict(radius="kpc",number_density="cm**-3"),
                                  logs=dict(radius=True,number_density=True),
                                  weight_field=None,
-                                 extrema=dict(radius=(0.02*r200m.value,2.0*r200m.value), number_density=(1e-7,1)))
+                                 extrema=dict(radius=(0.02*r200m.value,2.0*r200m.value), number_density=(1e-7,1e-1)))
     profile_radial_velocity = yt.create_profile( data_source=sphere,
                                  bin_fields=["radius", "rv"],
                                  fields=fields_total,
@@ -287,6 +287,7 @@ while i_file < len(ts):
         plt.ylabel(r'$T\,[\mathrm{K}]$')
         plt.xlabel(r'$\rho\,[\mathrm{g\,cm}^{-3}]$')
         plt.title(r'$t='+str(np.round(ds.current_time/Gyr,2))+r'\,\mathrm{Gyr} \quad '+str(np.round(profile_density_temperature.x_bins[ir]/r200m,1))+r'\leq r/r_{\rm vir}\leq'+str(np.round(profile_density_temperature.x_bins[ir+1]/r200m,1))+r'$',fontsize=10)
+        plt.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
         plt.savefig('profiles_2d/number_density_temperature_Volume_r_'+str(ir).zfill(3)+'_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
         plt.clf()   
 
@@ -300,6 +301,7 @@ while i_file < len(ts):
         plt.ylabel(r'$T\,[\mathrm{K}]$')
         plt.xlabel(r'$\rho\,[\mathrm{g\,cm}^{-3}]$')
         plt.title(r'$t='+str(np.round(ds.current_time/Gyr,2))+r'\,\mathrm{Gyr} \quad '+str(np.round(profile_density_temperature.x_bins[ir]/r200m,1))+r'\leq r/r_{\rm vir}\leq'+str(np.round(profile_density_temperature.x_bins[ir+1]/r200m,1))+r'$',fontsize=10)
+        plt.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
         plt.savefig('profiles_2d/number_density_temperature_Mass_r_'+str(ir).zfill(3)+'_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
         plt.clf()        
                                                                 
@@ -314,6 +316,7 @@ while i_file < len(ts):
         plt.ylabel(r'$K\,[\mathrm{K\,cm}^{2}]$')
         plt.xlabel(r'$P\,[\mathrm{K\,cm}^{-3}]$')
         plt.title(r'$t='+str(np.round(ds.current_time/Gyr,2))+r'\,\mathrm{Gyr} \quad '+str(np.round(profile_pressure_entropy.x_bins[ir]/r200m,1))+r'\leq r/r_{\rm vir}\leq'+str(np.round(profile_pressure_entropy.x_bins[ir+1]/r200m,1))+r'$',fontsize=10)
+        plt.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
         plt.savefig('profiles_2d/pressure_entropy_Volume_r_'+str(ir).zfill(3)+'_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
         plt.clf()       
 
@@ -327,6 +330,7 @@ while i_file < len(ts):
         plt.ylabel(r'$K\,[\mathrm{K\,cm}^{2}]$')
         plt.xlabel(r'$P\,[\mathrm{K\,cm}^{-3}]$')
         plt.title(r'$t='+str(np.round(ds.current_time/Gyr,2))+r'\,\mathrm{Gyr} \quad '+str(np.round(profile_pressure_entropy.x_bins[ir]/r200m,1))+r'\leq r/r_{\rm vir}\leq'+str(np.round(profile_pressure_entropy.x_bins[ir+1]/r200m,1))+r'$',fontsize=10)
+        plt.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
         plt.savefig('profiles_2d/pressure_entropy_Mass_r_'+str(ir).zfill(3)+'_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
         plt.clf()        
 
@@ -341,6 +345,7 @@ while i_file < len(ts):
     plt.ylabel(r'$K\,[\mathrm{K\,cm}^{2}]$')
     plt.xlabel(r'$r/r_{\rm vir}$')
     plt.title(r'$t='+str(np.round(ds.current_time/Gyr,2))+r'\,\mathrm{Gyr}$')
+    plt.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
     plt.savefig('profiles_2d/entropy_Volume_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
     plt.clf()
 
@@ -354,6 +359,7 @@ while i_file < len(ts):
     plt.ylabel(r'$K\,[\mathrm{K\,cm}^{2}]$')
     plt.xlabel(r'$r/r_{\rm vir}$')
     plt.title(r'$t='+str(np.round(ds.current_time/Gyr,2))+r'\,\mathrm{Gyr}$')
+    plt.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
     plt.savefig('profiles_2d/entropy_Mass_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
     plt.clf()
 
@@ -367,6 +373,7 @@ while i_file < len(ts):
     plt.ylabel(r'$P\,[\mathrm{K\,cm}^{-3}]$')
     plt.xlabel(r'$r/r_{\rm vir}$')
     plt.title(r'$t='+str(np.round(ds.current_time/Gyr,2))+r'\,\mathrm{Gyr}$')
+    plt.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
     plt.savefig('profiles_2d/pressure_Volume_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
     plt.clf()
 
@@ -380,6 +387,7 @@ while i_file < len(ts):
     plt.ylabel(r'$P\,[\mathrm{K\,cm}^{-3}]$')
     plt.xlabel(r'$r/r_{\rm vir}$')
     plt.title(r'$t='+str(np.round(ds.current_time/Gyr,2))+r'\,\mathrm{Gyr}$')
+    plt.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
     plt.savefig('profiles_2d/pressure_Mass_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
     plt.clf()
 
@@ -394,6 +402,7 @@ while i_file < len(ts):
     plt.ylabel(r'$T\,[\mathrm{K}]$')
     plt.xlabel(r'$r/r_{\rm vir}$')
     plt.title(r'$t='+str(np.round(ds.current_time/Gyr,2))+r'\,\mathrm{Gyr}$')
+    plt.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
     plt.savefig('profiles_2d/temperature_Volume_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
     plt.clf()
 
@@ -407,6 +416,7 @@ while i_file < len(ts):
     plt.ylabel(r'$T\,[\mathrm{K}]$')
     plt.xlabel(r'$r/r_{\rm vir}$')
     plt.title(r'$t='+str(np.round(ds.current_time/Gyr,2))+r'\,\mathrm{Gyr}$')
+    plt.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
     plt.savefig('profiles_2d/temperature_Mass_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
     plt.clf()
 
@@ -420,6 +430,7 @@ while i_file < len(ts):
     plt.ylabel(r'$n\,[\mathrm{cm}^{-3}]$')
     plt.xlabel(r'$r/r_{\rm vir}$')
     plt.title(r'$t='+str(np.round(ds.current_time/Gyr,2))+r'\,\mathrm{Gyr}$')
+    plt.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
     plt.savefig('profiles_2d/number_density_Volume_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
     plt.clf()
 
@@ -433,6 +444,7 @@ while i_file < len(ts):
     plt.ylabel(r'$n\,[\mathrm{cm}^{-3}]$')
     plt.xlabel(r'$r/r_{\rm vir}$')
     plt.title(r'$t='+str(np.round(ds.current_time/Gyr,2))+r'\,\mathrm{Gyr}$')
+    plt.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
     plt.savefig('profiles_2d/number_density_Mass_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
     plt.clf()
 
@@ -446,6 +458,7 @@ while i_file < len(ts):
     plt.ylabel(r'$v_r\,[\mathrm{km/s}]$')
     plt.xlabel(r'$r/r_{\rm vir}$')
     plt.title(r'$t='+str(np.round(ds.current_time/Gyr,2))+r'\,\mathrm{Gyr}$')
+    plt.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
     plt.savefig('profiles_2d/radial_velocity_Volume_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
     plt.clf()
 
@@ -459,6 +472,7 @@ while i_file < len(ts):
     plt.ylabel(r'$v_r\,[\mathrm{km/s}]$')
     plt.xlabel(r'$r/r_{\rm vir}$')
     plt.title(r'$t='+str(np.round(ds.current_time/Gyr,2))+r'\,\mathrm{Gyr}$')
+    plt.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
     plt.savefig('profiles_2d/radial_velocity_Mass_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
     plt.clf()
 
@@ -472,6 +486,7 @@ while i_file < len(ts):
     plt.ylabel(r'$t_{\rm cool}\,[\mathrm{Gyr}]$')
     plt.xlabel(r'$r/r_{\rm vir}$')
     plt.title(r'$t='+str(np.round(ds.current_time/Gyr,2))+r'\,\mathrm{Gyr}$')
+    plt.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
     plt.savefig('profiles_2d/tcool_Volume_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
     plt.clf()
 
@@ -485,6 +500,7 @@ while i_file < len(ts):
     plt.ylabel(r'$t_{\rm cool}\,[\mathrm{Gyr}]$')
     plt.xlabel(r'$r/r_{\rm vir}$')
     plt.title(r'$t='+str(np.round(ds.current_time/Gyr,2))+r'\,\mathrm{Gyr}$')
+    plt.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
     plt.savefig('profiles_2d/tcool_Mass_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
     plt.clf()
     i_file += size
