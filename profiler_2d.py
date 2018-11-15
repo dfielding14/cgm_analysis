@@ -332,7 +332,7 @@ while i_file < len(ts):
 
 
     plot=plt.pcolormesh(profile_entropy.x_bins/r200m, profile_entropy.y_bins, 
-        profile_entropy['cell_volume']/np.sum(profile_entropy['cell_volume']), 
+        (profile_entropy['cell_volume']/np.sum(profile_entropy['cell_volume'])).T, 
         norm=colors.LogNorm(vmin=1e-6, vmax=1), cmap='plasma')
     cb = plt.colorbar(plot)
     cb.set_label(r'Volume Fraction',rotation=270,fontsize=12,labelpad=15)
@@ -345,7 +345,7 @@ while i_file < len(ts):
     plt.clf()
 
     plot=plt.pcolormesh(profile_entropy.x_bins/r200m, profile_entropy.y_bins, 
-        profile_entropy['cell_mass']/np.sum(profile_entropy['cell_mass']), 
+        (profile_entropy['cell_mass']/np.sum(profile_entropy['cell_mass'])).T, 
         norm=colors.LogNorm(vmin=1e-6,vmax=1), cmap='viridis')
     cb = plt.colorbar(plot)
     cb.set_label(r'Mass Fraction',rotation=270,fontsize=12,labelpad=15)
