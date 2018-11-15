@@ -47,8 +47,8 @@ np.savez('profiles_my_simulation_name.npz',
 	entropy_bins = my_entropy_bin_1D_array,
 	number_density_bins = my_number_density_bin_1D_array,
 	radial_velocity_bins = my_radial_velocity_bin_1D_array,
-	pressure_ent_Volume = my_Phase_distribution_in_each_radial_bin_3D_array,
-	pressure_ent_Mass = my_Phase_distribution_in_each_radial_bin_3D_array,
+	pressure_entropy_Volume = my_Phase_distribution_in_each_radial_bin_3D_array,
+	pressure_entropy_Mass = my_Phase_distribution_in_each_radial_bin_3D_array,
 	density_temperature_Volume = my_Phase_distribution_in_each_radial_bin_3D_array,
 	density_temperature_Mass = my_Phase_distribution_in_each_radial_bin_3D_array,
 	temperature_Volume = my_radial_distribution_2D_array,
@@ -87,14 +87,14 @@ matplotlib.rcParams['xtick.direction'] = 'in'
 matplotlib.rcParams['ytick.direction'] = 'in'
 matplotlib.rcParams['xtick.top'] = True
 matplotlib.rcParams['ytick.right'] = True
-matplotlib.rcParams['figure.figsize'] = 4,3
+matplotlib.rcParams['figure.figsize'] = 5,4
 ```
 
 ### Bonus items / Down the line
 1. If your simulation has metallicity then it would be great to include it in your analysis!
 2. Cooling times! Cooling is important, it would be great to understand the differences in cooling in our sims.
 3. Ion columns!
-4. Ion density-weighted line-of-sight velocity!
+4. Ion density-weighted line-of-sight velocity?
 
 
 

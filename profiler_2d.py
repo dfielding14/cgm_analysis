@@ -1,10 +1,10 @@
 import matplotlib
-matplotlib.rc('font', family='sansserif', size=10)
+matplotlib.rc('font', family='sans-serif', size=10)
 matplotlib.rcParams['xtick.direction'] = 'in'
 matplotlib.rcParams['ytick.direction'] = 'in'
 matplotlib.rcParams['xtick.top'] = True
 matplotlib.rcParams['ytick.right'] = True
-matplotlib.rcParams['figure.figsize'] = 4,3
+matplotlib.rcParams['figure.figsize'] = 5,4
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy import interpolate
@@ -264,8 +264,8 @@ while i_file < len(ts):
         entropy_bins = (profile_entropy.y_bins).value,
         number_density_bins = (profile_number_density.y_bins).value,
         radial_velocity_bins = (profile_radial_velocity.y_bins).value,
-        pressure_ent_Volume = (profile_pressure_entropy['cell_volume'].in_units('kpc**3').value).T,
-        pressure_ent_Mass = (profile_pressure_entropy['cell_mass'].in_units('Msun').value).T ,
+        pressure_entropy_Volume = (profile_pressure_entropy['cell_volume'].in_units('kpc**3').value).T,
+        pressure_entropy_Mass = (profile_pressure_entropy['cell_mass'].in_units('Msun').value).T ,
         density_temperature_Volume = (profile_density_temperature ['cell_volume'].in_units('kpc**3').value).T,
         density_temperature_Mass = (profile_density_temperature['cell_mass'].in_units('Msun').value).T ,
         temperature_Volume = (profile_temperature['cell_volume'].in_units('kpc**3').value).T,
@@ -279,146 +279,63 @@ while i_file < len(ts):
     )
 
     for ir in xrange(len(profile_density_temperature.x)):
-        plot=plt.pcolormesh(profile_density_temperature.y_bins, profile_density_temperature.z_bins, (profile_density_temperature['cell_volume'].in_units('kpc**3').value).T[...,ir], norm=colors.LogNorm(vmin=1,vmax=1e6), cmap='plasma')
+        plot=plt.pcolormesh(profile_density_temperature.y_bins, profile_density_temperature.z_bins, 
+            (profile_density_temperature['cell_volume'].in_units('kpc**3').value).T[...,ir]/np.sum((profile_density_temperature['cell_volume'].in_units('kpc**3').value).T[...,ir]), 
+            norm=colors.LogNorm(vmin=1e-6,vmax=1), cmap='plasma')
         cb = plt.colorbar(plot)
-        cb.set_label(r'$\mathrm{Volume\,[kpc}^{3}]$',rotation=270,fontsize=12,labelpad=15)
+        cb.set_label(r'$\mathrm{Volume\,Fraction}$',rotation=270,fontsize=12,labelpad=15)
         plt.yscale('log')
         plt.xscale('log')
         plt.ylabel(r'$T\,[\mathrm{K}]$')
         plt.xlabel(r'$\rho\,[\mathrm{g\,cm}^{-3}]$')
         plt.title(r'$t='+str(np.round(ds.current_time/Gyr,2))+r'\,\mathrm{Gyr} \quad '+str(np.round(profile_density_temperature.x_bins[ir]/r200m,1))+r'\leq r/r_{\rm vir}\leq'+str(np.round(profile_density_temperature.x_bins[ir+1]/r200m,1))+r'$',fontsize=10)
-        fig = plt.gcf()
-        fig.set_size_inches(4,3)
-        plt.savefig('profiles_2d/rho_T_V_r_'+str(ir).zfill(3)+'_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
+        plt.savefig('profiles_2d/number_density_temperature_Volume_r_'+str(ir).zfill(3)+'_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
         plt.clf()   
 
-        plot=plt.pcolormesh(profile_density_temperature.y_bins, profile_density_temperature.z_bins, profile_density_temperature['cell_mass'].in_units('Msun').T[...,ir], norm=colors.LogNorm(vmin=3e3,vmax=3e8), cmap='plasma')
+        plot=plt.pcolormesh(profile_density_temperature.y_bins, profile_density_temperature.z_bins, 
+            profile_density_temperature['cell_mass'].in_units('Msun').T[...,ir]/np.sum(profile_density_temperature['cell_mass'].in_units('Msun').T[...,ir]),
+            norm=colors.LogNorm(vmin=1e-6,vmax=1), cmap='viridis')
         cb = plt.colorbar(plot)
-        cb.set_label(r'$M\,[M_\odot]$',rotation=270,fontsize=12,labelpad=15)
+        cb.set_label(r'$\mathrm{Mass\,Fraction}$',rotation=270,fontsize=12,labelpad=15)
         plt.yscale('log')
         plt.xscale('log')
         plt.ylabel(r'$T\,[\mathrm{K}]$')
         plt.xlabel(r'$\rho\,[\mathrm{g\,cm}^{-3}]$')
         plt.title(r'$t='+str(np.round(ds.current_time/Gyr,2))+r'\,\mathrm{Gyr} \quad '+str(np.round(profile_density_temperature.x_bins[ir]/r200m,1))+r'\leq r/r_{\rm vir}\leq'+str(np.round(profile_density_temperature.x_bins[ir+1]/r200m,1))+r'$',fontsize=10)
-        fig = plt.gcf()
-        fig.set_size_inches(4,3)
-        plt.savefig('profiles_2d/rho_T_M_r_'+str(ir).zfill(3)+'_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
+        plt.savefig('profiles_2d/number_density_temperature_Mass_r_'+str(ir).zfill(3)+'_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
         plt.clf()        
                                                                 
     for ir in xrange(len(profile_pressure_entropy.x)):
-        plot=plt.pcolormesh(profile_pressure_entropy.y_bins, profile_pressure_entropy.z_bins, (profile_pressure_entropy['cell_volume'].in_units('kpc**3').value).T[...,ir], norm=colors.LogNorm(vmin=1,vmax=1e6), cmap='plasma')
+        plot=plt.pcolormesh(profile_pressure_entropy.y_bins, profile_pressure_entropy.z_bins, 
+            (profile_pressure_entropy['cell_volume'].in_units('kpc**3').value).T[...,ir]/np.sum((profile_pressure_entropy['cell_volume'].in_units('kpc**3').value).T[...,ir]),
+            norm=colors.LogNorm(vmin=1e-6,vmax=1), cmap='plasma')
         cb = plt.colorbar(plot)
-        cb.set_label(r'$\mathrm{Volume\,[kpc}^{3}]$',rotation=270,fontsize=12,labelpad=15)
+        cb.set_label(r'$\mathrm{Volume\,Fraction}$',rotation=270,fontsize=12,labelpad=15)
         plt.yscale('log')
         plt.xscale('log')
         plt.ylabel(r'$K\,[\mathrm{K\,cm}^{2}]$')
         plt.xlabel(r'$P\,[\mathrm{K\,cm}^{-3}]$')
         plt.title(r'$t='+str(np.round(ds.current_time/Gyr,2))+r'\,\mathrm{Gyr} \quad '+str(np.round(profile_pressure_entropy.x_bins[ir]/r200m,1))+r'\leq r/r_{\rm vir}\leq'+str(np.round(profile_pressure_entropy.x_bins[ir+1]/r200m,1))+r'$',fontsize=10)
-        fig = plt.gcf()
-        fig.set_size_inches(4,3)
-        plt.savefig('profiles_2d/P_Ent_V_r_'+str(ir).zfill(3)+'_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
+        plt.savefig('profiles_2d/pressure_entropy_Volume_r_'+str(ir).zfill(3)+'_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
         plt.clf()       
 
-        plot=plt.pcolormesh(profile_pressure_entropy.y_bins, profile_pressure_entropy.z_bins, profile_pressure_entropy['cell_mass'].in_units('Msun').T[...,ir], norm=colors.LogNorm(vmin=3e3,vmax=3e8), cmap='plasma')
+        plot=plt.pcolormesh(profile_pressure_entropy.y_bins, profile_pressure_entropy.z_bins, 
+            profile_pressure_entropy['cell_mass'].in_units('Msun').T[...,ir]/np.sum(profile_pressure_entropy['cell_mass'].in_units('Msun').T[...,ir]), 
+            norm=colors.LogNorm(vmin=1e-6,vmax=1), cmap='viridis')
         cb = plt.colorbar(plot)
-        cb.set_label(r'$M\,[M_\odot]$',rotation=270,fontsize=12,labelpad=15)
+        cb.set_label(r'$\mathrm{Mass\,Fraction}$',rotation=270,fontsize=12,labelpad=15)
         plt.yscale('log')
         plt.xscale('log')
         plt.ylabel(r'$K\,[\mathrm{K\,cm}^{2}]$')
         plt.xlabel(r'$P\,[\mathrm{K\,cm}^{-3}]$')
         plt.title(r'$t='+str(np.round(ds.current_time/Gyr,2))+r'\,\mathrm{Gyr} \quad '+str(np.round(profile_pressure_entropy.x_bins[ir]/r200m,1))+r'\leq r/r_{\rm vir}\leq'+str(np.round(profile_pressure_entropy.x_bins[ir+1]/r200m,1))+r'$',fontsize=10)
-        fig = plt.gcf()
-        fig.set_size_inches(4,3)
-        plt.savefig('profiles_2d/P_Ent_M_r_'+str(ir).zfill(3)+'_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
+        plt.savefig('profiles_2d/pressure_entropy_Mass_r_'+str(ir).zfill(3)+'_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
         plt.clf()        
 
 
-    plot=plt.pcolormesh(profile_tcool_tff.x_bins/r200m, profile_tcool_tff.y_bins, np.array([ profile_tcool_tff['cell_volume'][:,i]/(4*pi*np.diff(profile_tcool_tff.x_bins)*profile_tcool_tff.x**2) for i in xrange(len(profile_tcool_tff.y))]), norm=colors.LogNorm(vmin=1e-4, vmax=1), cmap='plasma')
-    cb = plt.colorbar(plot)
-    cb.set_label(r'$\Omega/4\pi$',rotation=270,fontsize=12,labelpad=15)
-    plt.yscale('log')
-    plt.xscale('log')
-    plt.axhline(1, color='k', dashes=[2,2], dash_capstyle='round',alpha=0.75)
-    plt.ylabel(r'$t_{\rm cool}/t_{\rm ff}$')
-    plt.xlabel(r'$r/r_{\rm vir}$')
-    plt.title(r'$t='+str(np.round(ds.current_time/Gyr,2))+r'\,\mathrm{Gyr}$')
-    fig = plt.gcf()
-    fig.set_size_inches(4,3)
-    plt.savefig('profiles_2d/tcool_tff_abs_V_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
-    plt.clf()
-
-    plot=plt.pcolormesh(profile_tcool_tff.x_bins/r200m, profile_tcool_tff.y_bins, (profile_tcool_tff['cell_mass'].in_units('Msun').value).T , norm=colors.LogNorm(vmin=3e3,vmax=3e8), cmap='plasma')
-    cb = plt.colorbar(plot)
-    cb.set_label(r'$M\,[M_\odot]$',rotation=270,fontsize=12,labelpad=15)
-    plt.yscale('log')
-    plt.xscale('log')
-    plt.axhline(1, color='k', dashes=[2,2], dash_capstyle='round',alpha=0.75)
-    plt.ylabel(r'$t_{\rm cool}/t_{\rm ff}$')
-    plt.xlabel(r'$r/r_{\rm vir}$')
-    plt.title(r'$t='+str(np.round(ds.current_time/Gyr,2))+r'\,\mathrm{Gyr}$')
-    fig = plt.gcf()
-    fig.set_size_inches(4,3)
-    plt.savefig('profiles_2d/tcool_tff_abs_M_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
-    plt.clf()
-    plot=plt.pcolormesh(profile.x_bins/r200m, profile.y_bins, np.array([ profile['cell_volume'][:,i]/(4*pi*np.diff(profile.x_bins)*profile.x**2) for i in xrange(len(profile.y))]), norm=colors.LogNorm(vmin=1e-4, vmax=1), cmap='plasma')
-    cb = plt.colorbar(plot)
-    cb.set_label(r'$\Omega/4\pi$',rotation=270,fontsize=12,labelpad=15)
-    plt.yscale('log')
-    plt.xscale('log')
-    plt.axhline(1, color='k', dashes=[2,2], dash_capstyle='round',alpha=0.75)
-    plt.ylabel(r'$t_{\rm cool}/t_{\rm flow}$')
-    plt.xlabel(r'$r/r_{\rm vir}$')
-    plt.title(r'$t='+str(np.round(ds.current_time/Gyr,2))+r'\,\mathrm{Gyr}$')
-    fig = plt.gcf()
-    fig.set_size_inches(4,3)
-    plt.savefig('profiles_2d/tcool_tflow_in_V_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
-    plt.clf()
-
-    plot=plt.pcolormesh(profile.x_bins/r200m, profile.y_bins, (profile['cell_mass'].in_units('Msun').value).T , norm=colors.LogNorm(vmin=3e3,vmax=3e8), cmap='plasma')
-    cb = plt.colorbar(plot)
-    cb.set_label(r'$M\,[M_\odot]$',rotation=270,fontsize=12,labelpad=15)
-    plt.yscale('log')
-    plt.xscale('log')
-    plt.axhline(1, color='k', dashes=[2,2], dash_capstyle='round',alpha=0.75)
-    plt.ylabel(r'$t_{\rm cool}/t_{\rm flow}$')
-    plt.xlabel(r'$r/r_{\rm vir}$')
-    plt.title(r'$t='+str(np.round(ds.current_time/Gyr,2))+r'\,\mathrm{Gyr}$')
-    fig = plt.gcf()
-    fig.set_size_inches(4,3)
-    plt.savefig('profiles_2d/tcool_tflow_in_M_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
-    plt.clf()
-
-
-    plot=plt.pcolormesh(profile_abs.x_bins/r200m, profile_abs.y_bins, np.array([ profile_abs['cell_volume'][:,i]/(4*pi*np.diff(profile_abs.x_bins)*profile_abs.x**2) for i in xrange(len(profile_abs.y))]), norm=colors.LogNorm(vmin=1e-4, vmax=1), cmap='plasma')
-    cb = plt.colorbar(plot)
-    cb.set_label(r'$\Omega/4\pi$',rotation=270,fontsize=12,labelpad=15)
-    plt.yscale('log')
-    plt.xscale('log')
-    plt.axhline(1, color='k', dashes=[2,2], dash_capstyle='round',alpha=0.75)
-    plt.ylabel(r'$|t_{\rm cool}/t_{\rm flow}|$')
-    plt.xlabel(r'$r/r_{\rm vir}$')
-    plt.title(r'$t='+str(np.round(ds.current_time/Gyr,2))+r'\,\mathrm{Gyr}$')
-    fig = plt.gcf()
-    fig.set_size_inches(4,3)
-    plt.savefig('profiles_2d/tcool_tflow_abs_V_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
-    plt.clf()
-
-    plot=plt.pcolormesh(profile_abs.x_bins/r200m, profile_abs.y_bins, (profile_abs['cell_mass'].in_units('Msun').value).T , norm=colors.LogNorm(vmin=3e3,vmax=3e8), cmap='plasma')
-    cb = plt.colorbar(plot)
-    cb.set_label(r'$M\,[M_\odot]$',rotation=270,fontsize=12,labelpad=15)
-    plt.yscale('log')
-    plt.xscale('log')
-    plt.axhline(1, color='k', dashes=[2,2], dash_capstyle='round',alpha=0.75)
-    plt.ylabel(r'$|t_{\rm cool}/t_{\rm flow}|$')
-    plt.xlabel(r'$r/r_{\rm vir}$')
-    plt.title(r'$t='+str(np.round(ds.current_time/Gyr,2))+r'\,\mathrm{Gyr}$')
-    fig = plt.gcf()
-    fig.set_size_inches(4,3)
-    plt.savefig('profiles_2d/tcool_tflow_abs_M_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
-    plt.clf()
-
-
-    plot=plt.pcolormesh(profile_entropy.x_bins/r200m, profile_entropy.y_bins, np.array([ profile_entropy['cell_volume'][:,i]/(4*pi*np.diff(profile_entropy.x_bins)*profile_entropy.x**2) for i in xrange(len(profile_entropy.y))]), norm=colors.LogNorm(vmin=1e-4, vmax=1), cmap='plasma')
+    plot=plt.pcolormesh(profile_entropy.x_bins/r200m, profile_entropy.y_bins, 
+        profile_entropy['cell_volume']/np.sum(profile_entropy['cell_volume']), 
+        norm=colors.LogNorm(vmin=1e-6, vmax=1), cmap='plasma')
     cb = plt.colorbar(plot)
     cb.set_label(r'$\Omega/4\pi$',rotation=270,fontsize=12,labelpad=15)
     plt.yscale('log')
@@ -428,10 +345,12 @@ while i_file < len(ts):
     plt.title(r'$t='+str(np.round(ds.current_time/Gyr,2))+r'\,\mathrm{Gyr}$')
     fig = plt.gcf()
     fig.set_size_inches(4,3)
-    plt.savefig('profiles_2d/Ent_V_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
+    plt.savefig('profiles_2d/entropy_Volume_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
     plt.clf()
 
-    plot=plt.pcolormesh(profile_entropy.x_bins/r200m, profile_entropy.y_bins, (profile_entropy['cell_mass'].in_units('Msun').value).T , norm=colors.LogNorm(vmin=3e3,vmax=3e8), cmap='plasma')
+    plot=plt.pcolormesh(profile_entropy.x_bins/r200m, profile_entropy.y_bins, 
+        profile_entropy['cell_mass']/np.sum(profile_entropy['cell_mass']), 
+        norm=colors.LogNorm(vmin=1e-6,vmax=1), cmap='viridis')
     cb = plt.colorbar(plot)
     cb.set_label(r'$M\,[M_\odot]$',rotation=270,fontsize=12,labelpad=15)
     plt.yscale('log')
@@ -441,10 +360,12 @@ while i_file < len(ts):
     plt.title(r'$t='+str(np.round(ds.current_time/Gyr,2))+r'\,\mathrm{Gyr}$')
     fig = plt.gcf()
     fig.set_size_inches(4,3)
-    plt.savefig('profiles_2d/Ent_M_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
+    plt.savefig('profiles_2d/entropy_Mass_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
     plt.clf()
 
-    plot=plt.pcolormesh(profile_pressure.x_bins/r200m, profile_pressure.y_bins, np.array([ profile_pressure['cell_volume'][:,i]/(4*pi*np.diff(profile_pressure.x_bins)*profile_pressure.x**2) for i in xrange(len(profile_pressure.y))]), norm=colors.LogNorm(vmin=1e-4, vmax=1), cmap='plasma')
+    plot=plt.pcolormesh(profile_pressure.x_bins/r200m, profile_pressure.y_bins, 
+        profile_pressure['cell_volume']/np.sum(profile_pressure['cell_volume']), 
+        norm=colors.LogNorm(vmin=1e-6, vmax=1), cmap='plasma')
     cb = plt.colorbar(plot)
     cb.set_label(r'$\Omega/4\pi$',rotation=270,fontsize=12,labelpad=15)
     plt.yscale('log')
@@ -454,10 +375,12 @@ while i_file < len(ts):
     plt.title(r'$t='+str(np.round(ds.current_time/Gyr,2))+r'\,\mathrm{Gyr}$')
     fig = plt.gcf()
     fig.set_size_inches(4,3)
-    plt.savefig('profiles_2d/P_V_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
+    plt.savefig('profiles_2d/pressure_Volume_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
     plt.clf()
 
-    plot=plt.pcolormesh(profile_pressure.x_bins/r200m, profile_pressure.y_bins, (profile_pressure['cell_mass'].in_units('Msun').value).T , norm=colors.LogNorm(vmin=3e3,vmax=3e8), cmap='plasma')
+    plot=plt.pcolormesh(profile_pressure.x_bins/r200m, profile_pressure.y_bins, 
+        profile_pressure['cell_mass']/np.sum(profile_pressure['cell_mass']), 
+        norm=colors.LogNorm(vmin=1e-6,vmax=1), cmap='viridis')
     cb = plt.colorbar(plot)
     cb.set_label(r'$M\,[M_\odot]$',rotation=270,fontsize=12,labelpad=15)
     plt.yscale('log')
@@ -467,11 +390,13 @@ while i_file < len(ts):
     plt.title(r'$t='+str(np.round(ds.current_time/Gyr,2))+r'\,\mathrm{Gyr}$')
     fig = plt.gcf()
     fig.set_size_inches(4,3)
-    plt.savefig('profiles_2d/P_M_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
+    plt.savefig('profiles_2d/pressure_Mass_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
     plt.clf()
 
 
-    plot=plt.pcolormesh(profile_temperature.x_bins/r200m, profile_temperature.y_bins, np.array([ profile_temperature['cell_volume'][:,i]/(4*pi*np.diff(profile_temperature.x_bins)*profile_temperature.x**2) for i in xrange(len(profile_temperature.y))]), norm=colors.LogNorm(vmin=1e-4, vmax=1), cmap='plasma')
+    plot=plt.pcolormesh(profile_temperature.x_bins/r200m, profile_temperature.y_bins, 
+        profile_temperature['cell_volume']/np.sum(profile_temperature['cell_volume']), 
+        norm=colors.LogNorm(vmin=1e-6, vmax=1), cmap='plasma')
     cb = plt.colorbar(plot)
     cb.set_label(r'$\Omega/4\pi$',rotation=270,fontsize=12,labelpad=15)
     plt.yscale('log')
@@ -481,10 +406,12 @@ while i_file < len(ts):
     plt.title(r'$t='+str(np.round(ds.current_time/Gyr,2))+r'\,\mathrm{Gyr}$')
     fig = plt.gcf()
     fig.set_size_inches(4,3)
-    plt.savefig('profiles_2d/T_V_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
+    plt.savefig('profiles_2d/temperature_Volume_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
     plt.clf()
 
-    plot=plt.pcolormesh(profile_temperature.x_bins/r200m, profile_temperature.y_bins, (profile_temperature['cell_mass'].in_units('Msun').value).T , norm=colors.LogNorm(vmin=3e3,vmax=3e8), cmap='plasma')
+    plot=plt.pcolormesh(profile_temperature.x_bins/r200m, profile_temperature.y_bins, 
+        profile_temperature['cell_mass']/np.sum(profile_temperature['cell_mass']), 
+        norm=colors.LogNorm(vmin=1e-6, vmax=1), cmap='viridis')
     cb = plt.colorbar(plot)
     cb.set_label(r'$M\,[M_\odot]$',rotation=270,fontsize=12,labelpad=15)
     plt.yscale('log')
@@ -494,37 +421,42 @@ while i_file < len(ts):
     plt.title(r'$t='+str(np.round(ds.current_time/Gyr,2))+r'\,\mathrm{Gyr}$')
     fig = plt.gcf()
     fig.set_size_inches(4,3)
-    plt.savefig('profiles_2d/T_M_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
+    plt.savefig('profiles_2d/temperature_Mass_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
     plt.clf()
 
-
-    plot=plt.pcolormesh(profile_number_density.x_bins/r200m, profile_number_density.y_bins, np.array([ profile_number_density['cell_volume'][:,i]/(4*pi*np.diff(profile_number_density.x_bins)*profile_number_density.x**2) for i in xrange(len(profile_number_density.y))]), norm=colors.LogNorm(vmin=1e-4, vmax=1), cmap='plasma')
+    plot=plt.pcolormesh(profile_number_density.x_bins/r200m, profile_number_density.y_bins, 
+        profile_number_density['cell_volume']/np.sum(profile_number_density['cell_volume']), 
+        norm=colors.LogNorm(vmin=1e-6, vmax=1), cmap='plasma')
     cb = plt.colorbar(plot)
     cb.set_label(r'$\Omega/4\pi$',rotation=270,fontsize=12,labelpad=15)
     plt.yscale('log')
     plt.xscale('log')
-    plt.ylabel(r'$n_H\,[\mathrm{cm}^{-3}]$')
+    plt.ylabel(r'$n\,[\mathrm{cm}^{-3}]$')
     plt.xlabel(r'$r/r_{\rm vir}$')
     plt.title(r'$t='+str(np.round(ds.current_time/Gyr,2))+r'\,\mathrm{Gyr}$')
     fig = plt.gcf()
     fig.set_size_inches(4,3)
-    plt.savefig('profiles_2d/nH_V_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
+    plt.savefig('profiles_2d/number_density_Volume_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
     plt.clf()
 
-    plot=plt.pcolormesh(profile_number_density.x_bins/r200m, profile_number_density.y_bins, (profile_number_density['cell_mass'].in_units('Msun').value).T , norm=colors.LogNorm(vmin=3e3,vmax=3e8), cmap='plasma')
+    plot=plt.pcolormesh(profile_number_density.x_bins/r200m, profile_number_density.y_bins, 
+        profile_number_density['cell_mass']/np.sum(profile_number_density['cell_mass']), 
+        norm=colors.LogNorm(vmin=1e-6, vmax=1), cmap='viridis')
     cb = plt.colorbar(plot)
     cb.set_label(r'$M\,[M_\odot]$',rotation=270,fontsize=12,labelpad=15)
     plt.yscale('log')
     plt.xscale('log')
-    plt.ylabel(r'$n_H\,[\mathrm{cm}^{-3}]$')
+    plt.ylabel(r'$n\,[\mathrm{cm}^{-3}]$')
     plt.xlabel(r'$r/r_{\rm vir}$')
     plt.title(r'$t='+str(np.round(ds.current_time/Gyr,2))+r'\,\mathrm{Gyr}$')
     fig = plt.gcf()
     fig.set_size_inches(4,3)
-    plt.savefig('profiles_2d/nH_M_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
+    plt.savefig('profiles_2d/number_density_Mass_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
     plt.clf()
 
-    plot=plt.pcolormesh(profile_radial_velocity.x_bins/r200m, profile_radial_velocity.y_bins, np.array([ profile_radial_velocity['cell_volume'][:,i]/(4*pi*np.diff(profile_radial_velocity.x_bins)*profile_radial_velocity.x**2) for i in xrange(len(profile_radial_velocity.y))]), norm=colors.LogNorm(vmin=1e-4, vmax=1), cmap='plasma')
+    plot=plt.pcolormesh(profile_radial_velocity.x_bins/r200m, profile_radial_velocity.y_bins, 
+        profile_radial_velocity['cell_volume']/np.sum(profile_radial_velocity['cell_volume']), 
+        norm=colors.LogNorm(vmin=1e-6, vmax=1), cmap='plasma')
     cb = plt.colorbar(plot)
     cb.set_label(r'$\Omega/4\pi$',rotation=270,fontsize=12,labelpad=15)
     # plt.yscale('log')
@@ -534,10 +466,12 @@ while i_file < len(ts):
     plt.title(r'$t='+str(np.round(ds.current_time/Gyr,2))+r'\,\mathrm{Gyr}$')
     fig = plt.gcf()
     fig.set_size_inches(4,3)
-    plt.savefig('profiles_2d/vr_V_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
+    plt.savefig('profiles_2d/radial_velocity_Volume_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
     plt.clf()
 
-    plot=plt.pcolormesh(profile_radial_velocity.x_bins/r200m, profile_radial_velocity.y_bins, (profile_radial_velocity['cell_mass'].in_units('Msun').value).T , norm=colors.LogNorm(vmin=3e3,vmax=3e8), cmap='plasma')
+    plot=plt.pcolormesh(profile_radial_velocity.x_bins/r200m, profile_radial_velocity.y_bins, 
+        profile_radial_velocity['cell_mass']/np.sum(profile_radial_velocity['cell_mass']), 
+        norm=colors.LogNorm(vmin=1e-6, vmax=1), cmap='viridis')
     cb = plt.colorbar(plot)
     cb.set_label(r'$M\,[M_\odot]$',rotation=270,fontsize=12,labelpad=15)
     # plt.yscale('log')
@@ -547,11 +481,12 @@ while i_file < len(ts):
     plt.title(r'$t='+str(np.round(ds.current_time/Gyr,2))+r'\,\mathrm{Gyr}$')
     fig = plt.gcf()
     fig.set_size_inches(4,3)
-    plt.savefig('profiles_2d/vr_M_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
+    plt.savefig('profiles_2d/radial_velocity_Mass_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
     plt.clf()
 
-
-    plot=plt.pcolormesh(profile_tcool.x_bins/r200m, profile_tcool.y_bins, np.array([ profile_tcool['cell_volume'][:,i]/(4*pi*np.diff(profile_tcool.x_bins)*profile_tcool.x**2) for i in xrange(len(profile_tcool.y))]), norm=colors.LogNorm(vmin=1e-4, vmax=1), cmap='plasma')
+    plot=plt.pcolormesh(profile_tcool.x_bins/r200m, profile_tcool.y_bins, 
+        profile_tcool['cell_volume']/np.sum(profile_tcool['cell_volume']), 
+        norm=colors.LogNorm(vmin=1e-6, vmax=1), cmap='plasma')
     cb = plt.colorbar(plot)
     cb.set_label(r'$\Omega/4\pi$',rotation=270,fontsize=12,labelpad=15)
     plt.yscale('log')
@@ -561,10 +496,12 @@ while i_file < len(ts):
     plt.title(r'$t='+str(np.round(ds.current_time/Gyr,2))+r'\,\mathrm{Gyr}$')
     fig = plt.gcf()
     fig.set_size_inches(4,3)
-    plt.savefig('profiles_2d/tcool_V_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
+    plt.savefig('profiles_2d/tcool_Volume_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
     plt.clf()
 
-    plot=plt.pcolormesh(profile_tcool.x_bins/r200m, profile_tcool.y_bins, (profile_tcool['cell_mass'].in_units('Msun').value).T , norm=colors.LogNorm(vmin=3e3,vmax=3e8), cmap='plasma')
+    plot=plt.pcolormesh(profile_tcool.x_bins/r200m, profile_tcool.y_bins, 
+        profile_tcool['cell_mass']/np.sum(profile_tcool['cell_mass']), 
+        norm=colors.LogNorm(vmin=1e-6, vmax=1), cmap='viridis')
     cb = plt.colorbar(plot)
     cb.set_label(r'$M\,[M_\odot]$',rotation=270,fontsize=12,labelpad=15)
     plt.yscale('log')
@@ -574,117 +511,6 @@ while i_file < len(ts):
     plt.title(r'$t='+str(np.round(ds.current_time/Gyr,2))+r'\,\mathrm{Gyr}$')
     fig = plt.gcf()
     fig.set_size_inches(4,3)
-    plt.savefig('profiles_2d/tcool_M_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
+    plt.savefig('profiles_2d/tcool_Mass_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
     plt.clf()
-
-
-    plot=plt.pcolormesh(profile_Mach_r.x_bins/r200m, profile_Mach_r.y_bins, np.array([ profile_Mach_r['cell_volume'][:,i]/(4*pi*np.diff(profile_Mach_r.x_bins)*profile_Mach_r.x**2) for i in xrange(len(profile_Mach_r.y))]), norm=colors.LogNorm(vmin=1e-4, vmax=1), cmap='plasma')
-    cb = plt.colorbar(plot)
-    cb.set_label(r'$\Omega/4\pi$',rotation=270,fontsize=12,labelpad=15)
-    # plt.yscale('log')
-    plt.xscale('log')
-    plt.ylabel(r'$\mathcal{M}_r$')
-    plt.xlabel(r'$r/r_{\rm vir}$')
-    plt.title(r'$t='+str(np.round(ds.current_time/Gyr,2))+r'\,\mathrm{Gyr}$')
-    fig = plt.gcf()
-    fig.set_size_inches(4,3)
-    plt.savefig('profiles_2d/Mach_r_V_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
-    plt.clf()
-
-    plot=plt.pcolormesh(profile_Mach_r.x_bins/r200m, profile_Mach_r.y_bins, (profile_Mach_r['cell_mass'].in_units('Msun').value).T , norm=colors.LogNorm(vmin=3e3,vmax=3e8), cmap='plasma')
-    cb = plt.colorbar(plot)
-    cb.set_label(r'$M\,[M_\odot]$',rotation=270,fontsize=12,labelpad=15)
-    # plt.yscale('log')
-    plt.xscale('log')
-    plt.ylabel(r'$\mathcal{M}_r$')
-    plt.xlabel(r'$r/r_{\rm vir}$')
-    plt.title(r'$t='+str(np.round(ds.current_time/Gyr,2))+r'\,\mathrm{Gyr}$')
-    fig = plt.gcf()
-    fig.set_size_inches(4,3)
-    plt.savefig('profiles_2d/Mach_r_M_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
-    plt.clf()
-
     i_file += size
-
-
-
-storage=comm.gather(my_storage,root=0)
-
-def merge_dicts(list_of_dicts):
-    '''
-    Given any number of dicts, shallow copy and merge into a new dict,
-    precedence goes to key value pairs in latter dicts.
-    '''
-    result = {}
-    for dictionary in list_of_dicts:
-        result.update(dictionary)
-    return result
-
-
-if rank==0:
-    storage = merge_dicts(storage)
-    times = np.sort(storage.keys())
-    print times
-
-    P_Ent_Volume           = np.array([ storage[t][0] for t in times ])
-    P_Ent_Mass             = np.array([ storage[t][1] for t in times ])
-    rho_T_Volume           = np.array([ storage[t][2] for t in times ])
-    rho_T_Mass             = np.array([ storage[t][3] for t in times ])
-    Ent_Volume             = np.array([ storage[t][4] for t in times ])
-    Ent_Mass               = np.array([ storage[t][5] for t in times ])
-    P_Volume               = np.array([ storage[t][6] for t in times ])
-    P_Mass                 = np.array([ storage[t][7] for t in times ])
-    T_Volume               = np.array([ storage[t][8] for t in times ])
-    T_Mass                 = np.array([ storage[t][9] for t in times ])
-    nH_Volume              = np.array([ storage[t][10] for t in times ])
-    nH_Mass                = np.array([ storage[t][11] for t in times ])
-    vr_Volume              = np.array([ storage[t][12] for t in times ])
-    vr_Mass                = np.array([ storage[t][13] for t in times ])
-    tcool_Volume           = np.array([ storage[t][14] for t in times ])
-    tcool_Mass             = np.array([ storage[t][15] for t in times ])
-    Mach_r_Volume          = np.array([ storage[t][16] for t in times ])
-    Mach_r_Mass            = np.array([ storage[t][17] for t in times ])
-    tcool_tff_Volume       = np.array([ storage[t][18] for t in times ])
-    tcool_tff_Mass         = np.array([ storage[t][19] for t in times ])
-    tcool_tflow_Volume     = np.array([ storage[t][20] for t in times ])
-    tcool_tflow_Mass       = np.array([ storage[t][21] for t in times ])
-    tcool_tflow_abs_Volume = np.array([ storage[t][22] for t in times ])
-    tcool_tflow_abs_Mass   = np.array([ storage[t][23] for t in times ])
-
-    np.savez('./profiles_2d/All_profiles.npz', times = times ,
-        r_r200m                 = (profile.x/r200m).value, 
-        r_kpc                  = (profile.x/kpc).value, 
-        T_bins                 = (profile_temperature.y_bins).value,
-        nH_bins                = (profile_number_density.y_bins).value,
-        tcool_tflow_bins       = (profile.y_bins).value,
-        tcool_tff_bins         = (profile_tcool_tff.y_bins).value,
-        tcool_bins             = (profile_tcool.y_bins).value,
-        Mach_r_bins            = (profile_Mach_r.y_bins).value,
-        vr_bins                = (profile_radial_velocity.y_bins).value,
-        Ent_bins               = (profile_entropy.y_bins).value,
-        P_bins                 = (profile_pressure.y_bins).value,
-        rho_bins               = (profile_density_temperature.y_bins).value,
-        P_Ent_Volume           = P_Ent_Volume,
-        P_Ent_Mass             = P_Ent_Mass,
-        rho_T_Volume           = rho_T_Volume,
-        rho_T_Mass             = rho_T_Mass,
-        Ent_Volume             = Ent_Volume,
-        Ent_Mass               = Ent_Mass,
-        P_Volume               = P_Volume,
-        P_Mass                 = P_Mass,
-        T_Volume               = T_Volume,
-        T_Mass                 = T_Mass,
-        nH_Volume              = nH_Volume,
-        nH_Mass                = nH_Mass,
-        vr_Volume              = vr_Volume,
-        vr_Mass                = vr_Mass,
-        tcool_Volume           = tcool_Volume,
-        tcool_Mass             = tcool_Mass,
-        Mach_r_Volume          = Mach_r_Volume,
-        Mach_r_Mass            = Mach_r_Mass,
-        tcool_tff_Volume       = tcool_tff_Volume,
-        tcool_tff_Mass         = tcool_tff_Mass,
-        tcool_tflow_Volume     = tcool_tflow_Volume,
-        tcool_tflow_Mass       = tcool_tflow_Mass,
-        tcool_tflow_abs_Volume = tcool_tflow_abs_Volume,
-        tcool_tflow_abs_Mass   = tcool_tflow_abs_Mass)
