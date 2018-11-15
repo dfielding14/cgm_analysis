@@ -9,7 +9,7 @@ In spherical annuli with of widths dr = 0.1 r<sub>200m</sub> ranging between 0 a
 
 Bins:
 
-P/kb [K cm<sup>-3</sup>] 	= 1 to 10<sup>0.5</sup>\
+P/kb [K cm<sup>-3</sup>] 	= 1 to 10<sup>5</sup>\
 K    [K cm<sup>2</sup>]  	= 10<sup>4</sup> to 10<sup>10.5</sup>\
 T    [K]       				= 10<sup>3</sup> to 10<sup>8</sup>\
 n    [cm<sup>-3</sup>]   	= 10<sup>-7</sup> to 1\
@@ -63,6 +63,15 @@ np.savez('profiles_my_simulation_name.npz',
 
 Each user should make their `my_...` using either the provided script or whatever method they want, but it would be great if we could all use the same units and naming convention for the storage to streamline the process down the line, and if people hate my choices please feel free to comment and we can change them. 
 
+Additionally, it would be useful to add any other descriptive information, so in my script I also have:
+```
+r200m = 319.,
+time  = 5,
+halo_mass = 1e12,
+redshift = 0,
+...
+```
+
 ### Plotting
 To streamline comparisons we should all plot our results in the same way. I suspect we all use matplotib so that will be our backbone and let's use pcolormesh to make all the plots. 
 
@@ -81,6 +90,11 @@ matplotlib.rcParams['ytick.right'] = True
 matplotlib.rcParams['figure.figsize'] = 4,3
 ```
 
+### Bonus items / Down the line
+1. If your simulation has metallicity then it would be great to include it in your analysis!
+2. Cooling times! Cooling is important, it would be great to understand the differences in cooling in our sims.
+3. Ion columns!
+4. Ion density-weighted line-of-sight velocity!
 
 
 
