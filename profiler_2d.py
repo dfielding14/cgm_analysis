@@ -167,8 +167,6 @@ units_override = {"length_unit":(UnitLength.value, UnitLength.units),
 ts = yt.load("id0/galaxyhalo.*.vtk", units_override=units_override)
 
 
-my_storage={}
-
 i_file = rank
 while i_file < len(ts):
     ### for some reason I have to do this anew each time, maybe this bug has been fixed but whatever
@@ -196,10 +194,10 @@ while i_file < len(ts):
                                  bin_fields=["radius", "number_density", "temperature"],
                                  fields=fields_total,
                                  n_bins=(20,70,50),
-                                 units=dict(radius="kpc",density="cm**-3",temperature="K"),
-                                 logs=dict(radius=False,density=True,temperature=True),
+                                 units=dict(radius="kpc",number_density="cm**-3",temperature="K"),
+                                 logs=dict(radius=False,number_density=True,temperature=True),
                                  weight_field=None,
-                                 extrema=dict(radius=(0,2*r200m.value), density=(1e-7,1), temperature=(10**3,10**8)))
+                                 extrema=dict(radius=(0,2*r200m.value), number_density=(1e-7,1), temperature=(10**3,10**8)))
 
 
     profile_pressure = yt.create_profile( data_source=sphere,
