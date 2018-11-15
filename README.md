@@ -38,7 +38,8 @@ We are going to use `.npz` files for our data storage ([basic usage information]
 
 It is probably easiest to store all of the analysis products for each simulation output in a single `.npz` file. This can be done as follows:
 
-` np.savez('profiles_my_simulation_name.npz',\
+```
+np.savez('profiles_my_simulation_name.npz',\
 r_r200m_phase = my_1D_array_containing_radial_bins_divided_by_r200m_used_for_phase_diagrams,\
 r_r200m_profile = my_1D_array_containing_radial_bins_divided_by_r200m_used_for_radial_profiles,\
 temperature_bins = my_temperature_bin_1D_array,\
@@ -58,7 +59,7 @@ radial_velocity_Volume = my_radial_distribution_2D_array,\
 radial_velocity_Mass = my_radial_distribution_2D_array,\
 ...
 )
-`
+```
 
 Each user should make their `my_...` using either the provided script or whatever method they want, but it would be great if we could all use the same units and naming convention for the storage to streamline the process down the line, and if people hate my choices please feel free to comment and we can change them. 
 
