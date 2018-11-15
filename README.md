@@ -23,10 +23,10 @@ bin widths = 0.1 dex
 Measure the mass and volume weighted radial distributions (2d-histogram) of temperature, density, and radial velocity between 0 and 2 r<sub>200m</sub>. 
 
 Bins:
-T    [K]       				= 10<sup>3</sup> to 10<sup>8</sup> 
-n    [cm<sup>-3</sup>]   	= 10<sup>-7</sup> to 1  
-v<sub>r</sub>    [km/s]   	= -500 to 500 
-bin widths = 0.1 dex for T and n, and 10 km/s for v<sub>r</sub>.
+T    [K]       				= 10<sup>3</sup> to 10<sup>8</sup>    
+n    [cm<sup>-3</sup>]   	= 10<sup>-7</sup> to 1    
+v<sub>r</sub>    [km/s]   	= -500 to 500     
+bin widths = 0.1 dex for T and n, and 10 km/s for v<sub>r</sub>.   
 
 The radial bins will likely be resolution/simulation dependent, but a good starting point to try is:
 
