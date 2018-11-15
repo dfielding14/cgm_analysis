@@ -64,4 +64,33 @@ np.savez('profiles_my_simulation_name.npz',
 Each user should make their `my_...` using either the provided script or whatever method they want, but it would be great if we could all use the same units and naming convention for the storage to streamline the process down the line, and if people hate my choices please feel free to comment and we can change them. 
 
 ### Plotting
-To streamline comparisons we should all plot our results in the same way. 
+To streamline comparisons we should all plot our results in the same way. I suspect we all use matplotib so that will be our backbone and let's use pcolormesh to make all the plots. 
+
+As Miao suggested let's all normalize the colorbars by the total mass or volume and let's use a colorbar range from 10<sup>-6</sup> to 1. I propose we use the colormaps viridis and plasma for the mass-weighted and volume-weighted plots, respectively. 
+
+For the limits on the state variables and radius we will use the limits on the bins, so temperature goes from 10<sup>3</sup> to 10<sup>8</sup> K, and so on.
+
+And, finally, to make our figures look as similar as possible let's all use the same rcparams, which can be set by including the following in the beginning of your script.
+```
+import matplotlib
+matplotlib.rc('font', family='sansserif', size=10)
+matplotlib.rcParams['xtick.direction'] = 'in'
+matplotlib.rcParams['ytick.direction'] = 'in'
+matplotlib.rcParams['xtick.top'] = True
+matplotlib.rcParams['ytick.right'] = True
+matplotlib.rcParams['figure.figsize'] = 4,3
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
