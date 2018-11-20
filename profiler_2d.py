@@ -30,83 +30,91 @@ size = comm.Get_size()
 ####  Begin  Fielding+17 specific stuff to set the units  ####
 ##############################################################
 
-# read in and set up unit system
-H0 = 70 * km /s / Mpc
-mu = 0.62
-muH = 1/0.7
-Tcool =1e4
-athinput = open('athinput', 'r')
-for line in athinput:
-    if "Tigm" in line: Tigm = float(line.strip()[12:])
-    if "M15" in line: M15 = float(line.strip()[12:])
-    if "c_nfw" in line: c = float(line.strip()[11:])
-    if "z         =" in line: zz = float(line.strip()[11:])
-    if "Tcool"       in line: Tcool = float(line.strip()[11:])
-    if "num_domains" in line: nlevels = int(line.strip()[14:])
-    if "METALLICITY" in line: METALLICITY = float(line.strip()[14:])
-athinput.close()
-OL = 0.73
-Om = 0.27
+drummond = False
 
-Tcool *= K
-UnitLength = YTQuantity((G * M15 * 1e15 * Msun / H0**2)**(1./3.)).convert_to_units('kpc')
-UnitTime = YTQuantity(1/H0).convert_to_units('yr')
-UnitMass = YTQuantity(M15 * 1e15 * Msun).convert_to_units('Msun')
-UnitTemp = 4.688*0.62*M15**(2./3.) *keV
-kbTfloor = Tigm*UnitTemp
-H = np.sqrt(OL + (1+zz)**3 * Om)
-r200m = UnitLength * (H**2/( (1+zz)**3 * Om))**(1./3.)*(10*H)**(-2./3.)
+if drummond:
 
-# read in and set up cooling curves
-H_He_Cooling  = np.loadtxt('H_He_cooling.dat')
-Tbins         = np.loadtxt('Tbins.dat')
-nHbins        = np.loadtxt('nHbins.dat')
-Metal_Cooling = np.loadtxt('Metal_cooling.dat')
-Metal_Cooling = METALLICITY*Metal_Cooling
+    # read in and set up unit system
+    H0 = 70 * km /s / Mpc
+    mu = 0.62
+    muH = 1/0.7
+    Tcool =1e4
+    athinput = open('athinput', 'r')
+    for line in athinput:
+        if "Tigm" in line: Tigm = float(line.strip()[12:])
+        if "M15" in line: M15 = float(line.strip()[12:])
+        if "c_nfw" in line: c = float(line.strip()[11:])
+        if "z         =" in line: zz = float(line.strip()[11:])
+        if "Tcool"       in line: Tcool = float(line.strip()[11:])
+        if "num_domains" in line: nlevels = int(line.strip()[14:])
+        if "METALLICITY" in line: METALLICITY = float(line.strip()[14:])
+    athinput.close()
+    OL = 0.73
+    Om = 0.27
 
-f_Metal_Cooling = interpolate.RegularGridInterpolator((np.log10(Tbins), np.log10(nHbins)),Metal_Cooling)
-f_H_He_Cooling  = interpolate.RegularGridInterpolator((np.log10(Tbins), np.log10(nHbins)), H_He_Cooling)
-f_Cooling       = interpolate.RegularGridInterpolator((np.log10(Tbins), np.log10(nHbins)),Metal_Cooling+H_He_Cooling, bounds_error=False, fill_value=1e-35)
-vf_Cooling = np.vectorize(f_Cooling)
+    Tcool *= K
+    UnitLength = YTQuantity((G * M15 * 1e15 * Msun / H0**2)**(1./3.)).convert_to_units('kpc')
+    UnitTime = YTQuantity(1/H0).convert_to_units('yr')
+    UnitMass = YTQuantity(M15 * 1e15 * Msun).convert_to_units('Msun')
+    UnitTemp = 4.688*0.62*M15**(2./3.) *keV
+    kbTfloor = Tigm*UnitTemp
+    H = np.sqrt(OL + (1+zz)**3 * Om)
+    r200m = UnitLength * (H**2/( (1+zz)**3 * Om))**(1./3.)*(10*H)**(-2./3.)
 
-# make new yt fields for cooling
-def _cooling_function(field,data):
-    logT  = np.log10(data['temperature'].d)
-    lognH = np.log10(data['number_density_H'].d)
-    # LAMBDA = vf_Cooling(logT, lognH) * erg*cm**3/s
-    LAMBDA = f_Cooling((logT, lognH)) * erg*cm**3/s
-    return LAMBDA
-yt.add_field(("gas", "cooling_function"), function=_cooling_function, units='erg*cm**3/s', display_name=r"$\Lambda$",force_override=True)
-yt.add_field(("gas", "lambda_field"), function=_cooling_function, units='erg*cm**3/s', display_name=r"$\Lambda$",force_override=True)
+    # read in and set up cooling curves
+    H_He_Cooling  = np.loadtxt('H_He_cooling.dat')
+    Tbins         = np.loadtxt('Tbins.dat')
+    nHbins        = np.loadtxt('nHbins.dat')
+    Metal_Cooling = np.loadtxt('Metal_cooling.dat')
+    Metal_Cooling = METALLICITY*Metal_Cooling
 
-def _tcool(field,data):
-    logT  = np.log10(data['temperature'].d)
-    lognH = np.log10(data['number_density_H'].d)
-    # LAMBDA = vf_Cooling(logT, lognH) * erg*cm**3/s
-    LAMBDA = f_Cooling((logT, lognH)) * erg*cm**3/s
-    t_cool = 1.5*kb*data['temperature']*(muH/mu)**2/((data['density']/(mp*mu)) * LAMBDA)
-    t_cool[np.isinf(t_cool)] = 0.0
-    # t_cool[t_cool < 1e-6] = 1e6
-    return t_cool
-yt.add_field(("gas","tcool"),function=_tcool,units="Gyr", display_name=r"$t_{\rm cool}$",force_override=True)
+    f_Metal_Cooling = interpolate.RegularGridInterpolator((np.log10(Tbins), np.log10(nHbins)),Metal_Cooling)
+    f_H_He_Cooling  = interpolate.RegularGridInterpolator((np.log10(Tbins), np.log10(nHbins)), H_He_Cooling)
+    f_Cooling       = interpolate.RegularGridInterpolator((np.log10(Tbins), np.log10(nHbins)),Metal_Cooling+H_He_Cooling, bounds_error=False, fill_value=1e-35)
+    vf_Cooling = np.vectorize(f_Cooling)
 
-def _edot_cool(field,data):
-    logT  = np.log10(data['temperature'].d)
-    lognH = np.log10(data['number_density_H'].d)
-    # LAMBDA = vf_Cooling(logT, lognH) * erg*cm**3/s
-    LAMBDA = f_Cooling((logT, lognH)) * erg*cm**3/s
-    edot_cool = data['number_density_H']**2 * LAMBDA * data['cell_volume']
-    return edot_cool
-yt.add_field(("gas","edot_cool"),function=_edot_cool,units="erg/s", display_name=r"$\dot{E}_{\rm cool}$",force_override=True)
+    # make new yt fields for cooling
+    def _cooling_function(field,data):
+        logT  = np.log10(data['temperature'].d)
+        lognH = np.log10(data['number_density_H'].d)
+        # LAMBDA = vf_Cooling(logT, lognH) * erg*cm**3/s
+        LAMBDA = f_Cooling((logT, lognH)) * erg*cm**3/s
+        return LAMBDA
+    yt.add_field(("gas", "cooling_function"), function=_cooling_function, units='erg*cm**3/s', display_name=r"$\Lambda$",force_override=True)
+    yt.add_field(("gas", "lambda_field"), function=_cooling_function, units='erg*cm**3/s', display_name=r"$\Lambda$",force_override=True)
 
-def tff(field,data):
-    g = G*UnitMass/np.square(data['radius']) * (np.log(1.+c*data['radius']/r200m) - c*data['radius']/r200m/(1.+c*data['radius']/r200m))/(np.log(1.+c) - c/(1.+c))
-    return np.sqrt(2*data['radius']/g)
-yt.add_field(("gas", "tff"), function=tff, units='Gyr', display_name=r"$t_{\rm ff}$")
+    def _tcool(field,data):
+        logT  = np.log10(data['temperature'].d)
+        lognH = np.log10(data['number_density_H'].d)
+        # LAMBDA = vf_Cooling(logT, lognH) * erg*cm**3/s
+        LAMBDA = f_Cooling((logT, lognH)) * erg*cm**3/s
+        t_cool = 1.5*kb*data['temperature']*(muH/mu)**2/((data['density']/(mp*mu)) * LAMBDA)
+        t_cool[np.isinf(t_cool)] = 0.0
+        # t_cool[t_cool < 1e-6] = 1e6
+        return t_cool
+    yt.add_field(("gas","tcool"),function=_tcool,units="Gyr", display_name=r"$t_{\rm cool}$",force_override=True)
 
-def tcool_tff(field,data):
-    return data['tcool']/data['tff']
-yt.add_field(("gas","tcool_tff"),function=tcool_tff, display_name=r"$t_{\rm cool}/t_{\rm ff}$")
+    def _edot_cool(field,data):
+        logT  = np.log10(data['temperature'].d)
+        lognH = np.log10(data['number_density_H'].d)
+        # LAMBDA = vf_Cooling(logT, lognH) * erg*cm**3/s
+        LAMBDA = f_Cooling((logT, lognH)) * erg*cm**3/s
+        edot_cool = data['number_density_H']**2 * LAMBDA * data['cell_volume']
+        return edot_cool
+    yt.add_field(("gas","edot_cool"),function=_edot_cool,units="erg/s", display_name=r"$\dot{E}_{\rm cool}$",force_override=True)
+
+    def tff(field,data):
+        g = G*UnitMass/np.square(data['radius']) * (np.log(1.+c*data['radius']/r200m) - c*data['radius']/r200m/(1.+c*data['radius']/r200m))/(np.log(1.+c) - c/(1.+c))
+        return np.sqrt(2*data['radius']/g)
+    yt.add_field(("gas", "tff"), function=tff, units='Gyr', display_name=r"$t_{\rm ff}$")
+
+    def tcool_tff(field,data):
+        return data['tcool']/data['tff']
+    yt.add_field(("gas","tcool_tff"),function=tcool_tff, display_name=r"$t_{\rm cool}/t_{\rm ff}$")
+
+    def _metallicity(field, data):
+        return data['specific_scalar[0]']*data['density']/(UnitMass/UnitLength**3)
+    yt.add_field(("gas","metallicity"), function=_metallicity, units="", display_name=r"$Z/Z_\odot$")
 
 ############################################################
 ####  End  Fielding+17 specific stuff to set the units  ####
@@ -143,10 +151,6 @@ yt.add_field(("gas","number_density"),function=number_density,units="cm**-3", di
 def number_density_H(field,data):
     return data['density']/(muH*mp)
 yt.add_field(("gas","number_density_H"),function=number_density_H,units="cm**-3", display_name=r"$n_H$")
-
-def _metallicity(field, data):
-    return data['specific_scalar[0]']*data['density']/(UnitMass/UnitLength**3)
-yt.add_field(("gas","metallicity"), function=_metallicity, units="", display_name=r"$Z/Z_\odot$")
 
 def Pkb(field,data):
     return data['pressure']/kb
@@ -200,7 +204,6 @@ while i_file < len(ts):
                                  weight_field=None,
                                  extrema=dict(radius=(0,2*r200m.value), number_density=(1e-7,1e-1), temperature=(10**3,10**8)))
 
-
     profile_pressure = yt.create_profile( data_source=sphere,
                                  bin_fields=["radius", "Pkb"],
                                  fields=fields_total,
@@ -241,7 +244,8 @@ while i_file < len(ts):
                                  logs=dict(radius=True,rv=False),
                                  weight_field=None,
                                  extrema=dict(radius=(0.02*r200m.value,2.0*r200m.value), rv=(-500,1000)))
-    profile_tcool = yt.create_profile( data_source=sphere,
+    if drummond :
+        profile_tcool = yt.create_profile( data_source=sphere,
                                  bin_fields=["radius", "tcool"],
                                  fields=fields_total,
                                  n_bins=(200,60),
@@ -250,37 +254,66 @@ while i_file < len(ts):
                                  weight_field=None,
                                  extrema=dict(radius=(0.02*r200m.value,2.0*r200m.value), tcool=(1e-4,1e2)))
 
-    np.savez('profiles_2d/profiles_'+str(i_file).zfill(4)+'.npz', 
-        r200m = r200m.value,
-        halo_mass = UnitMass.value * M15,
-        redshift = zz,
-        metallicity = METALLICITY,
-        time = (ds.current_time/Gyr).value,
-        r_r200m_phase = (profile_pressure_entropy.x/r200m).value,
-        r_r200m_profile = (profile_pressure.x/r200m).value,
-        temperature_bins = (profile_temperature.y_bins).value,
-        pressure_bins = (profile_pressure.y_bins).value,
-        entropy_bins = (profile_entropy.y_bins).value,
-        number_density_bins = (profile_number_density.y_bins).value,
-        radial_velocity_bins = (profile_radial_velocity.y_bins).value,
-        tcool_bins = (profile_tcool.y_bins).value,
-        pressure_entropy_Volume = (profile_pressure_entropy['cell_volume'].in_units('kpc**3').value).T,
-        pressure_entropy_Mass = (profile_pressure_entropy['cell_mass'].in_units('Msun').value).T ,
-        density_temperature_Volume = (profile_density_temperature ['cell_volume'].in_units('kpc**3').value).T,
-        density_temperature_Mass = (profile_density_temperature['cell_mass'].in_units('Msun').value).T ,
-        temperature_Volume = (profile_temperature['cell_volume'].in_units('kpc**3').value).T,
-        temperature_Mass = (profile_temperature['cell_mass'].in_units('Msun').value).T ,
-        number_density_Volume = (profile_number_density['cell_volume'].in_units('kpc**3').value).T,
-        number_density_Mass = (profile_number_density['cell_mass'].in_units('Msun').value).T ,
-        pressure_Volume = (profile_pressure['cell_volume'].in_units('kpc**3').value).T,
-        pressure_Mass = (profile_pressure['cell_mass'].in_units('Msun').value).T ,
-        entropy_Volume = (profile_entropy['cell_volume'].in_units('kpc**3').value).T,
-        entropy_Mass = (profile_entropy['cell_mass'].in_units('Msun').value).T ,
-        radial_velocity_Volume = (profile_radial_velocity['cell_volume'].in_units('kpc**3').value).T,
-        radial_velocity_Mass = (profile_radial_velocity['cell_mass'].in_units('Msun').value).T ,
-        tcool_Volume = (profile_tcool['cell_volume'].in_units('kpc**3').value).T,
-        tcool_Mass = (profile_tcool['cell_mass'].in_units('Msun').value).T 
-    )
+        np.savez('profiles_2d/profiles_'+str(i_file).zfill(4)+'.npz', 
+            r200m = r200m.value,
+            halo_mass = UnitMass.value * M15,
+            redshift = zz,
+            metallicity = METALLICITY,
+            time = (ds.current_time/Gyr).value,
+            r_r200m_phase = (profile_pressure_entropy.x/r200m).value,
+            r_r200m_profile = (profile_pressure.x/r200m).value,
+            temperature_bins = (profile_temperature.y_bins).value,
+            pressure_bins = (profile_pressure.y_bins).value,
+            entropy_bins = (profile_entropy.y_bins).value,
+            number_density_bins = (profile_number_density.y_bins).value,
+            radial_velocity_bins = (profile_radial_velocity.y_bins).value,
+            tcool_bins = (profile_tcool.y_bins).value,
+            pressure_entropy_Volume = (profile_pressure_entropy['cell_volume'].in_units('kpc**3').value).T,
+            pressure_entropy_Mass = (profile_pressure_entropy['cell_mass'].in_units('Msun').value).T ,
+            density_temperature_Volume = (profile_density_temperature ['cell_volume'].in_units('kpc**3').value).T,
+            density_temperature_Mass = (profile_density_temperature['cell_mass'].in_units('Msun').value).T ,
+            temperature_Volume = (profile_temperature['cell_volume'].in_units('kpc**3').value).T,
+            temperature_Mass = (profile_temperature['cell_mass'].in_units('Msun').value).T ,
+            number_density_Volume = (profile_number_density['cell_volume'].in_units('kpc**3').value).T,
+            number_density_Mass = (profile_number_density['cell_mass'].in_units('Msun').value).T ,
+            pressure_Volume = (profile_pressure['cell_volume'].in_units('kpc**3').value).T,
+            pressure_Mass = (profile_pressure['cell_mass'].in_units('Msun').value).T ,
+            entropy_Volume = (profile_entropy['cell_volume'].in_units('kpc**3').value).T,
+            entropy_Mass = (profile_entropy['cell_mass'].in_units('Msun').value).T ,
+            radial_velocity_Volume = (profile_radial_velocity['cell_volume'].in_units('kpc**3').value).T,
+            radial_velocity_Mass = (profile_radial_velocity['cell_mass'].in_units('Msun').value).T ,
+            tcool_Volume = (profile_tcool['cell_volume'].in_units('kpc**3').value).T,
+            tcool_Mass = (profile_tcool['cell_mass'].in_units('Msun').value).T 
+        )
+    else :
+        np.savez('profiles_2d/profiles_'+str(i_file).zfill(4)+'.npz', 
+            r200m = r200m.value,
+            halo_mass = UnitMass.value * M15,
+            redshift = zz,
+            metallicity = METALLICITY,
+            time = (ds.current_time/Gyr).value,
+            r_r200m_phase = (profile_pressure_entropy.x/r200m).value,
+            r_r200m_profile = (profile_pressure.x/r200m).value,
+            temperature_bins = (profile_temperature.y_bins).value,
+            pressure_bins = (profile_pressure.y_bins).value,
+            entropy_bins = (profile_entropy.y_bins).value,
+            number_density_bins = (profile_number_density.y_bins).value,
+            radial_velocity_bins = (profile_radial_velocity.y_bins).value,
+            pressure_entropy_Volume = (profile_pressure_entropy['cell_volume'].in_units('kpc**3').value).T,
+            pressure_entropy_Mass = (profile_pressure_entropy['cell_mass'].in_units('Msun').value).T ,
+            density_temperature_Volume = (profile_density_temperature ['cell_volume'].in_units('kpc**3').value).T,
+            density_temperature_Mass = (profile_density_temperature['cell_mass'].in_units('Msun').value).T ,
+            temperature_Volume = (profile_temperature['cell_volume'].in_units('kpc**3').value).T,
+            temperature_Mass = (profile_temperature['cell_mass'].in_units('Msun').value).T ,
+            number_density_Volume = (profile_number_density['cell_volume'].in_units('kpc**3').value).T,
+            number_density_Mass = (profile_number_density['cell_mass'].in_units('Msun').value).T ,
+            pressure_Volume = (profile_pressure['cell_volume'].in_units('kpc**3').value).T,
+            pressure_Mass = (profile_pressure['cell_mass'].in_units('Msun').value).T ,
+            entropy_Volume = (profile_entropy['cell_volume'].in_units('kpc**3').value).T,
+            entropy_Mass = (profile_entropy['cell_mass'].in_units('Msun').value).T ,
+            radial_velocity_Volume = (profile_radial_velocity['cell_volume'].in_units('kpc**3').value).T,
+            radial_velocity_Mass = (profile_radial_velocity['cell_mass'].in_units('Msun').value).T )
+
 
     for ir in xrange(len(profile_density_temperature.x)):
         plot=plt.pcolormesh(profile_density_temperature.y_bins, profile_density_temperature.z_bins, 
@@ -482,32 +515,33 @@ while i_file < len(ts):
     plt.savefig('profiles_2d/radial_velocity_Mass_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
     plt.clf()
 
-    plot=plt.pcolormesh(profile_tcool.x_bins/r200m, profile_tcool.y_bins, 
-        (profile_tcool['cell_volume']/np.sum(profile_tcool['cell_volume'],axis=0)).T, 
-        norm=colors.LogNorm(vmin=1e-6, vmax=1), cmap='plasma')
-    cb = plt.colorbar(plot)
-    cb.set_label(r'Volume Fraction',rotation=270,fontsize=12,labelpad=15)
-    plt.yscale('log')
-    plt.xscale('log')
-    plt.ylabel(r'$t_{\rm cool}\,[\mathrm{Gyr}]$')
-    plt.xlabel(r'$r/r_{\rm vir}$')
-    plt.title(r'$t='+str(np.round(ds.current_time/Gyr,2))+r'\,\mathrm{Gyr}$')
-    plt.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
-    plt.savefig('profiles_2d/tcool_Volume_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
-    plt.clf()
+    if drummond:
+        plot=plt.pcolormesh(profile_tcool.x_bins/r200m, profile_tcool.y_bins, 
+            (profile_tcool['cell_volume']/np.sum(profile_tcool['cell_volume'],axis=0)).T, 
+            norm=colors.LogNorm(vmin=1e-6, vmax=1), cmap='plasma')
+        cb = plt.colorbar(plot)
+        cb.set_label(r'Volume Fraction',rotation=270,fontsize=12,labelpad=15)
+        plt.yscale('log')
+        plt.xscale('log')
+        plt.ylabel(r'$t_{\rm cool}\,[\mathrm{Gyr}]$')
+        plt.xlabel(r'$r/r_{\rm vir}$')
+        plt.title(r'$t='+str(np.round(ds.current_time/Gyr,2))+r'\,\mathrm{Gyr}$')
+        plt.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+        plt.savefig('profiles_2d/tcool_Volume_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
+        plt.clf()
 
-    plot=plt.pcolormesh(profile_tcool.x_bins/r200m, profile_tcool.y_bins, 
-        (profile_tcool['cell_mass']/np.sum(profile_tcool['cell_mass'],axis=0)).T, 
-        norm=colors.LogNorm(vmin=1e-6, vmax=1), cmap='viridis')
-    cb = plt.colorbar(plot)
-    cb.set_label(r'Mass Fraction',rotation=270,fontsize=12,labelpad=15)
-    plt.yscale('log')
-    plt.xscale('log')
-    plt.ylabel(r'$t_{\rm cool}\,[\mathrm{Gyr}]$')
-    plt.xlabel(r'$r/r_{\rm vir}$')
-    plt.title(r'$t='+str(np.round(ds.current_time/Gyr,2))+r'\,\mathrm{Gyr}$')
-    plt.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
-    plt.savefig('profiles_2d/tcool_Mass_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
-    plt.clf()
+        plot=plt.pcolormesh(profile_tcool.x_bins/r200m, profile_tcool.y_bins, 
+            (profile_tcool['cell_mass']/np.sum(profile_tcool['cell_mass'],axis=0)).T, 
+            norm=colors.LogNorm(vmin=1e-6, vmax=1), cmap='viridis')
+        cb = plt.colorbar(plot)
+        cb.set_label(r'Mass Fraction',rotation=270,fontsize=12,labelpad=15)
+        plt.yscale('log')
+        plt.xscale('log')
+        plt.ylabel(r'$t_{\rm cool}\,[\mathrm{Gyr}]$')
+        plt.xlabel(r'$r/r_{\rm vir}$')
+        plt.title(r'$t='+str(np.round(ds.current_time/Gyr,2))+r'\,\mathrm{Gyr}$')
+        plt.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+        plt.savefig('profiles_2d/tcool_Mass_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
+        plt.clf()
 
     i_file += size
