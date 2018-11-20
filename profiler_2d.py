@@ -26,8 +26,9 @@ size = comm.Get_size()
 
 
 
-
-####  Begin  Fielding+17 specific stuff to set the units
+##############################################################
+####  Begin  Fielding+17 specific stuff to set the units  ####
+##############################################################
 
 # read in and set up unit system
 H0 = 70 * km /s / Mpc
@@ -107,9 +108,9 @@ def tcool_tff(field,data):
     return data['tcool']/data['tff']
 yt.add_field(("gas","tcool_tff"),function=tcool_tff, display_name=r"$t_{\rm cool}/t_{\rm ff}$")
 
-
-####  End  Fielding+17 specific stuff to set the units
-
+############################################################
+####  End  Fielding+17 specific stuff to set the units  ####
+############################################################
 
 
 
@@ -211,7 +212,7 @@ while i_file < len(ts):
     profile_entropy = yt.create_profile( data_source=sphere,
                                  bin_fields=["radius", "Ent"],
                                  fields=fields_total,
-                                 n_bins=(200,50),
+                                 n_bins=(200,65),
                                  units=dict(radius="kpc",Ent="K*cm**2"),
                                  logs=dict(radius=True,Ent=True),
                                  weight_field=None,
@@ -235,11 +236,11 @@ while i_file < len(ts):
     profile_radial_velocity = yt.create_profile( data_source=sphere,
                                  bin_fields=["radius", "rv"],
                                  fields=fields_total,
-                                 n_bins=(200,100),
+                                 n_bins=(200,150),
                                  units=dict(radius="kpc",rv="km/s"),
                                  logs=dict(radius=True,rv=False),
                                  weight_field=None,
-                                 extrema=dict(radius=(0.02*r200m.value,2.0*r200m.value), rv=(-500,500)))
+                                 extrema=dict(radius=(0.02*r200m.value,2.0*r200m.value), rv=(-500,1000)))
     profile_tcool = yt.create_profile( data_source=sphere,
                                  bin_fields=["radius", "tcool"],
                                  fields=fields_total,
@@ -262,6 +263,7 @@ while i_file < len(ts):
         entropy_bins = (profile_entropy.y_bins).value,
         number_density_bins = (profile_number_density.y_bins).value,
         radial_velocity_bins = (profile_radial_velocity.y_bins).value,
+        tcool_bins = (profile_tcool.y_bins).value,
         pressure_entropy_Volume = (profile_pressure_entropy['cell_volume'].in_units('kpc**3').value).T,
         pressure_entropy_Mass = (profile_pressure_entropy['cell_mass'].in_units('Msun').value).T ,
         density_temperature_Volume = (profile_density_temperature ['cell_volume'].in_units('kpc**3').value).T,
@@ -270,6 +272,10 @@ while i_file < len(ts):
         temperature_Mass = (profile_temperature['cell_mass'].in_units('Msun').value).T ,
         number_density_Volume = (profile_number_density['cell_volume'].in_units('kpc**3').value).T,
         number_density_Mass = (profile_number_density['cell_mass'].in_units('Msun').value).T ,
+        pressure_Volume = (profile_pressure['cell_volume'].in_units('kpc**3').value).T,
+        pressure_Mass = (profile_pressure['cell_mass'].in_units('Msun').value).T ,
+        entropy_Volume = (profile_entropy['cell_volume'].in_units('kpc**3').value).T,
+        entropy_Mass = (profile_entropy['cell_mass'].in_units('Msun').value).T ,
         radial_velocity_Volume = (profile_radial_velocity['cell_volume'].in_units('kpc**3').value).T,
         radial_velocity_Mass = (profile_radial_velocity['cell_mass'].in_units('Msun').value).T ,
         tcool_Volume = (profile_tcool['cell_volume'].in_units('kpc**3').value).T,
@@ -503,4 +509,5 @@ while i_file < len(ts):
     plt.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
     plt.savefig('profiles_2d/tcool_Mass_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
     plt.clf()
+
     i_file += size
