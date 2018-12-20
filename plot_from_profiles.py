@@ -23,6 +23,81 @@ for i_file in xrange(len(files)):
 
 
     for ir in xrange(len(a['r_r200m_phase'])):
+        ##Histograms
+        # I am not sure it is better to do lines or bars, I will decide once i overplot everything
+        # plt.loglog(a['number_density_bins'][:-1]+np.diff(a['number_density_bins'])/2., np.sum(a['density_temperature_Volume'][...,ir],axis=0)/np.sum(a['density_temperature_Volume'][...,ir]))
+        # plt.xscale('log')
+        # plt.yscale('log')
+        # plt.xlabel(r'$n\,[\mathrm{cm}^{-3}]$')
+        # plt.ylabel(r'$\mathrm{Volume\,Fraction}$')
+        # plt.ylim((1e-5,1))
+        # plt.savefig('profiles_2d/number_density_Volume_hist_r_'+str(ir).zfill(3)+'_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
+        # plt.clf()   
+
+        plt.bar(a['number_density_bins'][:-1], np.sum(a['density_temperature_Volume'][...,ir],axis=0)/np.sum(a['density_temperature_Volume'][...,ir]), width=0.8*np.diff(a['number_density_bins']), color='none', edgecolor='k',log=True)
+        plt.xscale('log')
+        plt.xlabel(r'$n\,[\mathrm{cm}^{-3}]$')
+        plt.ylabel(r'$\mathrm{Volume\,Fraction}$')
+        plt.ylim((1e-5,1))
+        plt.savefig('profiles_2d/number_density_Volume_hist_r_'+str(ir).zfill(3)+'_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
+        plt.clf()   
+
+        plt.bar(a['temperature_bins'][:-1], np.sum(a['density_temperature_Volume'][...,ir],axis=1)/np.sum(a['density_temperature_Volume'][...,ir]), width=0.8*np.diff(a['temperature_bins']), color='none', edgecolor='k',log=True)
+        plt.xscale('log')
+        plt.xlabel(r'$T\,[\mathrm{K}]$')
+        plt.ylabel(r'$\mathrm{Volume\,Fraction}$')
+        plt.ylim((1e-5,1))
+        plt.savefig('profiles_2d/temperature_Volume_hist_r_'+str(ir).zfill(3)+'_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
+        plt.clf()   
+
+        plt.bar(a['number_density_bins'][:-1], np.sum(a['density_temperature_Mass'][...,ir],axis=0)/np.sum(a['density_temperature_Mass'][...,ir]), width=0.8*np.diff(a['number_density_bins']), color='none', edgecolor='k',log=True)
+        plt.xscale('log')
+        plt.xlabel(r'$n\,[\mathrm{cm}^{-3}]$')
+        plt.ylabel(r'$\mathrm{Mass\,Fraction}$')
+        plt.ylim((1e-5,1))
+        plt.savefig('profiles_2d/number_density_Mass_hist_r_'+str(ir).zfill(3)+'_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
+        plt.clf()   
+
+        plt.bar(a['temperature_bins'][:-1], np.sum(a['density_temperature_Mass'][...,ir],axis=1)/np.sum(a['density_temperature_Mass'][...,ir]), width=0.8*np.diff(a['temperature_bins']), color='none', edgecolor='k',log=True)
+        plt.xscale('log')
+        plt.xlabel(r'$T\,[\mathrm{K}]$')
+        plt.ylabel(r'$\mathrm{Mass\,Fraction}$')
+        plt.ylim((1e-5,1))
+        plt.savefig('profiles_2d/temperature_Mass_hist_r_'+str(ir).zfill(3)+'_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
+        plt.clf() 
+
+        plt.bar(a['pressure_bins'][:-1], np.sum(a['pressure_entropy_Volume'][...,ir],axis=0)/np.sum(a['pressure_entropy_Volume'][...,ir]), width=0.8*np.diff(a['pressure_bins']), color='none', edgecolor='k',log=True)
+        plt.xscale('log')
+        plt.xlabel(r'$P\,[\mathrm{K\,cm}^{-3}]$')
+        plt.ylabel(r'$\mathrm{Volume\,Fraction}$')
+        plt.ylim((1e-5,1))
+        plt.savefig('profiles_2d/pressure_Volume_hist_r_'+str(ir).zfill(3)+'_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
+        plt.clf()   
+
+        plt.bar(a['entropy_bins'][:-1], np.sum(a['pressure_entropy_Volume'][...,ir],axis=1)/np.sum(a['pressure_entropy_Volume'][...,ir]), width=0.8*np.diff(a['entropy_bins']), color='none', edgecolor='k',log=True)
+        plt.xscale('log')
+        plt.xlabel(r'$K\,[\mathrm{K\,cm}^{2}]$')
+        plt.ylabel(r'$\mathrm{Volume\,Fraction}$')
+        plt.ylim((1e-5,1))
+        plt.savefig('profiles_2d/entropy_Volume_hist_r_'+str(ir).zfill(3)+'_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
+        plt.clf()   
+
+        plt.bar(a['pressure_bins'][:-1], np.sum(a['pressure_entropy_Mass'][...,ir],axis=0)/np.sum(a['pressure_entropy_Mass'][...,ir]), width=0.8*np.diff(a['pressure_bins']), color='none', edgecolor='k',log=True)
+        plt.xscale('log')
+        plt.xlabel(r'$P\,[\mathrm{K\,cm}^{-3}]$')
+        plt.ylabel(r'$\mathrm{Mass\,Fraction}$')
+        plt.ylim((1e-5,1))
+        plt.savefig('profiles_2d/pressure_Mass_hist_r_'+str(ir).zfill(3)+'_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
+        plt.clf()   
+
+        plt.bar(a['entropy_bins'][:-1], np.sum(a['pressure_entropy_Mass'][...,ir],axis=1)/np.sum(a['pressure_entropy_Mass'][...,ir]), width=0.8*np.diff(a['entropy_bins']), color='none', edgecolor='k',log=True)
+        plt.xscale('log')
+        plt.xlabel(r'$K\,[\mathrm{K\,cm}^{2}]$')
+        plt.ylabel(r'$\mathrm{Mass\,Fraction}$')
+        plt.ylim((1e-5,1))
+        plt.savefig('profiles_2d/entropy_Mass_hist_r_'+str(ir).zfill(3)+'_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
+        plt.clf()   
+
         plot=plt.pcolormesh(a['number_density_bins'], a['temperature_bins'], 
             a['density_temperature_Volume'][...,ir]/np.sum(a['density_temperature_Volume'][...,ir]), 
             norm=colors.LogNorm(vmin=1e-6,vmax=1), cmap='plasma')
