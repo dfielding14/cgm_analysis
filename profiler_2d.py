@@ -125,26 +125,6 @@ if drummond:
 
 
 ### Define additional fields for yt
-def _my_radial_velocity(field, data):
-    xv = data["gas","velocity_x"]
-    yv = data["gas","velocity_y"]
-    zv = data["gas","velocity_z"]
-    center = data.get_field_parameter('center')
-    x_hat = data["x"] - center[0]
-    y_hat = data["y"] - center[1]
-    z_hat = data["z"] - center[2]
-    r = np.sqrt(x_hat*x_hat+y_hat*y_hat+z_hat*z_hat)
-    x_hat /= r
-    y_hat /= r
-    z_hat /= r
-    return xv*x_hat + yv*y_hat + zv*z_hat
-
-yt.add_field(("gas","rv"),
-             function=_my_radial_velocity,
-             units="km/s",
-             take_log=False,
-             display_name=r"$v_{r}$")
-
 def number_density(field,data):
     return data['density']/(mu*mp)
 yt.add_field(("gas","number_density"),function=number_density,units="cm**-3", display_name=r"$n$")
@@ -183,6 +163,7 @@ while i_file < len(ts):
 
     ### select your data file
     ds = ts[i_file]
+    ds.periodicity = (False,False,False)
 
     ### create a sphere centered on your galaxy
     sphere = ds.sphere([0.,0.,0.], (2.00*r200m.value, "kpc"))
@@ -238,13 +219,55 @@ while i_file < len(ts):
                                  weight_field=None,
                                  extrema=dict(radius=(0.02*r200m.value,2.0*r200m.value), number_density=(1e-7,1e-1)))
     profile_radial_velocity = yt.create_profile( data_source=sphere,
-                                 bin_fields=["radius", "rv"],
+                                 bin_fields=["radius", "velocity_spherical_radius"],
                                  fields=fields_total,
                                  n_bins=(200,150),
-                                 units=dict(radius="kpc",rv="km/s"),
-                                 logs=dict(radius=True,rv=False),
+                                 units=dict(radius="kpc",velocity_spherical_radius="km/s"),
+                                 logs=dict(radius=True,velocity_spherical_radius=False),
                                  weight_field=None,
-                                 extrema=dict(radius=(0.02*r200m.value,2.0*r200m.value), rv=(-500,1000)))
+                                 extrema=dict(radius=(0.02*r200m.value,2.0*r200m.value), velocity_spherical_radius=(-500,1000)))
+    profile_azimuthal_velocity = yt.create_profile( data_source=sphere,
+                                 bin_fields=["radius", "velocity_spherical_phi"],
+                                 fields=fields_total,
+                                 n_bins=(200,100),
+                                 units=dict(radius="kpc",velocity_spherical_phi="km/s"),
+                                 logs=dict(radius=True,velocity_spherical_phi=False),
+                                 weight_field=None,
+                                 extrema=dict(radius=(0.02*r200m.value,2.0*r200m.value), velocity_spherical_phi=(-500,500)))
+    profile_polar_velocity = yt.create_profile( data_source=sphere,
+                                 bin_fields=["radius", "velocity_spherical_theta"],
+                                 fields=fields_total,
+                                 n_bins=(200,100),
+                                 units=dict(radius="kpc",velocity_spherical_theta="km/s"),
+                                 logs=dict(radius=True,velocity_spherical_theta=False),
+                                 weight_field=None,
+                                 extrema=dict(radius=(0.02*r200m.value,2.0*r200m.value), velocity_spherical_theta=(-500,500)))
+    profile_specific_angular_momentum_x = yt.create_profile( data_source=sphere,
+                                 bin_fields=["radius", "specific_angular_momentum_x"],
+                                 fields=fields_total,
+                                 n_bins=(200,100),
+                                 units=dict(radius="kpc",specific_angular_momentum_x="kpc*km/s"),
+                                 logs=dict(radius=True,specific_angular_momentum_x=False),
+                                 weight_field=None,
+                                 extrema=dict(radius=(0.02*r200m.value,2.0*r200m.value), specific_angular_momentum_x=(-2.5e5,2.5e5)))
+    profile_specific_angular_momentum_y = yt.create_profile( data_source=sphere,
+                                 bin_fields=["radius", "specific_angular_momentum_y"],
+                                 fields=fields_total,
+                                 n_bins=(200,100),
+                                 units=dict(radius="kpc",specific_angular_momentum_y="kpc*km/s"),
+                                 logs=dict(radius=True,specific_angular_momentum_y=False),
+                                 weight_field=None,
+                                 extrema=dict(radius=(0.02*r200m.value,2.0*r200m.value), specific_angular_momentum_y=(-2.5e5,2.5e5)))
+    profile_specific_angular_momentum_z = yt.create_profile( data_source=sphere,
+                                 bin_fields=["radius", "specific_angular_momentum_z"],
+                                 fields=fields_total,
+                                 n_bins=(200,100),
+                                 units=dict(radius="kpc",specific_angular_momentum_z="kpc*km/s"),
+                                 logs=dict(radius=True,specific_angular_momentum_z=False),
+                                 weight_field=None,
+                                 extrema=dict(radius=(0.02*r200m.value,2.0*r200m.value), specific_angular_momentum_z=(-2.5e5,2.5e5)))
+
+
     if drummond :
         profile_tcool = yt.create_profile( data_source=sphere,
                                  bin_fields=["radius", "tcool"],
@@ -268,6 +291,11 @@ while i_file < len(ts):
             entropy_bins = (profile_entropy.y_bins).value,
             number_density_bins = (profile_number_density.y_bins).value,
             radial_velocity_bins = (profile_radial_velocity.y_bins).value,
+            azimuthal_velocity_bins = (profile_azimuthal_velocity.y_bins).value,
+            polar_velocity_bins = (profile_polar_velocity.y_bins).value,
+            specific_angular_momentum_x_bins = (profile_specific_angular_momentum_x.y_bins).value,
+            specific_angular_momentum_y_bins = (profile_specific_angular_momentum_y.y_bins).value,
+            specific_angular_momentum_z_bins = (profile_specific_angular_momentum_z.y_bins).value,
             tcool_bins = (profile_tcool.y_bins).value,
             pressure_entropy_Volume = (profile_pressure_entropy['cell_volume'].in_units('kpc**3').value).T,
             pressure_entropy_Mass = (profile_pressure_entropy['cell_mass'].in_units('Msun').value).T ,
@@ -283,6 +311,16 @@ while i_file < len(ts):
             entropy_Mass = (profile_entropy['cell_mass'].in_units('Msun').value).T ,
             radial_velocity_Volume = (profile_radial_velocity['cell_volume'].in_units('kpc**3').value).T,
             radial_velocity_Mass = (profile_radial_velocity['cell_mass'].in_units('Msun').value).T ,
+            azimuthal_velocity_Volume = (profile_azimuthal_velocity['cell_volume'].in_units('kpc**3').value).T,
+            azimuthal_velocity_Mass = (profile_azimuthal_velocity['cell_mass'].in_units('Msun').value).T ,
+            polar_velocity_Volume = (profile_polar_velocity['cell_volume'].in_units('kpc**3').value).T,
+            polar_velocity_Mass = (profile_polar_velocity['cell_mass'].in_units('Msun').value).T ,
+            specific_angular_momentum_x_Volume = (profile_specific_angular_momentum_x['cell_volume'].in_units('kpc**3').value).T,
+            specific_angular_momentum_x_Mass = (profile_specific_angular_momentum_x['cell_mass'].in_units('Msun').value).T ,
+            specific_angular_momentum_y_Volume = (profile_specific_angular_momentum_y['cell_volume'].in_units('kpc**3').value).T,
+            specific_angular_momentum_y_Mass = (profile_specific_angular_momentum_y['cell_mass'].in_units('Msun').value).T ,
+            specific_angular_momentum_z_Volume = (profile_specific_angular_momentum_z['cell_volume'].in_units('kpc**3').value).T,
+            specific_angular_momentum_z_Mass = (profile_specific_angular_momentum_z['cell_mass'].in_units('Msun').value).T ,
             tcool_Volume = (profile_tcool['cell_volume'].in_units('kpc**3').value).T,
             tcool_Mass = (profile_tcool['cell_mass'].in_units('Msun').value).T 
         )
@@ -300,6 +338,11 @@ while i_file < len(ts):
             entropy_bins = (profile_entropy.y_bins).value,
             number_density_bins = (profile_number_density.y_bins).value,
             radial_velocity_bins = (profile_radial_velocity.y_bins).value,
+            azimuthal_velocity_bins = (profile_azimuthal_velocity.y_bins).value,
+            polar_velocity_bins = (profile_polar_velocity.y_bins).value,
+            specific_angular_momentum_x_bins = (profile_specific_angular_momentum_x.y_bins).value,
+            specific_angular_momentum_y_bins = (profile_specific_angular_momentum_y.y_bins).value,
+            specific_angular_momentum_z_bins = (profile_specific_angular_momentum_z.y_bins).value,
             pressure_entropy_Volume = (profile_pressure_entropy['cell_volume'].in_units('kpc**3').value).T,
             pressure_entropy_Mass = (profile_pressure_entropy['cell_mass'].in_units('Msun').value).T ,
             density_temperature_Volume = (profile_density_temperature ['cell_volume'].in_units('kpc**3').value).T,
@@ -313,7 +356,17 @@ while i_file < len(ts):
             entropy_Volume = (profile_entropy['cell_volume'].in_units('kpc**3').value).T,
             entropy_Mass = (profile_entropy['cell_mass'].in_units('Msun').value).T ,
             radial_velocity_Volume = (profile_radial_velocity['cell_volume'].in_units('kpc**3').value).T,
-            radial_velocity_Mass = (profile_radial_velocity['cell_mass'].in_units('Msun').value).T )
+            radial_velocity_Mass = (profile_radial_velocity['cell_mass'].in_units('Msun').value).T ,
+            azimuthal_velocity_Volume = (profile_azimuthal_velocity['cell_volume'].in_units('kpc**3').value).T,
+            azimuthal_velocity_Mass = (profile_azimuthal_velocity['cell_mass'].in_units('Msun').value).T ,
+            polar_velocity_Volume = (profile_polar_velocity['cell_volume'].in_units('kpc**3').value).T,
+            polar_velocity_Mass = (profile_polar_velocity['cell_mass'].in_units('Msun').value).T ,
+            specific_angular_momentum_x_Volume = (profile_specific_angular_momentum_x['cell_volume'].in_units('kpc**3').value).T,
+            specific_angular_momentum_x_Mass = (profile_specific_angular_momentum_x['cell_mass'].in_units('Msun').value).T ,
+            specific_angular_momentum_y_Volume = (profile_specific_angular_momentum_y['cell_volume'].in_units('kpc**3').value).T,
+            specific_angular_momentum_y_Mass = (profile_specific_angular_momentum_y['cell_mass'].in_units('Msun').value).T ,
+            specific_angular_momentum_z_Volume = (profile_specific_angular_momentum_z['cell_volume'].in_units('kpc**3').value).T,
+            specific_angular_momentum_z_Mass = (profile_specific_angular_momentum_z['cell_mass'].in_units('Msun').value).T )
 
 
     for ir in xrange(len(profile_density_temperature.x)):
@@ -514,6 +567,146 @@ while i_file < len(ts):
     plt.title(r'$t='+str(np.round(ds.current_time/Gyr,2))+r'\,\mathrm{Gyr}$')
     plt.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
     plt.savefig('profiles_2d/radial_velocity_Mass_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
+    plt.clf()
+
+    plot=plt.pcolormesh(profile_azimuthal_velocity.x_bins/r200m, profile_azimuthal_velocity.y_bins, 
+        (profile_azimuthal_velocity['cell_volume'].T/(np.nansum(profile_azimuthal_velocity['cell_volume'],axis=1).d +1)), 
+        norm=colors.LogNorm(vmin=1e-6, vmax=1), cmap='plasma')
+    cb = plt.colorbar(plot)
+    cb.set_label(r'Volume Fraction',rotation=270,fontsize=12,labelpad=15)
+    # plt.yscale('log')
+    plt.xscale('log')
+    plt.ylabel(r'$v_\phi\,[\mathrm{km/s}]$')
+    plt.xlabel(r'$r/r_{\rm vir}$')
+    plt.title(r'$t='+str(np.round(ds.current_time/Gyr,2))+r'\,\mathrm{Gyr}$')
+    plt.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    plt.savefig('profiles_2d/azimuthal_velocity_Volume_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
+    plt.clf()
+
+    plot=plt.pcolormesh(profile_azimuthal_velocity.x_bins/r200m, profile_azimuthal_velocity.y_bins, 
+        (profile_azimuthal_velocity['cell_mass'].T/(np.nansum(profile_azimuthal_velocity['cell_mass'],axis=1).d +1)), 
+        norm=colors.LogNorm(vmin=1e-6, vmax=1), cmap='viridis')
+    cb = plt.colorbar(plot)
+    cb.set_label(r'Mass Fraction',rotation=270,fontsize=12,labelpad=15)
+    # plt.yscale('log')
+    plt.xscale('log')
+    plt.ylabel(r'$v_\phi\,[\mathrm{km/s}]$')
+    plt.xlabel(r'$r/r_{\rm vir}$')
+    plt.title(r'$t='+str(np.round(ds.current_time/Gyr,2))+r'\,\mathrm{Gyr}$')
+    plt.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    plt.savefig('profiles_2d/azimuthal_velocity_Mass_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
+    plt.clf()
+
+    plot=plt.pcolormesh(profile_polar_velocity.x_bins/r200m, profile_polar_velocity.y_bins, 
+        (profile_polar_velocity['cell_volume'].T/(np.nansum(profile_polar_velocity['cell_volume'],axis=1).d +1)), 
+        norm=colors.LogNorm(vmin=1e-6, vmax=1), cmap='plasma')
+    cb = plt.colorbar(plot)
+    cb.set_label(r'Volume Fraction',rotation=270,fontsize=12,labelpad=15)
+    # plt.yscale('log')
+    plt.xscale('log')
+    plt.ylabel(r'$v_\theta \,[\mathrm{km/s}]$')
+    plt.xlabel(r'$r/r_{\rm vir}$')
+    plt.title(r'$t='+str(np.round(ds.current_time/Gyr,2))+r'\,\mathrm{Gyr}$')
+    plt.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    plt.savefig('profiles_2d/polar_velocity_Volume_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
+    plt.clf()
+
+    plot=plt.pcolormesh(profile_polar_velocity.x_bins/r200m, profile_polar_velocity.y_bins, 
+        (profile_polar_velocity['cell_mass'].T/(np.nansum(profile_polar_velocity['cell_mass'],axis=1).d +1)), 
+        norm=colors.LogNorm(vmin=1e-6, vmax=1), cmap='viridis')
+    cb = plt.colorbar(plot)
+    cb.set_label(r'Mass Fraction',rotation=270,fontsize=12,labelpad=15)
+    # plt.yscale('log')
+    plt.xscale('log')
+    plt.ylabel(r'$v_\theta \,[\mathrm{km/s}]$')
+    plt.xlabel(r'$r/r_{\rm vir}$')
+    plt.title(r'$t='+str(np.round(ds.current_time/Gyr,2))+r'\,\mathrm{Gyr}$')
+    plt.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    plt.savefig('profiles_2d/polar_velocity_Mass_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
+    plt.clf()
+
+    plot=plt.pcolormesh(profile_specific_angular_momentum_x.x_bins/r200m, profile_specific_angular_momentum_x.y_bins, 
+        (profile_specific_angular_momentum_x['cell_volume'].T/(np.nansum(profile_specific_angular_momentum_x['cell_volume'],axis=1).d +1)), 
+        norm=colors.LogNorm(vmin=1e-6, vmax=1), cmap='plasma')
+    cb = plt.colorbar(plot)
+    cb.set_label(r'Volume Fraction',rotation=270,fontsize=12,labelpad=15)
+    # plt.yscale('log')
+    plt.xscale('log')
+    plt.ylabel(r'$j_x\,[\mathrm{kpc\,km/s}]$')
+    plt.xlabel(r'$r/r_{\rm vir}$')
+    plt.title(r'$t='+str(np.round(ds.current_time/Gyr,2))+r'\,\mathrm{Gyr}$')
+    plt.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    plt.savefig('profiles_2d/specific_angular_momentum_x_Volume_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
+    plt.clf()
+
+    plot=plt.pcolormesh(profile_specific_angular_momentum_x.x_bins/r200m, profile_specific_angular_momentum_x.y_bins, 
+        (profile_specific_angular_momentum_x['cell_mass'].T/(np.nansum(profile_specific_angular_momentum_x['cell_mass'],axis=1).d +1)), 
+        norm=colors.LogNorm(vmin=1e-6, vmax=1), cmap='viridis')
+    cb = plt.colorbar(plot)
+    cb.set_label(r'Mass Fraction',rotation=270,fontsize=12,labelpad=15)
+    # plt.yscale('log')
+    plt.xscale('log')
+    plt.ylabel(r'$j_x\,[\mathrm{kpc\,km/s}]$')
+    plt.xlabel(r'$r/r_{\rm vir}$')
+    plt.title(r'$t='+str(np.round(ds.current_time/Gyr,2))+r'\,\mathrm{Gyr}$')
+    plt.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    plt.savefig('profiles_2d/specific_angular_momentum_x_Mass_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
+    plt.clf()
+
+    plot=plt.pcolormesh(profile_specific_angular_momentum_y.x_bins/r200m, profile_specific_angular_momentum_y.y_bins, 
+        (profile_specific_angular_momentum_y['cell_volume'].T/(np.nansum(profile_specific_angular_momentum_y['cell_volume'],axis=1).d +1)), 
+        norm=colors.LogNorm(vmin=1e-6, vmax=1), cmap='plasma')
+    cb = plt.colorbar(plot)
+    cb.set_label(r'Volume Fraction',rotation=270,fontsize=12,labelpad=15)
+    # plt.yscale('log')
+    plt.xscale('log')
+    plt.ylabel(r'$j_y\,[\mathrm{kpc\,km/s}]$')
+    plt.xlabel(r'$r/r_{\rm vir}$')
+    plt.title(r'$t='+str(np.round(ds.current_time/Gyr,2))+r'\,\mathrm{Gyr}$')
+    plt.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    plt.savefig('profiles_2d/specific_angular_momentum_y_Volume_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
+    plt.clf()
+
+    plot=plt.pcolormesh(profile_specific_angular_momentum_y.x_bins/r200m, profile_specific_angular_momentum_y.y_bins, 
+        (profile_specific_angular_momentum_y['cell_mass'].T/(np.nansum(profile_specific_angular_momentum_y['cell_mass'],axis=1).d +1)), 
+        norm=colors.LogNorm(vmin=1e-6, vmax=1), cmap='viridis')
+    cb = plt.colorbar(plot)
+    cb.set_label(r'Mass Fraction',rotation=270,fontsize=12,labelpad=15)
+    # plt.yscale('log')
+    plt.xscale('log')
+    plt.ylabel(r'$j_y\,[\mathrm{kpc\,km/s}]$')
+    plt.xlabel(r'$r/r_{\rm vir}$')
+    plt.title(r'$t='+str(np.round(ds.current_time/Gyr,2))+r'\,\mathrm{Gyr}$')
+    plt.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    plt.savefig('profiles_2d/specific_angular_momentum_y_Mass_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
+    plt.clf()
+
+    plot=plt.pcolormesh(profile_specific_angular_momentum_z.x_bins/r200m, profile_specific_angular_momentum_z.y_bins, 
+        (profile_specific_angular_momentum_z['cell_volume'].T/(np.nansum(profile_specific_angular_momentum_z['cell_volume'],axis=1).d +1)), 
+        norm=colors.LogNorm(vmin=1e-6, vmax=1), cmap='plasma')
+    cb = plt.colorbar(plot)
+    cb.set_label(r'Volume Fraction',rotation=270,fontsize=12,labelpad=15)
+    # plt.yscale('log')
+    plt.xscale('log')
+    plt.ylabel(r'$j_z\,[\mathrm{kpc\,km/s}]$')
+    plt.xlabel(r'$r/r_{\rm vir}$')
+    plt.title(r'$t='+str(np.round(ds.current_time/Gyr,2))+r'\,\mathrm{Gyr}$')
+    plt.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    plt.savefig('profiles_2d/specific_angular_momentum_z_Volume_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
+    plt.clf()
+
+    plot=plt.pcolormesh(profile_specific_angular_momentum_z.x_bins/r200m, profile_specific_angular_momentum_z.y_bins, 
+        (profile_specific_angular_momentum_z['cell_mass'].T/(np.nansum(profile_specific_angular_momentum_z['cell_mass'],axis=1).d +1)), 
+        norm=colors.LogNorm(vmin=1e-6, vmax=1), cmap='viridis')
+    cb = plt.colorbar(plot)
+    cb.set_label(r'Mass Fraction',rotation=270,fontsize=12,labelpad=15)
+    # plt.yscale('log')
+    plt.xscale('log')
+    plt.ylabel(r'$j_z\,[\mathrm{kpc\,km/s}]$')
+    plt.xlabel(r'$r/r_{\rm vir}$')
+    plt.title(r'$t='+str(np.round(ds.current_time/Gyr,2))+r'\,\mathrm{Gyr}$')
+    plt.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    plt.savefig('profiles_2d/specific_angular_momentum_z_Mass_'+str(i_file).zfill(4)+'.png',bbox_inches='tight',dpi=200)
     plt.clf()
 
     if drummond:
