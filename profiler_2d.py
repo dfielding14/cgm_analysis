@@ -249,7 +249,7 @@ while i_file < len(ts):
                                  units=dict(radius="kpc",specific_angular_momentum_x="kpc*km/s"),
                                  logs=dict(radius=True,specific_angular_momentum_x=False),
                                  weight_field=None,
-                                 extrema=dict(radius=(0.02*r200m.value,2.0*r200m.value), specific_angular_momentum_x=(-2.5e5,2.5e5)))
+                                 extrema=dict(radius=(0.02*r200m.value,2.0*r200m.value), specific_angular_momentum_x=(-2.5e4,2.5e4)))
     profile_specific_angular_momentum_y = yt.create_profile( data_source=sphere,
                                  bin_fields=["radius", "specific_angular_momentum_y"],
                                  fields=fields_total,
@@ -257,7 +257,7 @@ while i_file < len(ts):
                                  units=dict(radius="kpc",specific_angular_momentum_y="kpc*km/s"),
                                  logs=dict(radius=True,specific_angular_momentum_y=False),
                                  weight_field=None,
-                                 extrema=dict(radius=(0.02*r200m.value,2.0*r200m.value), specific_angular_momentum_y=(-2.5e5,2.5e5)))
+                                 extrema=dict(radius=(0.02*r200m.value,2.0*r200m.value), specific_angular_momentum_y=(-2.5e4,2.5e4)))
     profile_specific_angular_momentum_z = yt.create_profile( data_source=sphere,
                                  bin_fields=["radius", "specific_angular_momentum_z"],
                                  fields=fields_total,
@@ -265,7 +265,7 @@ while i_file < len(ts):
                                  units=dict(radius="kpc",specific_angular_momentum_z="kpc*km/s"),
                                  logs=dict(radius=True,specific_angular_momentum_z=False),
                                  weight_field=None,
-                                 extrema=dict(radius=(0.02*r200m.value,2.0*r200m.value), specific_angular_momentum_z=(-2.5e5,2.5e5)))
+                                 extrema=dict(radius=(0.02*r200m.value,2.0*r200m.value), specific_angular_momentum_z=(-2.5e4,2.5e4)))
 
 
     if drummond :
