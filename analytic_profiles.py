@@ -269,8 +269,8 @@ def grav_acc(r):
 def vc(r):
     return np.sqrt(grav_acc(r)*r)
 
-r_inner  = 0.01*rvir*kpc
-r_outer  = 2.0*rvir*kpc
+r_inner  = 0.1*rvir*kpc
+r_outer  = rvir*kpc
 radii    = np.linspace(r_inner,r_outer,100)
 vc_outer = np.sqrt(r_outer*grav_acc(r_outer))
 
@@ -285,9 +285,8 @@ class HSE:
         self.f_cs_HSE = f_cs_HSE
         self.f_cgm = f_cgm
 
-
         def find_rho_ta_HSE(Mass,r_inner, r_outer):
-            rho = lambda r: np.square(vc_outer / vc(r)) * (r/r_outer)**(-gamma*self.f_cs_HSE)
+            rho = lambda r: np.square(vc(r_outer) / vc(r)) * (r/r_outer)**(-gamma*self.f_cs_HSE)
             m_shell = lambda r: 4*np.pi*r**2 * rho(r)
             M_cgm = integrate.quad(m_shell,r_inner, r_outer)[0]
             return Mass/M_cgm
@@ -296,7 +295,7 @@ class HSE:
 
 
     def rho(self,r):
-        return self.rho_ta_HSE*np.square(vc_outer / vc(r)) * (r/r_outer)**(-gamma*self.f_cs_HSE)
+        return self.rho_ta_HSE*np.square(vc(rvir*kpc) / vc(r)) * (r/(rvir*kpc))**(-gamma*self.f_cs_HSE)
 
     def n(self,r):
         return self.rho(r)/mu/mp
@@ -318,7 +317,7 @@ class HSE:
 
     def M_enc(self,r):
         m_shell = lambda radius: 4*np.pi*radius**2 * self.rho(radius)
-        M_cgm = integrate.quad(m_shell,r_inner,r)[0]
+        M_cgm = integrate.quad(m_shell,0.1*rvir*kpc,r)[0]
         return M_cgm
 
 ################################################################################################################################################################
@@ -334,7 +333,7 @@ class HSE_turb:
         self.f_cgm = f_cgm
         self.Mach = Mach
         def find_rho_ta_HSE_turb(Mass,r_inner, r_outer):
-            rho = lambda r: np.square(vc_outer / vc(r)) * (r/r_outer)**(-gamma*self.f_cs_HSE_turb / (1.0 + self.Mach**2))
+            rho = lambda r: np.square(vc(r_outer) / vc(r)) * (r/r_outer)**(-gamma*self.f_cs_HSE_turb / (1.0 + self.Mach**2))
             m_shell = lambda r: 4*np.pi*r**2 * rho(r)
             M_cgm = integrate.quad(m_shell,r_inner, r_outer)[0]
             return Mass/M_cgm
@@ -343,7 +342,7 @@ class HSE_turb:
 
 
     def rho(self,r):
-        return self.rho_ta_HSE_turb*np.square(vc_outer / vc(r)) * (r/r_outer)**(-gamma*self.f_cs_HSE_turb/ (1.0 + self.Mach**2))
+        return self.rho_ta_HSE_turb*np.square(vc(rvir*kpc) / vc(r)) * (r/(rvir*kpc))**(-gamma*self.f_cs_HSE_turb/ (1.0 + self.Mach**2))
 
     def n(self,r):
         return self.rho(r)/mu/mp
@@ -365,7 +364,7 @@ class HSE_turb:
 
     def M_enc(self,r):
         m_shell = lambda radius: 4*np.pi*radius**2 * self.rho(radius)
-        M_cgm = integrate.quad(m_shell,r_inner,r)[0]
+        M_cgm = integrate.quad(m_shell,0.1*rvir*kpc,r)[0]
         return M_cgm
 
 ################################################################################################################################################################
@@ -382,7 +381,7 @@ class HSE_rot:
         Nr = 1000
         Ntheta=500
         r_edges = np.linspace(r_inner,r_outer,Nr+1)
-        theta_edges = np.linspace(0,np.pi,Ntheta+1)
+        theta_edges = np.arccos(np.linspace(-0.99,0.99,Ntheta+1))
         r_centers = r_edges[:-1] + 0.5*np.diff(r_edges)
         thetas = theta_edges[:-1] + 0.5*np.diff(theta_edges)
 
@@ -420,24 +419,45 @@ class HSE_rot:
         rho_HSE_rot = np.vectorize(rho_HSE_rot)
 
 
-
-        def integral_argument(r,theta):
-            return 2*np.pi*r**2 * np.sin(theta)* rho_HSE_rot(r,theta)
-        integral_argument=np.vectorize(integral_argument)
+        def integral_argument(r,costheta):
+            """
+            2 pi r^2 rho(r,theta) dr dcostheta
+            """
+            return 2*np.pi*r**2 * rho_HSE_rot(r,np.arccos(costheta))
 
         Nr = 100
         Ntheta = 50
         r_edges = np.linspace(0.1*rvir*kpc,rvir*kpc,Nr+1)
-        theta_edges = np.linspace(0,np.pi,Ntheta+1)
+        theta_edges = np.arccos(np.linspace(0.99,-0.99,Ntheta+1))
         r_centers = r_edges[:-1] + 0.5*np.diff(r_edges)
         thetas = theta_edges[:-1] + 0.5*np.diff(theta_edges)
-        mass = np.array([integral_argument(r_centers, t) for t in thetas])
-        self.n_ta=(self.f_cgm*10**lMhalo * Msun)/(np.sum(mass)*np.diff(thetas)[0]*np.diff(r_centers)[0]) 
+        mass = np.sum(np.sum(np.array([integral_argument(r_centers, np.cos(t))*np.diff(r_edges) for t in thetas]),axis=1)*np.diff(theta_edges))
+        self.n_ta=(self.f_cgm*10**lMhalo * Msun)/mass
         self.rho_ta = self.n_ta * mu*mp
+
+        # def integral_argument(r,theta):
+        #     """
+        #     2 pi r^2 rho(r,theta) dr dcostheta
+        #     """
+        #     return 2*np.pi*r**2 * rho_HSE_rot(r,theta)
+
+        # mass = integrate.dblquad(integral_argument, 0.1*rvir*kpc, 1.0*rvir*kpc, lambda x: -0.99, lambda x: 0.99)
+        # self.n_ta=(self.f_cgm*10**lMhalo * Msun)/mass
+        # self.rho_ta = self.n_ta * mu*mp
+
+        # Nr = 100
+        # Ntheta = 50
+        # r_edges = np.linspace(0.1*rvir*kpc,rvir*kpc,Nr+1)
+        # theta_edges = np.arccos(np.linspace(0.99,-0.99,Ntheta+1))
+        # r_centers = r_edges[:-1] + 0.5*np.diff(r_edges)
+        # thetas = theta_edges[:-1] + 0.5*np.diff(theta_edges)
+        # mass = np.array([integral_argument(r_centers, t) for t in thetas])
+        # self.n_ta=(self.f_cgm*10**lMhalo * Msun)/(np.sum(mass)*np.diff(thetas)[0]*np.diff(r_centers)[0]) 
+        # self.rho_ta = self.n_ta * mu*mp
 
     def rho(self,r,theta):
         R = r * np.sin(theta)
-        rho = mp * 0.62 
+        rho = self.rho_ta
         if R > self.r_circ:
             rho*= (vc(r)/vc(self.r0))**-2
             rho*= (r/self.r0)**(-gamma*self.f_cs_HSE_rot)
@@ -452,7 +472,7 @@ class HSE_rot:
     # self.rho = np.vectorize(self.rho)
 
     def average_rho(self,r):
-        return np.array([ self.n_ta*np.mean(np.array([self.rho(R,THETA) for THETA in np.arccos(np.linspace(0.01,0.99,100)) ])) for R in r])
+        return np.array([ np.mean(np.array([self.rho(R,THETA) for THETA in np.arccos(np.linspace(0.99,-0.99,100)) ])) for R in r])
 
     def n(self,r):
         return self.average_rho(r)/mu/mp
@@ -480,7 +500,7 @@ class HSE_rot:
             return vc(r)
 
     def average_v_phi(self,r):
-        return np.mean(np.array([self.v_phi(r,THETA) for THETA in np.arccos(np.linspace(0.01,0.99,100))]))
+        return np.mean(np.array([self.v_phi(r,THETA) for THETA in np.arccos(np.linspace(-0.99,0.99,100))]))
 
 
 ################################################################################################################################################################
@@ -613,6 +633,11 @@ precipitate_halo = precipitate(10.0,0.05*mu*mp*vc(rvir*kpc)**2/kb)   #    tcoolt
 
 
 
+
+r_inner  = 0.05*rvir*kpc
+r_outer  = 2.0*rvir*kpc
+radii    = np.linspace(r_inner,r_outer,100)
+vc_outer = np.sqrt(r_outer*grav_acc(r_outer))
 
 
 
@@ -796,63 +821,5 @@ plt.clf()
 
 
 
-
-
-
-
-
-
-
-
-
-plot=plt.pcolormesh(data['r_r200m_profile'], data['number_density_bins'], 
-    (data['number_density_Mass']/np.sum(data['number_density_Mass'],axis=0)), 
-    norm=colors.LogNorm(vmin=1e-4), cmap='viridis')
-
-
-plt.plot(radii/(rvir*kpc), n_HSE(radii), color = 'k')
-plt.plot(radii/(rvir*kpc), n_HSE_turb(radii), color = 'k', ls='--')
-# plt.plot(radii/(rvir*kpc), n_HSE_rot(radii), color = 'k', ls='-.')
-plt.plot(rpre/(rvir*kpc), rho_precip(Tpre,rpre)/(mu*mp), color = 'k', ls='-.')
-
-cb = plt.colorbar(plot)
-cb.set_label(r'Mass Fraction',rotation=270,fontsize=12,labelpad=15)
-cb.ax.minorticks_off()
-plt.xlim(2e-2, 2)
-plt.ylim(5e-6,1e-1)
-plt.yscale('log')
-plt.xscale('log')
-plt.ylabel(r'$n\,[\mathrm{cm}^{-3}]$')
-plt.xlabel(r'$r/r_{\rm vir}$')
-plt.title(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$')
-plt.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
-plt.savefig('../Illustris/number_density_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
-plt.clf()
-
-
-
-
-plot=plt.pcolormesh(data['r_r200m_profile'], data['pressure_bins'], 
-    (data['pressure_Volume']/np.sum(data['pressure_Volume'],axis=0)), 
-    norm=colors.LogNorm(vmin=1e-4), cmap='plasma')
-
-
-plt.plot(radii/(rvir*kpc), P_HSE(radii), color = 'k')
-plt.plot(radii/(rvir*kpc), P_HSE_turb(radii), color = 'k', ls='--')
-plt.plot(radii/(rvir*kpc), P_HSE_rot(radii), color = 'k', ls='-.')
-
-cb = plt.colorbar(plot)
-cb.set_label(r'Volume Fraction',rotation=270,fontsize=12,labelpad=15)
-cb.ax.minorticks_off()
-plt.xlim(2e-2, 2)
-plt.ylim(5e-6,1e-1)
-plt.yscale('log')
-plt.xscale('log')
-plt.ylabel(r'$P\,[\mathrm{K\,cm}^{-3}]$')
-plt.xlabel(r'$r/r_{\rm vir}$')
-plt.title(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$')
-plt.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
-plt.savefig('../Illustris/pressure_Volume_'+fn+'.png',bbox_inches='tight',dpi=200)
-plt.clf()
 
 
