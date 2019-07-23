@@ -622,8 +622,8 @@ class precipitate:
 line_colors_VW = ['k', "#003366", "#003300", "#3333cc", "#339900", "#66a61e"]
 
 
-fn="50_M12subhalos_snap099_TNG100"
-# fn="M12_s529643_snap099_TNG100"
+# fn="50_M12subhalos_snap099_TNG100"
+fn="M12_s529643_snap099_TNG100"
 data = np.load('./data/simulations/'+fn+'.npz')
 
 HSE_halo = HSE(2.0,0.05)                                              #    f_cs_HSE = 2.0, f_cgm=0.1):
@@ -652,8 +652,8 @@ dvphi = np.diff(data['azimuthal_velocity_bins'])
 fig,ax = plt.subplots(1,1)
 
 plot=ax.pcolormesh(data['r_r200m_profile'], data['temperature_bins'], 
-    (data['temperature_Volume']/np.sum(data['temperature_Volume'],axis=0))/dlogT/dlogr, 
-    norm=colors.LogNorm(vmin=1, vmax =300), cmap='plasma')
+    (data['temperature_Volume']/np.sum(data['temperature_Volume']))/dlogT/dlogr, 
+    norm=colors.LogNorm(vmin=1e-2, vmax =3), cmap='plasma')
 
 ax.plot(radii/(rvir*kpc), HSE_halo.T(radii),                                color=cm.viridis(0.0), lw=2.5, label='HSE')
 ax.plot(radii/(rvir*kpc), cooling_flow_halo.T(radii), dashes=[1,2],         color=cm.viridis(0.2), lw=2.5, label='Cooling Flow'),
@@ -682,7 +682,7 @@ fig,ax = plt.subplots(1,1)
 
 plot=ax.pcolormesh(data['r_r200m_profile'], data['temperature_bins'], 
     (data['temperature_Mass']/(fb*Mhalo/Msun)/dlogT/dlogr), 
-    norm=colors.LogNorm(vmin=1e-1, vmax=50), cmap='viridis')
+    norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
 
 ax.plot(radii/(rvir*kpc), HSE_halo.T(radii),                                color=cm.plasma(0.0), lw=2.5, label='HSE')
 ax.plot(radii/(rvir*kpc), cooling_flow_halo.T(radii), dashes=[1,2],         color=cm.plasma(0.2), lw=2.5, label='Cooling Flow'),
@@ -713,8 +713,8 @@ plt.close('all')
 fig,ax = plt.subplots(1,1)
 
 plot=ax.pcolormesh(data['r_r200m_profile'], data['number_density_bins'], 
-    (data['number_density_Volume']/np.sum(data['number_density_Volume'],axis=0))/dlogn/dlogr, 
-    norm=colors.LogNorm(vmin=1, vmax =300), cmap='plasma')
+    (data['number_density_Volume']/np.sum(data['number_density_Volume']))/dlogn/dlogr, 
+    norm=colors.LogNorm(vmin=1e-2, vmax =3), cmap='plasma')
 
 ax.plot(radii/(rvir*kpc), HSE_halo.n(radii),                                color=cm.viridis(0.0), lw=2.5, label='HSE')
 ax.plot(radii/(rvir*kpc), cooling_flow_halo.n(radii), dashes=[1,2],         color=cm.viridis(0.2), lw=2.5, label='Cooling Flow'),
@@ -744,7 +744,7 @@ fig,ax = plt.subplots(1,1)
 
 plot=ax.pcolormesh(data['r_r200m_profile'], data['number_density_bins'], 
     (data['number_density_Mass']/(fb*Mhalo/Msun)/dlogn/dlogr), 
-    norm=colors.LogNorm(vmin=1e-1, vmax=50), cmap='viridis')
+    norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
 
 ax.plot(radii/(rvir*kpc), HSE_halo.n(radii),                                color=cm.plasma(0.0), lw=2.5, label='HSE')
 ax.plot(radii/(rvir*kpc), cooling_flow_halo.n(radii), dashes=[1,2],         color=cm.plasma(0.2), lw=2.5, label='Cooling Flow'),
@@ -774,8 +774,8 @@ plt.close('all')
 
 fig,ax = plt.subplots(1,1)
 plot=ax.pcolormesh(data['r_r200m_profile'], data['pressure_bins'], 
-    (data['pressure_Volume']/np.sum(data['pressure_Volume'],axis=0))/dlogP/dlogr, 
-    norm=colors.LogNorm(vmin=1, vmax =300), cmap='plasma')
+    (data['pressure_Volume']/np.sum(data['pressure_Volume']))/dlogP/dlogr, 
+    norm=colors.LogNorm(vmin=1e-2, vmax =3), cmap='plasma')
 
 ax.plot(radii/(rvir*kpc), HSE_halo.P(radii),                                color=cm.viridis(0.0), lw=2.5, label='HSE')
 ax.plot(radii/(rvir*kpc), cooling_flow_halo.P(radii), dashes=[1,2],         color=cm.viridis(0.2), lw=2.5, label='Cooling Flow'),
@@ -803,7 +803,7 @@ plt.clf()
 fig,ax = plt.subplots(1,1)
 plot=ax.pcolormesh(data['r_r200m_profile'], data['pressure_bins'], 
     (data['pressure_Mass']/(fb*Mhalo/Msun)/dlogP/dlogr), 
-    norm=colors.LogNorm(vmin=1e-1, vmax=50), cmap='viridis')
+    norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
 
 ax.plot(radii/(rvir*kpc), HSE_halo.P(radii),                                color=cm.plasma(0.0), lw=2.5, label='HSE')
 ax.plot(radii/(rvir*kpc), cooling_flow_halo.P(radii), dashes=[1,2],         color=cm.plasma(0.2), lw=2.5, label='Cooling Flow'),
@@ -831,8 +831,8 @@ plt.close('all')
 
 fig,ax = plt.subplots(1,1)
 plot=ax.pcolormesh(data['r_r200m_profile'], data['entropy_bins'], 
-    (data['entropy_Volume']/np.sum(data['entropy_Volume'],axis=0))/dlogK/dlogr, 
-    norm=colors.LogNorm(vmin=1, vmax =300), cmap='plasma')
+    (data['entropy_Volume']/np.sum(data['entropy_Volume']))/dlogK/dlogr, 
+    norm=colors.LogNorm(vmin=1e-2, vmax =3), cmap='plasma')
 
 ax.plot(radii/(rvir*kpc), HSE_halo.K(radii),                                color=cm.viridis(0.0), lw=2.5, label='HSE')
 ax.plot(radii/(rvir*kpc), cooling_flow_halo.K(radii), dashes=[1,2],         color=cm.viridis(0.2), lw=2.5, label='Cooling Flow'),
@@ -860,7 +860,7 @@ plt.clf()
 fig,ax = plt.subplots(1,1)
 plot=ax.pcolormesh(data['r_r200m_profile'], data['entropy_bins'], 
     (data['entropy_Mass']/(fb*Mhalo/Msun)/dlogK/dlogr), 
-    norm=colors.LogNorm(vmin=1e-1, vmax=50), cmap='viridis')
+    norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
 
 ax.plot(radii/(rvir*kpc), HSE_halo.K(radii),                                color=cm.plasma(0.0), lw=2.5, label='HSE')
 ax.plot(radii/(rvir*kpc), cooling_flow_halo.K(radii), dashes=[1,2],         color=cm.plasma(0.2), lw=2.5, label='Cooling Flow'),
@@ -890,7 +890,7 @@ plt.close('all')
 
 fig,ax = plt.subplots(1,1)
 plot=ax.pcolormesh(data['r_r200m_profile'], data['radial_velocity_bins'], 
-    (((data['radial_velocity_Volume']/np.sum(data['radial_velocity_Volume'],axis=0))).T/dvr).T /dlogr, 
+    (((data['radial_velocity_Volume']/np.sum(data['radial_velocity_Volume']))).T/dvr).T /dlogr, 
     norm=colors.LogNorm(vmin=1e-3,vmax=3), cmap='plasma')
 
 ax.plot(radii/(rvir*kpc), cooling_flow_halo.vr(radii)/1e5, dashes=[1,2],         color=cm.viridis(0.2), lw=2.5, label='Cooling Flow'),
@@ -939,7 +939,7 @@ plt.close('all')
 
 fig,ax = plt.subplots(1,1)
 plot=ax.pcolormesh(data['r_r200m_profile'], data['azimuthal_velocity_bins'], 
-    (((data['azimuthal_velocity_Volume']/np.sum(data['azimuthal_velocity_Volume'],axis=0))).T/dvphi).T /dlogr, 
+    (((data['azimuthal_velocity_Volume']/np.sum(data['azimuthal_velocity_Volume']))).T/dvphi).T /dlogr, 
     norm=colors.LogNorm(vmin=1e-3,vmax=3), cmap='plasma')
 
 ax.plot(radii/(rvir*kpc), HSE_rot_halo.average_v_phi(radii)/1e5,  dashes=[4,2,1,2],     color=cm.viridis(0.6), lw=2.5, label='HSE w/ rot. '+r'$\lambda=0.05$')
@@ -1178,7 +1178,7 @@ fig, axarr = plt.subplots(2,1,sharex=True)
 
 plot=axarr[0].pcolormesh(data['r_r200m_profile'], data['temperature_bins'], 
     (data['temperature_Mass']/(fb*Mhalo/Msun)/dlogT/dlogr), 
-    norm=colors.LogNorm(vmin=1e-1, vmax=50), cmap='viridis')
+    norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
 
 HSE_halo = HSE(4.0,0.05)                                              
 axarr[0].plot(radii/(rvir*kpc), HSE_halo.T(radii), color=cm.plasma(0.0), lw=2.5, label=r'$\frac{v_c^2}{c_s^2} = 4$')
@@ -1204,7 +1204,7 @@ axarr[0].grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
 
 plot=axarr[1].pcolormesh(data['r_r200m_profile'], data['number_density_bins'], 
     (data['number_density_Mass']/(fb*Mhalo/Msun)/dlogn/dlogr), 
-    norm=colors.LogNorm(vmin=1e-1, vmax=50), cmap='viridis')
+    norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
 
 HSE_halo = HSE(4.0,0.05)                                              
 axarr[1].plot(radii/(rvir*kpc), HSE_halo.n(radii), color=cm.plasma(0.0), lw=2.5, label=r'$\frac{v_c^2}{c_s^2} = 4$')
@@ -1239,7 +1239,7 @@ fig, axarr = plt.subplots(2,1,sharex=True)
 
 plot=axarr[0].pcolormesh(data['r_r200m_profile'], data['temperature_bins'], 
     (data['temperature_Mass']/(fb*Mhalo/Msun)/dlogT/dlogr), 
-    norm=colors.LogNorm(vmin=1e-1, vmax=50), cmap='viridis')
+    norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
 
 HSE_halo = HSE(2.0,0.01)                                              
 axarr[0].plot(radii/(rvir*kpc), HSE_halo.T(radii), color=cm.plasma(0.0), lw=2.5, label=r'$\frac{M_{\rm CGM}}{M_{\rm halo}} = 0.01$')
@@ -1265,7 +1265,7 @@ axarr[0].grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
 
 plot=axarr[1].pcolormesh(data['r_r200m_profile'], data['number_density_bins'], 
     (data['number_density_Mass']/(fb*Mhalo/Msun)/dlogn/dlogr), 
-    norm=colors.LogNorm(vmin=1e-1, vmax=50), cmap='viridis')
+    norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
 
 HSE_halo = HSE(2.0,0.01)                                              
 axarr[1].plot(radii/(rvir*kpc), HSE_halo.n(radii), color=cm.plasma(0.0), lw=2.5, label=r'$\frac{M_{\rm CGM}}{M_{\rm halo}} = 0.01$')
@@ -1311,7 +1311,7 @@ fig, axarr = plt.subplots(2,1,sharex=True)
 
 plot=axarr[0].pcolormesh(data['r_r200m_profile'], data['temperature_bins'], 
     (data['temperature_Mass']/(fb*Mhalo/Msun)/dlogT/dlogr), 
-    norm=colors.LogNorm(vmin=1e-1, vmax=50), cmap='viridis')
+    norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
 
 HSE_rot_halo = HSE_rot(2.0,0.05,0.01)
 axarr[0].plot(radii/(rvir*kpc), HSE_rot_halo.T(radii), color=cm.plasma(0.0), lw=2.5, label=r'$\lambda = 0.01$')
@@ -1337,7 +1337,7 @@ axarr[0].grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
 
 plot=axarr[1].pcolormesh(data['r_r200m_profile'], data['number_density_bins'], 
     (data['number_density_Mass']/(fb*Mhalo/Msun)/dlogn/dlogr), 
-    norm=colors.LogNorm(vmin=1e-1, vmax=50), cmap='viridis')
+    norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
 
 HSE_rot_halo = HSE_rot(2.0,0.05,0.01)
 axarr[1].plot(radii/(rvir*kpc), HSE_rot_halo.n(radii), color=cm.plasma(0.0), lw=2.5, label=r'$\lambda = 0.01$')
@@ -1386,7 +1386,7 @@ fig, axarr = plt.subplots(2,1,sharex=True)
 
 plot=axarr[0].pcolormesh(data['r_r200m_profile'], data['temperature_bins'], 
     (data['temperature_Mass']/(fb*Mhalo/Msun)/dlogT/dlogr), 
-    norm=colors.LogNorm(vmin=1e-1, vmax=50), cmap='viridis')
+    norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
 
 cooling_flow_halo = cooling_flow(1.5,-0.5*Msun/yr)
 axarr[0].plot(radii/(rvir*kpc), cooling_flow_halo.T(radii), color=cm.plasma(0.0), lw=2.5, label=r'$\dot{M} = 0.5 M_\odot/{\rm yr}$')
@@ -1412,7 +1412,7 @@ axarr[0].grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
 
 plot=axarr[1].pcolormesh(data['r_r200m_profile'], data['number_density_bins'], 
     (data['number_density_Mass']/(fb*Mhalo/Msun)/dlogn/dlogr), 
-    norm=colors.LogNorm(vmin=1e-1, vmax=50), cmap='viridis')
+    norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
 
 cooling_flow_halo = cooling_flow(1.5,-0.5*Msun/yr)
 axarr[1].plot(radii/(rvir*kpc), cooling_flow_halo.n(radii), color=cm.plasma(0.0), lw=2.5, label=r'$\dot{M} = 0.5 M_\odot/{\rm yr}$')
@@ -1448,7 +1448,7 @@ fig, axarr = plt.subplots(2,1,sharex=True)
 
 plot=axarr[0].pcolormesh(data['r_r200m_profile'], data['temperature_bins'], 
     (data['temperature_Mass']/(fb*Mhalo/Msun)/dlogT/dlogr), 
-    norm=colors.LogNorm(vmin=1e-1, vmax=50), cmap='viridis')
+    norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
 
 cooling_flow_halo = cooling_flow(4.0,-2.0*Msun/yr)
 axarr[0].plot(radii/(rvir*kpc), cooling_flow_halo.T(radii), color=cm.plasma(0.0), lw=2.5, label=r'$\frac{v_c^2}{c_s^2}=4.0$')
@@ -1474,7 +1474,7 @@ axarr[0].grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
 
 plot=axarr[1].pcolormesh(data['r_r200m_profile'], data['number_density_bins'], 
     (data['number_density_Mass']/(fb*Mhalo/Msun)/dlogn/dlogr), 
-    norm=colors.LogNorm(vmin=1e-1, vmax=50), cmap='viridis')
+    norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
 
 cooling_flow_halo = cooling_flow(4.0,-2.0*Msun/yr)
 axarr[1].plot(radii/(rvir*kpc), cooling_flow_halo.n(radii), color=cm.plasma(0.0), lw=2.5, label=r'$\frac{v_c^2}{c_s^2}=4.0$')
@@ -1529,7 +1529,7 @@ fig, axarr = plt.subplots(2,1,sharex=True)
 
 plot=axarr[0].pcolormesh(data['r_r200m_profile'], data['temperature_bins'], 
     (data['temperature_Mass']/(fb*Mhalo/Msun)/dlogT/dlogr), 
-    norm=colors.LogNorm(vmin=1e-1, vmax=50), cmap='viridis')
+    norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
 
 precipitate_halo = precipitate(1.0,0.05*mu*mp*vc(rvir*kpc)**2/kb)
 axarr[0].plot(radii/(rvir*kpc), precipitate_halo.T(radii), color=cm.plasma(0.0), lw=2.5, label=r'$\frac{t_{\rm cool}}{t_{\rm ff}}=1$')
@@ -1555,7 +1555,7 @@ axarr[0].grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
 
 plot=axarr[1].pcolormesh(data['r_r200m_profile'], data['number_density_bins'], 
     (data['number_density_Mass']/(fb*Mhalo/Msun)/dlogn/dlogr), 
-    norm=colors.LogNorm(vmin=1e-1, vmax=50), cmap='viridis')
+    norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
 
 precipitate_halo = precipitate(1.0 ,0.05*mu*mp*vc(rvir*kpc)**2/kb)
 axarr[1].plot(radii/(rvir*kpc), precipitate_halo.n(radii), color=cm.plasma(0.0), lw=2.5, label=r'$\frac{t_{\rm cool}}{t_{\rm ff}}=1$')
@@ -1591,7 +1591,7 @@ fig, axarr = plt.subplots(2,1,sharex=True)
 
 plot=axarr[0].pcolormesh(data['r_r200m_profile'], data['temperature_bins'], 
     (data['temperature_Mass']/(fb*Mhalo/Msun)/dlogT/dlogr), 
-    norm=colors.LogNorm(vmin=1e-1, vmax=50), cmap='viridis')
+    norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
 
 precipitate_halo = precipitate(10.0,0.05*mu*mp*vc(rvir*kpc)**2/kb)
 axarr[0].plot(radii/(rvir*kpc), precipitate_halo.T(radii), color=cm.plasma(0.3), lw=2.5, label=r'$T_{\rm out}=\frac{1}{20} \frac{\mu m_p}{k_B} v_{\rm vir}^2 $')
@@ -1615,7 +1615,7 @@ axarr[0].grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
 
 plot=axarr[1].pcolormesh(data['r_r200m_profile'], data['number_density_bins'], 
     (data['number_density_Mass']/(fb*Mhalo/Msun)/dlogn/dlogr), 
-    norm=colors.LogNorm(vmin=1e-1, vmax=50), cmap='viridis')
+    norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
 
 precipitate_halo = precipitate(10.0 ,0.05*mu*mp*vc(rvir*kpc)**2/kb)
 axarr[1].plot(radii/(rvir*kpc), precipitate_halo.n(radii), color=cm.plasma(0.3), lw=2.5, label=r'$T_{\rm out}=\frac{1}{20} \frac{\mu m_p}{k_B} v_{\rm vir}^2 $')
@@ -1652,7 +1652,7 @@ fig, axarr = plt.subplots(2,1,sharex=True)
 
 plot=axarr[0].pcolormesh(data['r_r200m_profile'], data['temperature_bins'], 
     (data['temperature_Mass']/(fb*Mhalo/Msun)/dlogT/dlogr), 
-    norm=colors.LogNorm(vmin=1e-1, vmax=50), cmap='viridis')
+    norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
 
 precipitate_halo = precipitate(3.0,0.05*mu*mp*vc(rvir*kpc)**2/kb)
 axarr[0].plot(radii/(rvir*kpc), precipitate_halo.T(radii), color=cm.plasma(0.3), lw=2.5, label=r'$T_{\rm out}=\frac{1}{20} \frac{\mu m_p}{k_B} v_{\rm vir}^2 $')
@@ -1676,7 +1676,7 @@ axarr[0].grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
 
 plot=axarr[1].pcolormesh(data['r_r200m_profile'], data['number_density_bins'], 
     (data['number_density_Mass']/(fb*Mhalo/Msun)/dlogn/dlogr), 
-    norm=colors.LogNorm(vmin=1e-1, vmax=50), cmap='viridis')
+    norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
 
 precipitate_halo = precipitate(3.0 ,0.05*mu*mp*vc(rvir*kpc)**2/kb)
 axarr[1].plot(radii/(rvir*kpc), precipitate_halo.n(radii), color=cm.plasma(0.3), lw=2.5, label=r'$T_{\rm out}=\frac{1}{20} \frac{\mu m_p}{k_B} v_{\rm vir}^2 $')
