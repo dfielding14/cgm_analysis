@@ -21,6 +21,7 @@ import scipy
 from matplotlib import rc
 from matplotlib import cm
 import matplotlib.colors as colors
+from matplotlib.colors import ListedColormap
 from scipy.integrate import odeint
 import scipy, numpy as np
 from scipy import integrate, interpolate
@@ -64,7 +65,7 @@ def c_DuttonMaccio14(lMhalo, z=0):  #table 3 appropriate for Mvir
     zs = np.array([0.,0.5,1.,2.])
     cs = np.array([c_func(lMhalo) for c_func in (c_z0,c_z05,c_z1,c_z2)])
     return np.interp(z, zs, cs)
-def Behroozi_params(z, parameter_file='/Users/dfielding/Dropbox (Simons Foundation)/Research/Tables/umachine-edr/data/smhm/params/smhm_true_med_cen_params.txt'):
+def Behroozi_params(z, parameter_file='./data/smhm_true_med_cen_params.txt'):
     param_file = open(parameter_file, "r")
     param_list = []
     allparams = []
@@ -101,7 +102,7 @@ def Behroozi_params(z, parameter_file='/Users/dfielding/Dropbox (Simons Foundati
     sms = zparams['sm_0'] - log(10**(-zparams['alpha']*dms) + 10**(-zparams['beta']*dms)) + zparams['gamma']*np.e**(-0.5*(dm2s*dm2s))
     return ms,sms
 
-def MgalaxyBehroozi(lMhalo, z, parameter_file='/Users/dfielding/Dropbox (Simons Foundation)/Research/Tables/umachine-edr/data/smhm/params/smhm_true_med_cen_params.txt'):
+def MgalaxyBehroozi(lMhalo, z, parameter_file='./data/smhm_true_med_cen_params.txt'):
     ms,sms = Behroozi_params(z,parameter_file)
     lMstar = scipy.interpolate.interp1d(ms, sms, fill_value='extrapolate')(lMhalo)
     return 10.**lMstar*un.Msun
@@ -165,19 +166,19 @@ class DK14_with_Galaxy:
 
 log_nHbins = np.arange(-8.,0.1,0.1)
 log_Tbins  = np.array([ 2.        ,  2.01990533,  2.03977084,  2.05967712,  2.07957911,  2.09947348,  2.11935496,  2.13924932,  2.15911579,  2.17903447,  2.19890428,  2.21879792,  2.23869824,  2.25858951,  2.27847934,  2.29837275,  2.31825113,  2.33815765,  2.35804915,  2.37794328,  2.39781833,  2.41772079,  2.437608  ,  2.45750332,  2.47739625,  2.49728918,  2.51716948,  2.53706312,  2.55695343,  2.57684803,  2.59674001,  2.61663294,  2.636518  ,  2.65641451,  2.67630029,  2.69619918,  2.71608686,  2.73598194,  2.75586724,  2.77576327,  2.79565072,  2.81554461,  2.83543682,  2.85532522,  2.87521768,  2.89510751,  2.91499853,  2.93489218,  2.95478272,  2.97467279,  2.99456787,  3.01443648,  3.03434777,  3.05422997,  3.07412124,  3.09401655,  3.11390996,  3.13379431,  3.15369296,  3.17359424,  3.19348645,  3.2133584 ,  3.2332499 ,  3.25314403,  3.27304769,  3.29294252,  3.31283307,  3.33272123,  3.35260701,  3.37250686,  3.39239788,  3.41227579,  3.43216729,  3.45206261,  3.47195148,  3.49185181,  3.51173639,  3.53163218,  3.55152321,  3.57141757,  3.59130955,  3.61119199,  3.6310885 ,  3.65097737,  3.6708672 ,  3.690763  ,  3.71065044,  3.73054814,  3.75043893,  3.770329  ,  3.79022193,  3.81011152,  3.82999802,  3.84989214,  3.86978292,  3.88967705,  3.90956664,  3.92945981,  3.94935107,  3.96923876,  3.98913383,  4.00902557,  4.02889633,  4.04879141,  4.06870508,  4.08859682,  4.10846376,  4.12836695,  4.14826345,  4.16814375,  4.18805599,  4.20793056,  4.22783518,  4.24772787,  4.2676177 ,  4.2875104 ,  4.30738926,  4.32727718,  4.34717369,  4.3670578 ,  4.38696241,  4.40684652,  4.42673874,  4.44663048,  4.46652651,  4.48641634,  4.50630188,  4.52619696,  4.54608583,  4.56597757,  4.58586645,  4.60575724,  4.62565184,  4.64554977,  4.66544008,  4.68532944,  4.70522213,  4.72511101,  4.74500465,  4.76489305,  4.78478146,  4.80467749,  4.82456827,  4.84445858,  4.8643508 ,  4.88424015,  4.90413094,  4.92402601,  4.94391489,  4.96380663,  4.98369837,  5.00358963,  5.02349949,  5.04336214,  5.06325817,  5.08314419,  5.10305071,  5.12293625,  5.14282751,  5.16271353,  5.18261433,  5.2025156 ,  5.22240448,  5.24229288,  5.26216602,  5.28207827,  5.30196285,  5.32184696,  5.3417511 ,  5.3616333 ,  5.38153028,  5.40141773,  5.42130756,  5.44119215,  5.46109295,  5.48098373,  5.50086737,  5.52075863,  5.54065466,  5.5605402 ,  5.58043432,  5.60033035,  5.62021923,  5.64011335,  5.66000175,  5.67989111,  5.69978571,  5.71967936,  5.73956442,  5.75945616,  5.77935123,  5.79924393,  5.81913567,  5.8390255 ,  5.85891581,  5.87880898,  5.89869785,  5.91859102,  5.9384799 ,  5.95837259,  5.9782629 ,  5.99815464,  6.01803446,  6.03794432,  6.05781841,  6.07773113,  6.09760427,  6.11750317,  6.13738585,  6.1572752 ,  6.1771903 ,  6.19706011,  6.21695709,  6.23683929,  6.256742  ,  6.27662277,  6.29653358,  6.31641054,  6.33629942,  6.35619783,  6.37608385,  6.39597273,  6.41587448,  6.43576479,  6.45565176,  6.47554064,  6.49543333,  6.51533079,  6.53521824,  6.55510664,  6.57500315,  6.59488964,  6.61478138,  6.63467884,  6.65457106,  6.67445707,  6.69435072,  6.7142458 ,  6.73413563,  6.75402689,  6.77391815,  6.79380417,  6.81370115,  6.83359337,  6.85347939,  6.87337303,  6.89326239,  6.91315651,  6.93304682,  6.9529376 ,  6.97282743,  6.99272156,  7.01262617,  7.03249788,  7.05238628,  7.07228661,  7.09219408,  7.11206865,  7.13197136,  7.15185976,  7.17175579,  7.19164658,  7.21152115,  7.23141861,  7.25129747,  7.27119064,  7.29108   ,  7.31099033,  7.33088017,  7.35077095,  7.37066126,  7.39054632,  7.41043997,  7.43033314,  7.4502182 ,  7.47011614,  7.49000072,  7.50990105,  7.52978945,  7.54967737,  7.56957293,  7.58945799,  7.60934877,  7.62924623,  7.64913034,  7.66902828,  7.68891811,  7.70881176,  7.72870255,  7.74859095,  7.76848269,  7.78837347,  7.80826521,  7.82815695,  7.84804726,  7.86793852,  7.88783121,  7.90772295,  7.92761135,  7.94750214,  7.9673934 ,  7.98728609,  8.00719261,  8.02706432,  8.04696274,  8.0668478 ,  8.08675098,  8.10663319,  8.12652111,  8.14640713,  8.16631126,  8.18619347,  8.20609665,  8.22598076,  8.24588299,  8.26576138,  8.28564739,  8.30554485,  8.32543373,  8.34533405,  8.36522579,  8.38510513,  8.4050045 ,  8.42489815,  8.4447937 ,  8.46468353,  8.4845705 ,  8.50445747,  8.52435684,  8.54424191,  8.56413364,  8.58402538,  8.60391235,  8.62380695,  8.64369965,  8.66358757,  8.68347931,  8.70337772,  8.7232666 ,  8.74315643,  8.76304626,  8.782938  ,  8.80282879,  8.82272339,  8.84261513,  8.86250687,  8.88239384,  8.90228558,  8.92218018,  8.94206715,  8.96196175,  8.98185062])
-redshifts  = np.array([ 0.   ,  0.049,  0.101,  0.155,  0.211,  0.271,  0.333,  0.399,  0.468,  0.54 ,  0.615,  0.695,  0.778,  0.865,  0.957,  1.053,  1.154,  1.259,  1.37 ,  1.487,  1.609,  1.737,  1.871,  2.013,  2.16 ,  2.316,  2.479,  2.649,  2.829,  3.017,  3.214,  3.421,  3.638,  3.866,  4.105,  4.356,  4.619,  4.895,  5.184,  5.488,  5.807,  6.141,  6.492,  6.859,  7.246,  7.65 ,  8.075,  8.521,  8.989])
+redshifts  = np.array([0.000,0.049,0.101,0.155,0.211,0.271,0.333,0.399,0.468,0.540,0.615,0.695,0.778,0.957,1.154,1.370,1.609,1.871,2.013,2.160,2.479,2.829,3.017,3.214,3.638,4.356,4.895,5.184,5.807,6.141,6.859,7.650,8.521])
 """
 Cooling curve as a function of density, temperature, metallicity, redshift
 """
 Zs          = np.linspace(0,2,10)
-file = glob.glob('/Users/dfielding/Dropbox (Simons Foundation)/Research/Tables/CoolingTables/Lambda_tab.npz')
+file = glob.glob('./data/Cooling_Tables/Lambda_tab.npz')
 if len(file) >0:
     a = np.load(file[0])
     Lambda_tab = a['Lambda_tab']
     Lambda      = interpolate.RegularGridInterpolator((log_nHbins,log_Tbins,Zs,redshifts), Lambda_tab, bounds_error=False, fill_value=0)
     a.close()
 else:
-    files = np.sort(glob.glob('/Users/dfielding/Dropbox (Simons Foundation)/Research/Tables/CoolingTables/z_*hdf5'))
+    files = np.sort(glob.glob('./data/Cooling_Tables/z_*hdf5'))
     redshifts = np.array([float(f[-10:-5]) for f in files])
     HHeCooling = {}
     ZCooling   = {}
@@ -195,7 +196,7 @@ else:
         ZCooling[redshifts[i]]   = interpolate.RectBivariateSpline(log_Tbins,log_nHbins, Cooling_Total_Metals)
         f.close()
     Lambda_tab  = np.array([[[[HHeCooling[zz].ev(lT,ln)+Z*ZCooling[zz].ev(lT,ln) for zz in redshifts] for Z in Zs] for lT in log_Tbins] for ln in log_nHbins])
-    np.savez('Lambda_tab.npz', Lambda_tab=Lambda_tab, redshifts=redshifts, Zs=Zs, log_Tbins=log_Tbins, log_nHbins=log_nHbins)
+    np.savez('./data/Cooling_Tables/Lambda_tab.npz', Lambda_tab=Lambda_tab, redshifts=redshifts, Zs=Zs, log_Tbins=log_Tbins, log_nHbins=log_nHbins)
     Lambda      = interpolate.RegularGridInterpolator((log_nHbins,log_Tbins,Zs,redshifts), Lambda_tab, bounds_error=False, fill_value=0)
 print 'interpolated lambda'
 
@@ -623,7 +624,7 @@ line_colors_VW = ['k', "#003366", "#003300", "#3333cc", "#339900", "#66a61e"]
 
 fn="50_M12subhalos_snap099_TNG100"
 # fn="M12_s529643_snap099_TNG100"
-data = np.load('../Illustris/'+fn+'.npz')
+data = np.load('./data/simulations/'+fn+'.npz')
 
 HSE_halo = HSE(2.0,0.05)                                              #    f_cs_HSE = 2.0, f_cgm=0.1):
 HSE_turb_halo = HSE_turb(2.0,0.05,0.5)                                #    f_cs_HSE_turb = 2.0, f_cgm=0.1, Mach=0.5):
@@ -673,7 +674,7 @@ ax.legend(loc='upper right', fontsize=8,ncol=2,columnspacing=-3, handlelength=3.
 ax.set_title(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$')
 ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
 fig.set_size_inches(5,3)
-plt.savefig('../Illustris/temperature_Volume_'+fn+'.png',bbox_inches='tight',dpi=200)
+plt.savefig('./plots/temperature_Volume_'+fn+'.png',bbox_inches='tight',dpi=200)
 plt.clf()
 
 
@@ -702,7 +703,7 @@ ax.legend(loc='upper right', fontsize=8,ncol=2,columnspacing=-3, handlelength=3.
 ax.set_title(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$')
 ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
 fig.set_size_inches(5,3)
-plt.savefig('../Illustris/temperature_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
+plt.savefig('./plots/temperature_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
 plt.clf()
 plt.close('all')
 
@@ -734,7 +735,7 @@ ax.legend(loc='upper right', fontsize=8,ncol=2,columnspacing=-3, handlelength=3.
 ax.set_title(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$')
 ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
 fig.set_size_inches(5,3)
-plt.savefig('../Illustris/number_density_Volume_'+fn+'.png',bbox_inches='tight',dpi=200)
+plt.savefig('./plots/number_density_Volume_'+fn+'.png',bbox_inches='tight',dpi=200)
 plt.clf()
 
 
@@ -764,7 +765,7 @@ ax.legend(loc='upper right', fontsize=8,ncol=2,columnspacing=-3, handlelength=3.
 ax.set_title(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$')
 ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
 fig.set_size_inches(5,3)
-plt.savefig('../Illustris/number_density_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
+plt.savefig('./plots/number_density_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
 plt.clf()
 plt.close('all')
 
@@ -795,7 +796,7 @@ ax.legend(loc='upper right', fontsize=8,ncol=2,columnspacing=-3, handlelength=3.
 ax.set_title(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$')
 ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
 fig.set_size_inches(5,3)
-plt.savefig('../Illustris/pressure_Volume_'+fn+'.png',bbox_inches='tight',dpi=200)
+plt.savefig('./plots/pressure_Volume_'+fn+'.png',bbox_inches='tight',dpi=200)
 plt.clf()
 
 
@@ -823,7 +824,7 @@ ax.legend(loc='upper right', fontsize=8,ncol=2,columnspacing=-3, handlelength=3.
 ax.set_title(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$')
 ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
 fig.set_size_inches(5,3)
-plt.savefig('../Illustris/pressure_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
+plt.savefig('./plots/pressure_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
 plt.clf()
 plt.close('all')
 
@@ -852,7 +853,7 @@ ax.legend(loc='lower right', fontsize=8,ncol=1, handlelength=3.0)
 ax.set_title(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$')
 ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
 fig.set_size_inches(5,3)
-plt.savefig('../Illustris/entropy_Volume_'+fn+'.png',bbox_inches='tight',dpi=200)
+plt.savefig('./plots/entropy_Volume_'+fn+'.png',bbox_inches='tight',dpi=200)
 plt.clf()
 
 
@@ -880,7 +881,7 @@ ax.legend(loc='lower right', fontsize=8,ncol=1, handlelength=3.0)
 ax.set_title(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$')
 ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
 fig.set_size_inches(5,3)
-plt.savefig('../Illustris/entropy_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
+plt.savefig('./plots/entropy_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
 plt.clf()
 plt.close('all')
 
@@ -907,7 +908,7 @@ ax.legend(loc='lower right', fontsize=8,ncol=1, handlelength=3.0)
 ax.set_title(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$')
 ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
 fig.set_size_inches(5,3)
-plt.savefig('../Illustris/radial_velocity_Volume_'+fn+'.png',bbox_inches='tight',dpi=200)
+plt.savefig('./plots/radial_velocity_Volume_'+fn+'.png',bbox_inches='tight',dpi=200)
 plt.clf()
 
 
@@ -931,7 +932,7 @@ ax.legend(loc='lower right', fontsize=8,ncol=1, handlelength=3.0)
 ax.set_title(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$')
 ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
 fig.set_size_inches(5,3)
-plt.savefig('../Illustris/radial_velocity_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
+plt.savefig('./plots/radial_velocity_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
 plt.clf()
 plt.close('all')
 
@@ -956,7 +957,7 @@ ax.legend(loc='lower right', fontsize=8,ncol=1, handlelength=3.0)
 ax.set_title(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$')
 ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
 fig.set_size_inches(5,3)
-plt.savefig('../Illustris/azimuthal_velocity_Volume_'+fn+'.png',bbox_inches='tight',dpi=200)
+plt.savefig('./plots/azimuthal_velocity_Volume_'+fn+'.png',bbox_inches='tight',dpi=200)
 plt.clf()
 
 
@@ -980,7 +981,7 @@ ax.legend(loc='lower right', fontsize=8,ncol=1, handlelength=3.0)
 ax.set_title(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$')
 ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
 fig.set_size_inches(5,3)
-plt.savefig('../Illustris/azimuthal_velocity_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
+plt.savefig('./plots/azimuthal_velocity_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
 plt.clf()
 plt.close('all')
 
@@ -1015,7 +1016,7 @@ ax.set_xlabel(r'$P\,[\mathrm{K\,cm}^{-3}]$')
 ax.set_title(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr} \quad '+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$',fontsize=10)
 ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
 fig.set_size_inches(5,3)
-plt.savefig('../Illustris/pressure_entropy_Volume_r_'+str(ir).zfill(3)+'_'+fn+'.png',bbox_inches='tight',dpi=200)
+plt.savefig('./plots/pressure_entropy_Volume_r_'+str(ir).zfill(3)+'_'+fn+'.png',bbox_inches='tight',dpi=200)
 plt.clf()       
 
 fig,ax = plt.subplots(1,1)
@@ -1032,7 +1033,7 @@ ax.set_xlabel(r'$P\,[\mathrm{K\,cm}^{-3}]$')
 ax.set_title(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr} \quad '+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$',fontsize=10)
 ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
 fig.set_size_inches(5,3)
-plt.savefig('../Illustris/pressure_entropy_Mass_r_'+str(ir).zfill(3)+'_'+fn+'.png',bbox_inches='tight',dpi=200)
+plt.savefig('./plots/pressure_entropy_Mass_r_'+str(ir).zfill(3)+'_'+fn+'.png',bbox_inches='tight',dpi=200)
 plt.clf()       
 
 
@@ -1058,7 +1059,7 @@ ax.set_xlabel(r'$P\,[\mathrm{K\,cm}^{-3}]$')
 ax.set_title(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$')
 ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
 fig.set_size_inches(5,3)
-plt.savefig('../Illustris/pressure_entropy_Volume_all_r_'+fn+'.png',bbox_inches='tight',dpi=200)
+plt.savefig('./plots/pressure_entropy_Volume_all_r_'+fn+'.png',bbox_inches='tight',dpi=200)
 plt.clf()       
 
 
@@ -1093,7 +1094,7 @@ ax.set_xlabel(r'$P\,[\mathrm{K\,cm}^{-3}]$')
 ax.set_title(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$')
 ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
 fig.set_size_inches(5,3)
-plt.savefig('../Illustris/pressure_entropy_Mass_all_r_'+fn+'.png',bbox_inches='tight',dpi=200)
+plt.savefig('./plots/pressure_entropy_Mass_all_r_'+fn+'.png',bbox_inches='tight',dpi=200)
 plt.clf()       
 
 
@@ -1101,7 +1102,7 @@ plt.clf()
 fig,ax = plt.subplots(1,1)
 for ir in xrange(20):
     # ir = 19-ir
-    color = cm.plasma(ir/19.)
+    color = cm.Spectral(ir/19.)
 
     N = 256
     vals = np.ones((N, 4))
@@ -1127,7 +1128,7 @@ ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
 ax.set_ylim((1e4,1e10))
 ax.set_xlim((1e-1,1e5))
 fig.set_size_inches(5,3)
-plt.savefig('../Illustris/pressure_entropy_Mass_all_r_rainbow_'+fn+'.png',bbox_inches='tight',dpi=200)
+plt.savefig('./plots/pressure_entropy_Mass_all_r_rainbow_'+fn+'.png',bbox_inches='tight',dpi=200)
 plt.clf()       
 
 
@@ -1229,7 +1230,7 @@ axarr[1].grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
 
 # fig.suptitle(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$', y = 0.96)
 fig.set_size_inches(5,5)
-plt.savefig('../Illustris/HSE_f_cs_comparison_T_n_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
+plt.savefig('./plots/HSE_f_cs_comparison_T_n_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
 plt.clf()
 
 
@@ -1290,7 +1291,7 @@ axarr[1].grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
 
 # fig.suptitle(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$', y = 0.96)
 fig.set_size_inches(5,5)
-plt.savefig('../Illustris/HSE_f_cgm_comparison_T_n_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
+plt.savefig('./plots/HSE_f_cgm_comparison_T_n_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
 plt.clf()
 
 
@@ -1362,7 +1363,7 @@ axarr[1].grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
 
 # fig.suptitle(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$', y = 0.96)
 fig.set_size_inches(5,5)
-plt.savefig('../Illustris/HSE_rot_lambda_comparison_T_n_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
+plt.savefig('./plots/HSE_rot_lambda_comparison_T_n_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
 plt.clf()
 
 
@@ -1437,7 +1438,7 @@ axarr[1].grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
 
 # fig.suptitle(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$', y = 0.96)
 fig.set_size_inches(5,5)
-plt.savefig('../Illustris/cooling_flow_fcs15_mdot_comparison_T_n_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
+plt.savefig('./plots/cooling_flow_fcs15_mdot_comparison_T_n_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
 plt.clf()
 
 
@@ -1499,7 +1500,7 @@ axarr[1].grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
 
 # fig.suptitle(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$', y = 0.96)
 fig.set_size_inches(5,5)
-plt.savefig('../Illustris/cooling_flow_mdot_2_fcs_comparison_T_n_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
+plt.savefig('./plots/cooling_flow_mdot_2_fcs_comparison_T_n_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
 plt.clf()
 
 
@@ -1580,7 +1581,7 @@ axarr[1].grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
 
 # fig.suptitle(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$', y = 0.96)
 fig.set_size_inches(5,5)
-plt.savefig('../Illustris/precipitate_tcool_tff_comparison_T_n_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
+plt.savefig('./plots/precipitate_tcool_tff_comparison_T_n_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
 plt.clf()
 
 
@@ -1638,7 +1639,7 @@ axarr[1].grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
 
 # fig.suptitle(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$', y = 0.96)
 fig.set_size_inches(5,5)
-plt.savefig('../Illustris/precipitate_T_out_comparison_T_n_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
+plt.savefig('./plots/precipitate_T_out_comparison_T_n_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
 plt.clf()
 
 
@@ -1699,5 +1700,5 @@ axarr[1].grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
 
 # fig.suptitle(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$', y = 0.96)
 fig.set_size_inches(5,5)
-plt.savefig('../Illustris/precipitate_tcooltff3_T_out_comparison_T_n_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
+plt.savefig('./plots/precipitate_tcooltff3_T_out_comparison_T_n_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
 plt.clf()
