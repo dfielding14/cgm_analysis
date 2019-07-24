@@ -98,26 +98,3 @@ matplotlib.rcParams['figure.figsize'] = 5,4
 
 
 
-
-
-
-
-
-
-
-
-
-
-# Analytic Models
-## Hydrostatic Equilibrium
-$\frac{d P}{dr} = - \rho g = - \frac{v_c^2}{r}$
-$\frac{d \log P}{d \log r} = \frac{d \log T}{d \log r} + \frac{d \log \rho}{d \log r}=- \gamma \frac{v_c^2}{c_s^2}$
-Choose $f_{\rm cs}= \frac{v_c^2}{c_s^2}$ to be a constant value, with a fiducial choice of 2. Which gives:
-$\frac{d \log \rho}{d \log r}=- \gamma f_{\rm cs} - \frac{d \log v_c^2}{d \log r}$
-So the density profile is:
-$\rho(r) = \rho_0 \left( \frac{v_c(r)}{v_c(r_0)} \right)^{-2} \left( \frac{r}{r_0} \right)^{-\gamma f_{\rm cs}}$
-Choose density normalization to give desired CGM mass fraction $f_{\rm CGM} = \frac{M_{\rm CGM}}{f_{\rm b} M_{\rm halo}}$, where $M_{\rm CGM}$ is the mass between $0.1 r_{\rm vir}$ and $r_{\rm vir}$.
-## Hydrostatic Equilibrium with turbulence 
-$P\rightarrow P + \rho \delta v^2$. Where we assume there is a constant turbulent mach number $\mathcal{M} = \frac{\delta v}{c_s}$. So the solution is the same as pure HSE but with $\gamma \rightarrow \frac{\gamma}{1+\mathcal{M}^2}$. Which in practice means that for larger mach numbers you get flatter pressure profiles.
-## Hydrostatic Equilibrium with rotation 
-$P\rightarrow P + \rho \delta v^2$. Where we assume there is a constant turbulent mach number $\mathcal{M} = \frac{\delta v}{c_s}$. So the solution is the same as pure HSE but with $\gamma \rightarrow \frac{\gamma}{1+\mathcal{M}^2}$. Which in practice means that for larger mach numbers you get flatter pressure profiles.
