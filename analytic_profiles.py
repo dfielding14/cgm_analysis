@@ -200,8 +200,14 @@ else:
 print("interpolated lambda")
 
 
+#### Fit to Diemer+14 nu vs logMhalo ---- THIS ONLY works for z = 0
+nus = np.array([0.720000,0.7777,0.845000,1.200000,1.845400,3.140000])
+logMhalos = np.array([11.5,11.75,12.,13.,14.,15.])
+
 lMhalo=12.
-nu =  0.845
+nu = np.interp(lMhalo, logMhalos, nus)
+
+
 f_cgm = 0.01 
 
 """
