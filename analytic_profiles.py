@@ -1,6 +1,12 @@
+import glob
 import numpy as np
-from scipy.integrate import ode
-from scipy.integrate import odeint
+import h5py
+from scipy import integrate, interpolate
+from astropy import units as un, constants as cons
+from astropy.cosmology import Planck15 as cosmo
+import colossus, colossus.cosmology.cosmology
+colossus.cosmology.cosmology.setCosmology('planck15')
+from colossus.halo import profile_dk14
 import matplotlib
 matplotlib.rcParams['xtick.direction'] = 'in'
 matplotlib.rcParams['ytick.direction'] = 'in'
@@ -11,26 +17,9 @@ matplotlib.rcParams['ytick.minor.visible'] = True
 matplotlib.rcParams['lines.dash_capstyle'] = "round"
 matplotlib.rcParams['lines.solid_capstyle'] = "round"
 import matplotlib.pyplot as plt
-import glob
-import numpy as np
-import h5py
-from scipy import interpolate
-from scipy import optimize
-from scipy import integrate
-import scipy
-from matplotlib import rc
-from matplotlib import cm
 import matplotlib.colors as colors
+from matplotlib import cm
 from matplotlib.colors import ListedColormap
-from scipy.integrate import odeint
-import scipy, numpy as np
-from scipy import integrate, interpolate
-from numpy import log as ln, log10 as log, pi ## note i'm using log for log10!! forgive me that's how i was raised
-from astropy import units as un, constants as cons
-from astropy.cosmology import Planck15 as cosmo
-import colossus, colossus.cosmology.cosmology
-colossus.cosmology.cosmology.setCosmology('planck15')
-from colossus.halo import profile_dk14
 
 gamma   = 5/3.
 kb      = 1.3806488e-16
@@ -57,11 +46,51 @@ muH = 1/0.75
 redshift=0.0
 
 
+
+"""
+Cooling curve as a function of density, temperature, metallicity, redshift
+"""
+file = glob.glob('./data/Cooling_Tables/Lambda_tab.npz')
+if len(file) > 0:
+    data = np.load(file[0])
+    Lambda_tab = data['Lambda_tab']
+    redshifts  = data['redshifts']
+    Zs         = data['Zs']
+    log_Tbins  = data['log_Tbins']
+    log_nHbins = data['log_nHbins']    
+    Lambda      = interpolate.RegularGridInterpolator((log_nHbins,log_Tbins,Zs,redshifts), Lambda_tab, bounds_error=False, fill_value=0)
+else:
+    files = np.sort(glob.glob('./data/Cooling_Tables/z_*hdf5'))
+    redshifts = np.array([float(f[-10:-5]) for f in files])
+    HHeCooling = {}
+    ZCooling   = {}
+    TE_T_n     = {}
+    for i in range(len(files)):
+        f            = h5py.File(files[i], 'r')
+        i_X_He       = -3 
+        Metal_free   = f.get('Metal_free')
+        Total_Metals = f.get('Total_Metals')
+        log_Tbins    = np.array(np.log10(Metal_free['Temperature_bins']))
+        log_nHbins   = np.array(np.log10(Metal_free['Hydrogen_density_bins']))
+        Cooling_Metal_free       = np.array(Metal_free['Net_Cooling'])[i_X_He] ##### what Helium_mass_fraction to use    Total_Metals = f.get('Total_Metals')
+        Cooling_Total_Metals     = np.array(Total_Metals['Net_cooling'])
+        HHeCooling[redshifts[i]] = interpolate.RectBivariateSpline(log_Tbins,log_nHbins, Cooling_Metal_free)
+        ZCooling[redshifts[i]]   = interpolate.RectBivariateSpline(log_Tbins,log_nHbins, Cooling_Total_Metals)
+        f.close()
+    Lambda_tab  = np.array([[[[HHeCooling[zz].ev(lT,ln)+Z*ZCooling[zz].ev(lT,ln) for zz in redshifts] for Z in Zs] for lT in log_Tbins] for ln in log_nHbins])
+    np.savez('./data/Cooling_Tables/Lambda_tab.npz', Lambda_tab=Lambda_tab, redshifts=redshifts, Zs=Zs, log_Tbins=log_Tbins, log_nHbins=log_nHbins)
+    Lambda      = interpolate.RegularGridInterpolator((log_nHbins,log_Tbins,Zs,redshifts), Lambda_tab, bounds_error=False, fill_value=0)
+print("interpolated lambda")
+
+
+
+
+
 def c_DuttonMaccio14(lMhalo, z=0):  #table 3 appropriate for Mvir
-    c_z0  = lambda lMhalo: 10.**(1.025 - 0.097*(lMhalo-log(0.7**-1*1e12))) 
-    c_z05 = lambda lMhalo: 10.**(0.884 - 0.085*(lMhalo-log(0.7**-1*1e12))) 
-    c_z1  = lambda lMhalo: 10.**(0.775 - 0.073*(lMhalo-log(0.7**-1*1e12))) 
-    c_z2  = lambda lMhalo: 10.**(0.643 - 0.051*(lMhalo-log(0.7**-1*1e12)))
+    c_z0  = lambda lMhalo: 10.**(1.025 - 0.097*(lMhalo-np.log10(0.7**-1*1e12))) 
+    c_z05 = lambda lMhalo: 10.**(0.884 - 0.085*(lMhalo-np.log10(0.7**-1*1e12))) 
+    c_z1  = lambda lMhalo: 10.**(0.775 - 0.073*(lMhalo-np.log10(0.7**-1*1e12))) 
+    c_z2  = lambda lMhalo: 10.**(0.643 - 0.051*(lMhalo-np.log10(0.7**-1*1e12)))
     zs = np.array([0.,0.5,1.,2.])
     cs = np.array([c_func(lMhalo) for c_func in (c_z0,c_z05,c_z1,c_z2)])
     return np.interp(z, zs, cs)
@@ -99,12 +128,12 @@ def Behroozi_params(z, parameter_file='./data/smhm_true_med_cen_params.txt'):
     ms = 0.05 * np.arange(int(10.5*20),int(smhm_max*20+1),1)
     dms = ms - zparams['m_1'] 
     dm2s = dms/zparams['delta']
-    sms = zparams['sm_0'] - log(10**(-zparams['alpha']*dms) + 10**(-zparams['beta']*dms)) + zparams['gamma']*np.e**(-0.5*(dm2s*dm2s))
+    sms = zparams['sm_0'] - np.log10(10**(-zparams['alpha']*dms) + 10**(-zparams['beta']*dms)) + zparams['gamma']*np.e**(-0.5*(dm2s*dm2s))
     return ms,sms
 
 def MgalaxyBehroozi(lMhalo, z, parameter_file='./data/smhm_true_med_cen_params.txt'):
     ms,sms = Behroozi_params(z,parameter_file)
-    lMstar = scipy.interpolate.interp1d(ms, sms, fill_value='extrapolate')(lMhalo)
+    lMstar = interpolate.interp1d(ms, sms, fill_value='extrapolate')(lMhalo)
     return 10.**lMstar*un.Msun
 
 
@@ -164,42 +193,6 @@ class DK14_with_Galaxy:
 
 
 
-"""
-Cooling curve as a function of density, temperature, metallicity, redshift
-"""
-file = glob.glob('./data/Cooling_Tables/Lambda_tab.npz')
-if len(file) > 0:
-    data = np.load(file[0])
-    Lambda_tab = data['Lambda_tab']
-    redshifts  = data['redshifts']
-    Zs         = data['Zs']
-    log_Tbins  = data['log_Tbins']
-    log_nHbins = data['log_nHbins']    
-    Lambda      = interpolate.RegularGridInterpolator((log_nHbins,log_Tbins,Zs,redshifts), Lambda_tab, bounds_error=False, fill_value=0)
-else:
-    files = np.sort(glob.glob('./data/Cooling_Tables/z_*hdf5'))
-    redshifts = np.array([float(f[-10:-5]) for f in files])
-    HHeCooling = {}
-    ZCooling   = {}
-    TE_T_n     = {}
-    for i in xrange(len(files)):
-        f            = h5py.File(files[i], 'r')
-        i_X_He       = -3 
-        Metal_free   = f.get('Metal_free')
-        Total_Metals = f.get('Total_Metals')
-        log_Tbins    = np.array(np.log10(Metal_free['Temperature_bins']))
-        log_nHbins   = np.array(np.log10(Metal_free['Hydrogen_density_bins']))
-        Cooling_Metal_free       = np.array(Metal_free['Net_Cooling'])[i_X_He] ##### what Helium_mass_fraction to use    Total_Metals = f.get('Total_Metals')
-        Cooling_Total_Metals     = np.array(Total_Metals['Net_cooling'])
-        HHeCooling[redshifts[i]] = interpolate.RectBivariateSpline(log_Tbins,log_nHbins, Cooling_Metal_free)
-        ZCooling[redshifts[i]]   = interpolate.RectBivariateSpline(log_Tbins,log_nHbins, Cooling_Total_Metals)
-        f.close()
-    Lambda_tab  = np.array([[[[HHeCooling[zz].ev(lT,ln)+Z*ZCooling[zz].ev(lT,ln) for zz in redshifts] for Z in Zs] for lT in log_Tbins] for ln in log_nHbins])
-    np.savez('./data/Cooling_Tables/Lambda_tab.npz', Lambda_tab=Lambda_tab, redshifts=redshifts, Zs=Zs, log_Tbins=log_Tbins, log_nHbins=log_nHbins)
-    Lambda      = interpolate.RegularGridInterpolator((log_nHbins,log_Tbins,Zs,redshifts), Lambda_tab, bounds_error=False, fill_value=0)
-print("interpolated lambda")
-
-
 #### Fit to Diemer+14 nu vs logMhalo ---- THIS ONLY works for z = 0
 nus = np.array([0.720000,0.7777,0.845000,1.200000,1.845400,3.140000])
 logMhalos = np.array([11.5,11.75,12.,13.,14.,15.])
@@ -208,6 +201,7 @@ lMhalo=12.
 nu = np.interp(lMhalo, logMhalos, nus)
 
 
+nu =  0.845
 f_cgm = 0.01 
 
 """
@@ -523,7 +517,7 @@ class cooling_flow:
         def dlogrhodlogr(logrho,logr):
             r = np.exp(logr)
             rho = np.exp(logrho)
-            vr = self.Mdot/(4*pi*r**2*rho)
+            vr = self.Mdot/(4*np.pi*r**2*rho)
             return (self.f_cs_CF - (2/3.)*(r*Lambda((np.log10(rho/muH/mp), np.log10(TT(r)), metallicity, 0.0))*rho) / ( vr * vc(r)**2 * (mu*mp)**2 ) - 2.0) / ( (vr/vc(r))**2 * self.f_cs_CF - 1.0 ) - 2.0
 
         def rho_coolingflow(r_inner=0.05*rvir*kpc, r_outer=2.0*rvir*kpc, rho_inner = Mhalo/(rvir*kpc)**3):
@@ -554,7 +548,7 @@ class cooling_flow:
         return np.interp(r,self.r_cf,self.rho_cf)/(mu*mp)
 
     def vr(self,r):
-        return self.Mdot/(4.*pi*r**2*self.rho(r))
+        return self.Mdot/(4.*np.pi*r**2*self.rho(r))
 
     def K(self,r):
         return self.T(r) * (self.n(r))**(-2/3.)
@@ -633,7 +627,7 @@ files = glob.glob('./data/simulations/*npz')
 
 for fn in files:
     fn = fn[19:-4]
-    print fn
+    print(fn)
     data = np.load('./data/simulations/'+fn+'.npz')
 
     HSE_halo = HSE(2.0,0.05)                                              #    f_cs_HSE = 2.0, f_cgm=0.1):
@@ -672,7 +666,6 @@ for fn in files:
     ax.plot(radii/(rvir*kpc), precipitate_halo.T(radii),  dashes=[4,2,1,2,1,2], color=cm.viridis(0.8), lw=2.5, label='HSE w/ ' + r'$\frac{t_{\rm cool}}{t_{\rm ff}} = 10$'+' precip.')
     cb = fig.colorbar(plot)
     cb.set_label(r'$d^2 (V/V_{\rm tot}) / d \log T \, d \log r$',rotation=270,fontsize=12,labelpad=15)
-    cb.ax.minorticks_off()
 
     ax.set_xlim(5e-2, 2)
     ax.set_ylim(3e3,4e7)
@@ -701,7 +694,6 @@ for fn in files:
     ax.plot(radii/(rvir*kpc), precipitate_halo.T(radii),  dashes=[4,2,1,2,1,2], color=cm.plasma(0.8), lw=2.5, label='HSE w/ ' + r'$\frac{t_{\rm cool}}{t_{\rm ff}} = 10$'+' precip.')
     cb = fig.colorbar(plot)
     cb.set_label(r'$d^2 (M/ f_b M_{\rm halo}) / d \log T \, d \log r$',rotation=270,fontsize=12,labelpad=15)
-    cb.ax.minorticks_off()
 
     ax.set_xlim(5e-2, 2)
     ax.set_ylim(3e3,4e7)
@@ -733,7 +725,6 @@ for fn in files:
     ax.plot(radii/(rvir*kpc), precipitate_halo.n(radii),  dashes=[4,2,1,2,1,2], color=cm.viridis(0.8), lw=2.5, label='HSE w/ ' + r'$\frac{t_{\rm cool}}{t_{\rm ff}} = 10$'+' precip.')
     cb = fig.colorbar(plot)
     cb.set_label(r'$d^2 (V/V_{\rm tot}) / d \log n \, d \log r$',rotation=270,fontsize=12,labelpad=15)
-    cb.ax.minorticks_off()
 
     ax.set_xlim(5e-2, 2)
     ax.set_ylim(5e-6,3e0)
@@ -763,7 +754,6 @@ for fn in files:
     ax.plot(radii/(rvir*kpc), precipitate_halo.n(radii),  dashes=[4,2,1,2,1,2], color=cm.plasma(0.8), lw=2.5, label='HSE w/ ' + r'$\frac{t_{\rm cool}}{t_{\rm ff}} = 10$'+' precip.')
     cb = fig.colorbar(plot)
     cb.set_label(r'$d^2 (M/ f_b M_{\rm halo}) / d \log n \, d \log r$',rotation=270,fontsize=12,labelpad=15)
-    cb.ax.minorticks_off()
 
     ax.set_xlim(5e-2, 2)
     ax.set_ylim(5e-6,3e0)
@@ -794,7 +784,6 @@ for fn in files:
     ax.plot(radii/(rvir*kpc), precipitate_halo.P(radii),  dashes=[4,2,1,2,1,2], color=cm.viridis(0.8), lw=2.5, label='HSE w/ ' + r'$\frac{t_{\rm cool}}{t_{\rm ff}} = 10$'+' precip.')
     cb = fig.colorbar(plot)
     cb.set_label(r'$d^2 (V/V_{\rm tot}) / d \log P \, d \log r$',rotation=270,fontsize=12,labelpad=15)
-    cb.ax.minorticks_off()
 
     ax.set_xlim(5e-2, 2)
     ax.set_ylim(1e-1,1e6)
@@ -822,7 +811,6 @@ for fn in files:
     ax.plot(radii/(rvir*kpc), precipitate_halo.P(radii),  dashes=[4,2,1,2,1,2], color=cm.plasma(0.8), lw=2.5, label='HSE w/ ' + r'$\frac{t_{\rm cool}}{t_{\rm ff}} = 10$'+' precip.')
     cb = fig.colorbar(plot)
     cb.set_label(r'$d^2 (M/ f_b M_{\rm halo}) / d \log P \, d \log r$',rotation=270,fontsize=12,labelpad=15)
-    cb.ax.minorticks_off()
 
     ax.set_xlim(5e-2, 2)
     ax.set_ylim(1e-1,1e6)
@@ -851,7 +839,6 @@ for fn in files:
     ax.plot(radii/(rvir*kpc), precipitate_halo.K(radii),  dashes=[4,2,1,2,1,2], color=cm.viridis(0.8), lw=2.5, label='HSE w/ ' + r'$\frac{t_{\rm cool}}{t_{\rm ff}} = 10$'+' precip.')
     cb = fig.colorbar(plot)
     cb.set_label(r'$d^2 (V/V_{\rm tot}) / d \log K \, d \log r$',rotation=270,fontsize=12,labelpad=15)
-    cb.ax.minorticks_off()
 
     ax.set_xlim(5e-2, 2)
     # ax.set_ylim(1e-1,1e6)
@@ -879,7 +866,6 @@ for fn in files:
     ax.plot(radii/(rvir*kpc), precipitate_halo.K(radii),  dashes=[4,2,1,2,1,2], color=cm.plasma(0.8), lw=2.5, label='HSE w/ ' + r'$\frac{t_{\rm cool}}{t_{\rm ff}} = 10$'+' precip.')
     cb = fig.colorbar(plot)
     cb.set_label(r'$d^2 (M/ f_b M_{\rm halo}) / d \log K \, d \log r$',rotation=270,fontsize=12,labelpad=15)
-    cb.ax.minorticks_off()
 
     ax.set_xlim(5e-2, 2)
     # ax.set_ylim(1e-1,1e6)
@@ -906,7 +892,6 @@ for fn in files:
     ax.plot(radii/(rvir*kpc), cooling_flow_halo.vr(radii)/1e5, dashes=[1,2],         color=cm.viridis(0.2), lw=2.5, label='Cooling Flow'),
     cb = fig.colorbar(plot)
     cb.set_label(r'$d^2 (V/V_{\rm tot}) / d v_r \, d \log r$',rotation=270,fontsize=12,labelpad=15)
-    cb.ax.minorticks_off()
 
     ax.set_xlim(5e-2, 2)
     # ax.set_ylim(1e-1,1e6)
@@ -930,7 +915,6 @@ for fn in files:
     ax.plot(radii/(rvir*kpc), cooling_flow_halo.vr(radii)/1e5, dashes=[1,2],         color=cm.plasma(0.2), lw=2.5, label='Cooling Flow'),
     cb = fig.colorbar(plot)
     cb.set_label(r'$d^2 (M/ f_b M_{\rm halo}) / d v_r \, d \log r$',rotation=270,fontsize=12,labelpad=15)
-    cb.ax.minorticks_off()
 
     ax.set_xlim(5e-2, 2)
     # ax.set_ylim(1e-1,1e6)
@@ -955,7 +939,6 @@ for fn in files:
     ax.plot(radii/(rvir*kpc), HSE_rot_halo.average_v_phi(radii)/1e5,  dashes=[4,2,1,2],     color=cm.viridis(0.6), lw=2.5, label='HSE w/ rot. '+r'$\lambda=0.05$')
     cb = fig.colorbar(plot)
     cb.set_label(r'$d^2 (V/V_{\rm tot}) / d v_\phi \, d \log r$',rotation=270,fontsize=12,labelpad=15)
-    cb.ax.minorticks_off()
 
     ax.set_xlim(5e-2, 2)
     # ax.set_ylim(1e-1,1e6)
@@ -979,7 +962,6 @@ for fn in files:
     ax.plot(radii/(rvir*kpc), HSE_rot_halo.average_v_phi(radii)/1e5,  dashes=[4,2,1,2],     color=cm.plasma(0.6), lw=2.5, label='HSE w/ rot. '+r'$\lambda=0.05$')
     cb = fig.colorbar(plot)
     cb.set_label(r'$d^2 (M/ f_b M_{\rm halo}) / d v_\phi \, d \log r$',rotation=270,fontsize=12,labelpad=15)
-    cb.ax.minorticks_off()
 
     ax.set_xlim(5e-2, 2)
     # ax.set_ylim(1e-1,1e6)
@@ -1018,7 +1000,6 @@ for fn in files:
         norm=colors.LogNorm(vmin=1e-5,vmax=1e-1), cmap='plasma')
     cb = fig.colorbar(plot)
     cb.set_label(r'$\mathrm{Volume\,Fraction}$',rotation=270,fontsize=12,labelpad=15)
-    cb.ax.minorticks_off()
     ax.set_yscale('log')
     ax.set_xscale('log')
     ax.set_ylabel(r'$K\,[\mathrm{K\,cm}^{2}]$')
@@ -1035,7 +1016,6 @@ for fn in files:
         norm=colors.LogNorm(vmin=1e-5,vmax=1e-1), cmap='viridis')
     cb = fig.colorbar(plot)
     cb.set_label(r'$\mathrm{Mass\,Fraction}$',rotation=270,fontsize=12,labelpad=15)
-    cb.ax.minorticks_off()
     ax.set_yscale('log')
     ax.set_xscale('log')
     ax.set_ylabel(r'$K\,[\mathrm{K\,cm}^{2}]$')
@@ -1061,7 +1041,6 @@ for fn in files:
         norm=colors.LogNorm(vmin=1e-5,vmax=1e-1), cmap='plasma')
     cb = fig.colorbar(plot)
     cb.set_label(r'$\mathrm{Volume\,Fraction}$',rotation=270,fontsize=12,labelpad=15)
-    cb.ax.minorticks_off()
     ax.set_yscale('log')
     ax.set_xscale('log')
     ax.set_ylabel(r'$K\,[\mathrm{K\,cm}^{2}]$')
@@ -1080,7 +1059,6 @@ for fn in files:
         norm=colors.LogNorm(vmin=1e-3,vmax=1e-0), cmap='binary')
     cb = fig.colorbar(plot)
     cb.set_label(r'$\frac{d^2 \log (M/ f_b M_{\rm halo})}{d \log P \, d \log K}$',rotation=270,fontsize=12,labelpad=15)
-    cb.ax.minorticks_off()
 
     ir = 1
     plot=ax.contour(data['pressure_bins'][:-1], data['entropy_bins'][:-1], 
@@ -1158,7 +1136,6 @@ for fn in files:
     cax.set_title(r'$\frac{d^2 \log (M/ f_b M_{\rm halo})}{d \log P \, d \log K}$')#, fontsize=10,rotation=270,labelpad=15)
     cax.set_xlabel(r'$r/r_{\rm 200m}$',fontsize=10)
     # cb.set_ticks(np.arange(-6,-2.9,1))
-    # cb.ax.minorticks_off()
     ax.set_yscale('log')
     ax.set_xscale('log')
     ax.set_ylabel(r'$K\,[\mathrm{K\,cm}^{2}]$')
@@ -1227,7 +1204,6 @@ for fn in files:
 
     cb = fig.colorbar(plot,ax=axarr[0])
     cb.set_label(r'$\frac{d^2 (M/f_b M_{\rm halo}) }{d \log T \, d \log r}$',rotation=270,fontsize=12,labelpad=15)
-    cb.ax.minorticks_off()
     axarr[0].set_xlim(5e-2, 2)
     axarr[0].set_ylim(3e3,4e7)
     axarr[0].set_yscale('log')
@@ -1253,7 +1229,6 @@ for fn in files:
 
     cb = fig.colorbar(plot,ax=axarr[1])
     cb.set_label(r'$\frac{d^2 (M/ f_b M_{\rm halo})}{ d \log n \, d \log r}$',rotation=270,fontsize=12,labelpad=15)
-    cb.ax.minorticks_off()
 
     axarr[1].set_xlim(5e-2, 2)
     axarr[1].set_ylim(5e-6,1e-1)
@@ -1288,7 +1263,6 @@ for fn in files:
 
     cb = fig.colorbar(plot,ax=axarr[0])
     cb.set_label(r'$\frac{d^2 (M/f_b M_{\rm halo}) }{d \log T \, d \log r}$',rotation=270,fontsize=12,labelpad=15)
-    cb.ax.minorticks_off()
     axarr[0].set_xlim(5e-2, 2)
     axarr[0].set_ylim(3e3,4e7)
     axarr[0].set_yscale('log')
@@ -1314,7 +1288,6 @@ for fn in files:
 
     cb = fig.colorbar(plot,ax=axarr[1])
     cb.set_label(r'$\frac{d^2 (M/ f_b M_{\rm halo})}{ d \log n \, d \log r}$',rotation=270,fontsize=12,labelpad=15)
-    cb.ax.minorticks_off()
 
     axarr[1].set_xlim(5e-2, 2)
     axarr[1].set_ylim(5e-6,1e-1)
@@ -1360,7 +1333,6 @@ for fn in files:
 
     cb = fig.colorbar(plot,ax=axarr[0])
     cb.set_label(r'$\frac{d^2 (M/f_b M_{\rm halo}) }{d \log T \, d \log r}$',rotation=270,fontsize=12,labelpad=15)
-    cb.ax.minorticks_off()
     axarr[0].set_xlim(5e-2, 2)
     axarr[0].set_ylim(3e3,4e7)
     axarr[0].set_yscale('log')
@@ -1386,7 +1358,6 @@ for fn in files:
 
     cb = fig.colorbar(plot,ax=axarr[1])
     cb.set_label(r'$\frac{d^2 (M/ f_b M_{\rm halo})}{ d \log n \, d \log r}$',rotation=270,fontsize=12,labelpad=15)
-    cb.ax.minorticks_off()
 
     axarr[1].set_xlim(5e-2, 2)
     axarr[1].set_ylim(5e-6,1e-1)
@@ -1435,7 +1406,6 @@ for fn in files:
 
     cb = fig.colorbar(plot,ax=axarr[0])
     cb.set_label(r'$\frac{d^2 (M/f_b M_{\rm halo}) }{d \log T \, d \log r}$',rotation=270,fontsize=12,labelpad=15)
-    cb.ax.minorticks_off()
     axarr[0].set_xlim(5e-2, 2)
     axarr[0].set_ylim(3e3,4e7)
     axarr[0].set_yscale('log')
@@ -1461,7 +1431,6 @@ for fn in files:
 
     cb = fig.colorbar(plot,ax=axarr[1])
     cb.set_label(r'$\frac{d^2 (M/ f_b M_{\rm halo})}{ d \log n \, d \log r}$',rotation=270,fontsize=12,labelpad=15)
-    cb.ax.minorticks_off()
 
     axarr[1].set_xlim(5e-2, 2)
     axarr[1].set_ylim(5e-6,1e-1)
@@ -1497,7 +1466,6 @@ for fn in files:
 
     cb = fig.colorbar(plot,ax=axarr[0])
     cb.set_label(r'$\frac{d^2 (M/f_b M_{\rm halo}) }{d \log T \, d \log r}$',rotation=270,fontsize=12,labelpad=15)
-    cb.ax.minorticks_off()
     axarr[0].set_xlim(5e-2, 2)
     axarr[0].set_ylim(3e3,4e7)
     axarr[0].set_yscale('log')
@@ -1523,7 +1491,6 @@ for fn in files:
 
     cb = fig.colorbar(plot,ax=axarr[1])
     cb.set_label(r'$\frac{d^2 (M/ f_b M_{\rm halo})}{ d \log n \, d \log r}$',rotation=270,fontsize=12,labelpad=15)
-    cb.ax.minorticks_off()
 
     axarr[1].set_xlim(5e-2, 2)
     axarr[1].set_ylim(5e-6,1e-1)
@@ -1578,7 +1545,6 @@ for fn in files:
 
     cb = fig.colorbar(plot,ax=axarr[0])
     cb.set_label(r'$\frac{d^2 (M/f_b M_{\rm halo}) }{d \log T \, d \log r}$',rotation=270,fontsize=12,labelpad=15)
-    cb.ax.minorticks_off()
     axarr[0].set_xlim(5e-2, 2)
     axarr[0].set_ylim(3e3,4e7)
     axarr[0].set_yscale('log')
@@ -1604,7 +1570,6 @@ for fn in files:
 
     cb = fig.colorbar(plot,ax=axarr[1])
     cb.set_label(r'$\frac{d^2 (M/ f_b M_{\rm halo})}{ d \log n \, d \log r}$',rotation=270,fontsize=12,labelpad=15)
-    cb.ax.minorticks_off()
 
     axarr[1].set_xlim(5e-2, 2)
     axarr[1].set_ylim(5e-6,1e-1)
@@ -1638,7 +1603,6 @@ for fn in files:
 
     cb = fig.colorbar(plot,ax=axarr[0])
     cb.set_label(r'$\frac{d^2 (M/f_b M_{\rm halo}) }{d \log T \, d \log r}$',rotation=270,fontsize=12,labelpad=15)
-    cb.ax.minorticks_off()
     axarr[0].set_xlim(5e-2, 2)
     axarr[0].set_ylim(3e3,4e7)
     axarr[0].set_yscale('log')
@@ -1662,7 +1626,6 @@ for fn in files:
 
     cb = fig.colorbar(plot,ax=axarr[1])
     cb.set_label(r'$\frac{d^2 (M/ f_b M_{\rm halo})}{ d \log n \, d \log r}$',rotation=270,fontsize=12,labelpad=15)
-    cb.ax.minorticks_off()
 
     axarr[1].set_xlim(5e-2, 2)
     axarr[1].set_ylim(5e-6,1e-1)
@@ -1699,7 +1662,6 @@ for fn in files:
 
     cb = fig.colorbar(plot,ax=axarr[0])
     cb.set_label(r'$\frac{d^2 (M/f_b M_{\rm halo}) }{d \log T \, d \log r}$',rotation=270,fontsize=12,labelpad=15)
-    cb.ax.minorticks_off()
     axarr[0].set_xlim(5e-2, 2)
     axarr[0].set_ylim(3e3,4e7)
     axarr[0].set_yscale('log')
@@ -1723,7 +1685,6 @@ for fn in files:
 
     cb = fig.colorbar(plot,ax=axarr[1])
     cb.set_label(r'$\frac{d^2 (M/ f_b M_{\rm halo})}{ d \log n \, d \log r}$',rotation=270,fontsize=12,labelpad=15)
-    cb.ax.minorticks_off()
 
     axarr[1].set_xlim(5e-2, 2)
     axarr[1].set_ylim(5e-6,1e-1)
@@ -1738,3 +1699,5 @@ for fn in files:
     fig.set_size_inches(5,5)
     plt.savefig('./plots/precipitate_tcooltff3_T_out_comparison_T_n_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
     plt.clf()
+
+    plt.close('all')
