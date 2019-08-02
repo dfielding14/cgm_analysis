@@ -623,532 +623,709 @@ line_colors_VW = ['k', "#003366", "#003300", "#3333cc", "#339900", "#66a61e"]
 
 
 # fn="50_M12subhalos_snap099_TNG100"
-fn="M12_s529643_snap099_TNG100"
-data = np.load('./data/simulations/'+fn+'.npz')
-
-HSE_halo = HSE(2.0,0.05)                                              #    f_cs_HSE = 2.0, f_cgm=0.1):
-HSE_turb_halo = HSE_turb(2.0,0.05,0.5)                                #    f_cs_HSE_turb = 2.0, f_cgm=0.1, Mach=0.5):
-HSE_rot_halo = HSE_rot(2.0,0.05,0.05)                                 #    f_cs_HSE_rot = 2.0, f_cgm=0.1, lam=0.05):
-cooling_flow_halo = cooling_flow(1.5,-4.0*Msun/yr)                   #    f_cs_CF = 2.0, Mdot = -3.0 * Msun/yr):
-precipitate_halo = precipitate(10.0,0.05*mu*mp*vc(rvir*kpc)**2/kb)   #    tcooltff=10.0, T_outer=0.25*mu*mp*vc(rvir*kpc)**2/kb):
-
-
-
-
-r_inner  = 0.05*rvir*kpc
-r_outer  = 2.0*rvir*kpc
-radii    = np.linspace(r_inner,r_outer,100)
-vc_outer = np.sqrt(r_outer*grav_acc(r_outer))
-
-
-dlogT = np.diff(np.log10(data['temperature_bins']))[0]
-dlogn = np.diff(np.log10(data['number_density_bins']))[0]
-dlogP = np.diff(np.log10(data['pressure_bins']))[0]
-dlogK = np.diff(np.log10(data['entropy_bins']))[0]
-dlogr = np.diff(np.log10(data['r_r200m_profile']))[0]
-dvr = np.diff(data['radial_velocity_bins'])
-dvphi = np.diff(data['azimuthal_velocity_bins'])
-
-fig,ax = plt.subplots(1,1)
-
-plot=ax.pcolormesh(data['r_r200m_profile'], data['temperature_bins'], 
-    (data['temperature_Volume']/np.sum(data['temperature_Volume']))/dlogT/dlogr, 
-    norm=colors.LogNorm(vmin=1e-2, vmax =3), cmap='plasma')
-
-ax.plot(radii/(rvir*kpc), HSE_halo.T(radii),                                color=cm.viridis(0.0), lw=2.5, label='HSE')
-ax.plot(radii/(rvir*kpc), cooling_flow_halo.T(radii), dashes=[1,2],         color=cm.viridis(0.2), lw=2.5, label='Cooling Flow'),
-ax.plot(radii/(rvir*kpc), HSE_turb_halo.T(radii),     dashes=[4,2],         color=cm.viridis(0.4), lw=2.5, label='HSE w/'+r'$\mathcal{M}=0.5$'+' turb.')
-ax.plot(radii/(rvir*kpc), HSE_rot_halo.T(radii),      dashes=[4,2,1,2],     color=cm.viridis(0.6), lw=2.5, label='HSE w/ rot. '+r'$\lambda=0.05$')
-ax.plot(radii/(rvir*kpc), precipitate_halo.T(radii),  dashes=[4,2,1,2,1,2], color=cm.viridis(0.8), lw=2.5, label='HSE w/ ' + r'$\frac{t_{\rm cool}}{t_{\rm ff}} = 10$'+' precip.')
-cb = fig.colorbar(plot)
-cb.set_label(r'$d^2 (V/V_{\rm tot}) / d \log T \, d \log r$',rotation=270,fontsize=12,labelpad=15)
-cb.ax.minorticks_off()
-
-ax.set_xlim(5e-2, 2)
-ax.set_ylim(3e3,4e7)
-ax.set_yscale('log')
-ax.set_xscale('log')
-ax.set_ylabel(r'$T\,[\mathrm{K}]$')
-ax.set_xlabel(r'$r/r_{\rm vir}$')
-ax.legend(loc='upper right', fontsize=8,ncol=2,columnspacing=-3, handlelength=3.0)
-ax.set_title(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$')
-ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
-fig.set_size_inches(5,3)
-plt.savefig('./plots/temperature_Volume_'+fn+'.png',bbox_inches='tight',dpi=200)
-plt.clf()
-
-
-fig,ax = plt.subplots(1,1)
-
-plot=ax.pcolormesh(data['r_r200m_profile'], data['temperature_bins'], 
-    (data['temperature_Mass']/(fb*Mhalo/Msun)/dlogT/dlogr), 
-    norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
-
-ax.plot(radii/(rvir*kpc), HSE_halo.T(radii),                                color=cm.plasma(0.0), lw=2.5, label='HSE')
-ax.plot(radii/(rvir*kpc), cooling_flow_halo.T(radii), dashes=[1,2],         color=cm.plasma(0.2), lw=2.5, label='Cooling Flow'),
-ax.plot(radii/(rvir*kpc), HSE_turb_halo.T(radii),     dashes=[4,2],         color=cm.plasma(0.4), lw=2.5, label='HSE w/'+r'$\mathcal{M}=0.5$'+' turb.')
-ax.plot(radii/(rvir*kpc), HSE_rot_halo.T(radii),      dashes=[4,2,1,2],     color=cm.plasma(0.6), lw=2.5, label='HSE w/ rot. '+r'$\lambda=0.05$')
-ax.plot(radii/(rvir*kpc), precipitate_halo.T(radii),  dashes=[4,2,1,2,1,2], color=cm.plasma(0.8), lw=2.5, label='HSE w/ ' + r'$\frac{t_{\rm cool}}{t_{\rm ff}} = 10$'+' precip.')
-cb = fig.colorbar(plot)
-cb.set_label(r'$d^2 (M/ f_b M_{\rm halo}) / d \log T \, d \log r$',rotation=270,fontsize=12,labelpad=15)
-cb.ax.minorticks_off()
-
-ax.set_xlim(5e-2, 2)
-ax.set_ylim(3e3,4e7)
-ax.set_yscale('log')
-ax.set_xscale('log')
-ax.set_ylabel(r'$T\,[\mathrm{K}]$')
-ax.set_xlabel(r'$r/r_{\rm vir}$')
-ax.legend(loc='upper right', fontsize=8,ncol=2,columnspacing=-3, handlelength=3.0)
-ax.set_title(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$')
-ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
-fig.set_size_inches(5,3)
-plt.savefig('./plots/temperature_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
-plt.clf()
-plt.close('all')
-
-
-
-
-fig,ax = plt.subplots(1,1)
-
-plot=ax.pcolormesh(data['r_r200m_profile'], data['number_density_bins'], 
-    (data['number_density_Volume']/np.sum(data['number_density_Volume']))/dlogn/dlogr, 
-    norm=colors.LogNorm(vmin=1e-2, vmax =3), cmap='plasma')
-
-ax.plot(radii/(rvir*kpc), HSE_halo.n(radii),                                color=cm.viridis(0.0), lw=2.5, label='HSE')
-ax.plot(radii/(rvir*kpc), cooling_flow_halo.n(radii), dashes=[1,2],         color=cm.viridis(0.2), lw=2.5, label='Cooling Flow'),
-ax.plot(radii/(rvir*kpc), HSE_turb_halo.n(radii),     dashes=[4,2],         color=cm.viridis(0.4), lw=2.5, label='HSE w/'+r'$\mathcal{M}=0.5$'+' turb.')
-ax.plot(radii/(rvir*kpc), HSE_rot_halo.n(radii),      dashes=[4,2,1,2],     color=cm.viridis(0.6), lw=2.5, label='HSE w/ rot. '+r'$\lambda=0.05$')
-ax.plot(radii/(rvir*kpc), precipitate_halo.n(radii),  dashes=[4,2,1,2,1,2], color=cm.viridis(0.8), lw=2.5, label='HSE w/ ' + r'$\frac{t_{\rm cool}}{t_{\rm ff}} = 10$'+' precip.')
-cb = fig.colorbar(plot)
-cb.set_label(r'$d^2 (V/V_{\rm tot}) / d \log n \, d \log r$',rotation=270,fontsize=12,labelpad=15)
-cb.ax.minorticks_off()
-
-ax.set_xlim(5e-2, 2)
-ax.set_ylim(5e-6,3e0)
-ax.set_yscale('log')
-ax.set_xscale('log')
-ax.set_ylabel(r'$n\,[\mathrm{cm}^{-3}]$')
-ax.set_xlabel(r'$r/r_{\rm vir}$')
-ax.legend(loc='upper right', fontsize=8,ncol=2,columnspacing=-3, handlelength=3.0)
-ax.set_title(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$')
-ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
-fig.set_size_inches(5,3)
-plt.savefig('./plots/number_density_Volume_'+fn+'.png',bbox_inches='tight',dpi=200)
-plt.clf()
-
-
-
-fig,ax = plt.subplots(1,1)
-
-plot=ax.pcolormesh(data['r_r200m_profile'], data['number_density_bins'], 
-    (data['number_density_Mass']/(fb*Mhalo/Msun)/dlogn/dlogr), 
-    norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
-
-ax.plot(radii/(rvir*kpc), HSE_halo.n(radii),                                color=cm.plasma(0.0), lw=2.5, label='HSE')
-ax.plot(radii/(rvir*kpc), cooling_flow_halo.n(radii), dashes=[1,2],         color=cm.plasma(0.2), lw=2.5, label='Cooling Flow'),
-ax.plot(radii/(rvir*kpc), HSE_turb_halo.n(radii),     dashes=[4,2],         color=cm.plasma(0.4), lw=2.5, label='HSE w/'+r'$\mathcal{M}=0.5$'+' turb.')
-ax.plot(radii/(rvir*kpc), HSE_rot_halo.n(radii),      dashes=[4,2,1,2],     color=cm.plasma(0.6), lw=2.5, label='HSE w/ rot. '+r'$\lambda=0.05$')
-ax.plot(radii/(rvir*kpc), precipitate_halo.n(radii),  dashes=[4,2,1,2,1,2], color=cm.plasma(0.8), lw=2.5, label='HSE w/ ' + r'$\frac{t_{\rm cool}}{t_{\rm ff}} = 10$'+' precip.')
-cb = fig.colorbar(plot)
-cb.set_label(r'$d^2 (M/ f_b M_{\rm halo}) / d \log n \, d \log r$',rotation=270,fontsize=12,labelpad=15)
-cb.ax.minorticks_off()
-
-ax.set_xlim(5e-2, 2)
-ax.set_ylim(5e-6,3e0)
-ax.set_yscale('log')
-ax.set_xscale('log')
-ax.set_ylabel(r'$n\,[\mathrm{cm}^{-3}]$')
-ax.set_xlabel(r'$r/r_{\rm vir}$')
-ax.legend(loc='upper right', fontsize=8,ncol=2,columnspacing=-3, handlelength=3.0)
-ax.set_title(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$')
-ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
-fig.set_size_inches(5,3)
-plt.savefig('./plots/number_density_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
-plt.clf()
-plt.close('all')
-
-
-
-
-fig,ax = plt.subplots(1,1)
-plot=ax.pcolormesh(data['r_r200m_profile'], data['pressure_bins'], 
-    (data['pressure_Volume']/np.sum(data['pressure_Volume']))/dlogP/dlogr, 
-    norm=colors.LogNorm(vmin=1e-2, vmax =3), cmap='plasma')
-
-ax.plot(radii/(rvir*kpc), HSE_halo.P(radii),                                color=cm.viridis(0.0), lw=2.5, label='HSE')
-ax.plot(radii/(rvir*kpc), cooling_flow_halo.P(radii), dashes=[1,2],         color=cm.viridis(0.2), lw=2.5, label='Cooling Flow'),
-ax.plot(radii/(rvir*kpc), HSE_turb_halo.P(radii),     dashes=[4,2],         color=cm.viridis(0.4), lw=2.5, label='HSE w/'+r'$\mathcal{M}=0.5$'+' turb.')
-ax.plot(radii/(rvir*kpc), HSE_rot_halo.P(radii),      dashes=[4,2,1,2],     color=cm.viridis(0.6), lw=2.5, label='HSE w/ rot. '+r'$\lambda=0.05$')
-ax.plot(radii/(rvir*kpc), precipitate_halo.P(radii),  dashes=[4,2,1,2,1,2], color=cm.viridis(0.8), lw=2.5, label='HSE w/ ' + r'$\frac{t_{\rm cool}}{t_{\rm ff}} = 10$'+' precip.')
-cb = fig.colorbar(plot)
-cb.set_label(r'$d^2 (V/V_{\rm tot}) / d \log P \, d \log r$',rotation=270,fontsize=12,labelpad=15)
-cb.ax.minorticks_off()
-
-ax.set_xlim(5e-2, 2)
-ax.set_ylim(1e-1,1e6)
-ax.set_yscale('log')
-ax.set_xscale('log')
-ax.set_ylabel(r'$P\,[\mathrm{K\,cm}^{-3}]$')
-ax.set_xlabel(r'$r/r_{\rm vir}$')
-ax.legend(loc='upper right', fontsize=8,ncol=2,columnspacing=-3, handlelength=3.0)
-ax.set_title(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$')
-ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
-fig.set_size_inches(5,3)
-plt.savefig('./plots/pressure_Volume_'+fn+'.png',bbox_inches='tight',dpi=200)
-plt.clf()
-
-
-fig,ax = plt.subplots(1,1)
-plot=ax.pcolormesh(data['r_r200m_profile'], data['pressure_bins'], 
-    (data['pressure_Mass']/(fb*Mhalo/Msun)/dlogP/dlogr), 
-    norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
-
-ax.plot(radii/(rvir*kpc), HSE_halo.P(radii),                                color=cm.plasma(0.0), lw=2.5, label='HSE')
-ax.plot(radii/(rvir*kpc), cooling_flow_halo.P(radii), dashes=[1,2],         color=cm.plasma(0.2), lw=2.5, label='Cooling Flow'),
-ax.plot(radii/(rvir*kpc), HSE_turb_halo.P(radii),     dashes=[4,2],         color=cm.plasma(0.4), lw=2.5, label='HSE w/'+r'$\mathcal{M}=0.5$'+' turb.')
-ax.plot(radii/(rvir*kpc), HSE_rot_halo.P(radii),      dashes=[4,2,1,2],     color=cm.plasma(0.6), lw=2.5, label='HSE w/ rot. '+r'$\lambda=0.05$')
-ax.plot(radii/(rvir*kpc), precipitate_halo.P(radii),  dashes=[4,2,1,2,1,2], color=cm.plasma(0.8), lw=2.5, label='HSE w/ ' + r'$\frac{t_{\rm cool}}{t_{\rm ff}} = 10$'+' precip.')
-cb = fig.colorbar(plot)
-cb.set_label(r'$d^2 (M/ f_b M_{\rm halo}) / d \log P \, d \log r$',rotation=270,fontsize=12,labelpad=15)
-cb.ax.minorticks_off()
-
-ax.set_xlim(5e-2, 2)
-ax.set_ylim(1e-1,1e6)
-ax.set_yscale('log')
-ax.set_xscale('log')
-ax.set_ylabel(r'$P\,[\mathrm{K\,cm}^{-3}]$')
-ax.set_xlabel(r'$r/r_{\rm vir}$')
-ax.legend(loc='upper right', fontsize=8,ncol=2,columnspacing=-3, handlelength=3.0)
-ax.set_title(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$')
-ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
-fig.set_size_inches(5,3)
-plt.savefig('./plots/pressure_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
-plt.clf()
-plt.close('all')
-
-
-fig,ax = plt.subplots(1,1)
-plot=ax.pcolormesh(data['r_r200m_profile'], data['entropy_bins'], 
-    (data['entropy_Volume']/np.sum(data['entropy_Volume']))/dlogK/dlogr, 
-    norm=colors.LogNorm(vmin=1e-2, vmax =3), cmap='plasma')
-
-ax.plot(radii/(rvir*kpc), HSE_halo.K(radii),                                color=cm.viridis(0.0), lw=2.5, label='HSE')
-ax.plot(radii/(rvir*kpc), cooling_flow_halo.K(radii), dashes=[1,2],         color=cm.viridis(0.2), lw=2.5, label='Cooling Flow'),
-ax.plot(radii/(rvir*kpc), HSE_turb_halo.K(radii),     dashes=[4,2],         color=cm.viridis(0.4), lw=2.5, label='HSE w/'+r'$\mathcal{M}=0.5$'+' turb.')
-ax.plot(radii/(rvir*kpc), HSE_rot_halo.K(radii),      dashes=[4,2,1,2],     color=cm.viridis(0.6), lw=2.5, label='HSE w/ rot. '+r'$\lambda=0.05$')
-ax.plot(radii/(rvir*kpc), precipitate_halo.K(radii),  dashes=[4,2,1,2,1,2], color=cm.viridis(0.8), lw=2.5, label='HSE w/ ' + r'$\frac{t_{\rm cool}}{t_{\rm ff}} = 10$'+' precip.')
-cb = fig.colorbar(plot)
-cb.set_label(r'$d^2 (V/V_{\rm tot}) / d \log K \, d \log r$',rotation=270,fontsize=12,labelpad=15)
-cb.ax.minorticks_off()
-
-ax.set_xlim(5e-2, 2)
-# ax.set_ylim(1e-1,1e6)
-ax.set_yscale('log')
-ax.set_xscale('log')
-ax.set_ylabel(r'$K\,[\mathrm{K\,cm}^{2}]$')
-ax.set_xlabel(r'$r/r_{\rm vir}$')
-ax.legend(loc='lower right', fontsize=8,ncol=1, handlelength=3.0)
-ax.set_title(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$')
-ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
-fig.set_size_inches(5,3)
-plt.savefig('./plots/entropy_Volume_'+fn+'.png',bbox_inches='tight',dpi=200)
-plt.clf()
-
-
-fig,ax = plt.subplots(1,1)
-plot=ax.pcolormesh(data['r_r200m_profile'], data['entropy_bins'], 
-    (data['entropy_Mass']/(fb*Mhalo/Msun)/dlogK/dlogr), 
-    norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
-
-ax.plot(radii/(rvir*kpc), HSE_halo.K(radii),                                color=cm.plasma(0.0), lw=2.5, label='HSE')
-ax.plot(radii/(rvir*kpc), cooling_flow_halo.K(radii), dashes=[1,2],         color=cm.plasma(0.2), lw=2.5, label='Cooling Flow'),
-ax.plot(radii/(rvir*kpc), HSE_turb_halo.K(radii),     dashes=[4,2],         color=cm.plasma(0.4), lw=2.5, label='HSE w/'+r'$\mathcal{M}=0.5$'+' turb.')
-ax.plot(radii/(rvir*kpc), HSE_rot_halo.K(radii),      dashes=[4,2,1,2],     color=cm.plasma(0.6), lw=2.5, label='HSE w/ rot. '+r'$\lambda=0.05$')
-ax.plot(radii/(rvir*kpc), precipitate_halo.K(radii),  dashes=[4,2,1,2,1,2], color=cm.plasma(0.8), lw=2.5, label='HSE w/ ' + r'$\frac{t_{\rm cool}}{t_{\rm ff}} = 10$'+' precip.')
-cb = fig.colorbar(plot)
-cb.set_label(r'$d^2 (M/ f_b M_{\rm halo}) / d \log K \, d \log r$',rotation=270,fontsize=12,labelpad=15)
-cb.ax.minorticks_off()
-
-ax.set_xlim(5e-2, 2)
-# ax.set_ylim(1e-1,1e6)
-ax.set_yscale('log')
-ax.set_xscale('log')
-ax.set_ylabel(r'$K\,[\mathrm{K\,cm}^{2}]$')
-ax.set_xlabel(r'$r/r_{\rm vir}$')
-ax.legend(loc='lower right', fontsize=8,ncol=1, handlelength=3.0)
-ax.set_title(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$')
-ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
-fig.set_size_inches(5,3)
-plt.savefig('./plots/entropy_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
-plt.clf()
-plt.close('all')
-
-
-
-
-fig,ax = plt.subplots(1,1)
-plot=ax.pcolormesh(data['r_r200m_profile'], data['radial_velocity_bins'], 
-    (((data['radial_velocity_Volume']/np.sum(data['radial_velocity_Volume']))).T/dvr).T /dlogr, 
-    norm=colors.LogNorm(vmin=1e-3,vmax=3), cmap='plasma')
-
-ax.plot(radii/(rvir*kpc), cooling_flow_halo.vr(radii)/1e5, dashes=[1,2],         color=cm.viridis(0.2), lw=2.5, label='Cooling Flow'),
-cb = fig.colorbar(plot)
-cb.set_label(r'$d^2 (V/V_{\rm tot}) / d v_r \, d \log r$',rotation=270,fontsize=12,labelpad=15)
-cb.ax.minorticks_off()
-
-ax.set_xlim(5e-2, 2)
-# ax.set_ylim(1e-1,1e6)
-# ax.set_yscale('log')
-ax.set_xscale('log')
-ax.set_ylabel(r'$v_r\,[\mathrm{km/s}]$')
-ax.set_xlabel(r'$r/r_{\rm vir}$')
-ax.legend(loc='lower right', fontsize=8,ncol=1, handlelength=3.0)
-ax.set_title(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$')
-ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
-fig.set_size_inches(5,3)
-plt.savefig('./plots/radial_velocity_Volume_'+fn+'.png',bbox_inches='tight',dpi=200)
-plt.clf()
-
-
-fig,ax = plt.subplots(1,1)
-plot=ax.pcolormesh(data['r_r200m_profile'], data['radial_velocity_bins'], 
-    (data['radial_velocity_Mass'].T/(fb*Mhalo/Msun)/dvr /dlogr).T, 
-    norm=colors.LogNorm(vmin=3e-4, vmax=3e-1), cmap='viridis')
-
-ax.plot(radii/(rvir*kpc), cooling_flow_halo.vr(radii)/1e5, dashes=[1,2],         color=cm.plasma(0.2), lw=2.5, label='Cooling Flow'),
-cb = fig.colorbar(plot)
-cb.set_label(r'$d^2 (M/ f_b M_{\rm halo}) / d v_r \, d \log r$',rotation=270,fontsize=12,labelpad=15)
-cb.ax.minorticks_off()
-
-ax.set_xlim(5e-2, 2)
-# ax.set_ylim(1e-1,1e6)
-# ax.set_yscale('log')
-ax.set_xscale('log')
-ax.set_ylabel(r'$v_r\,[\mathrm{km/s}]$')
-ax.set_xlabel(r'$r/r_{\rm vir}$')
-ax.legend(loc='lower right', fontsize=8,ncol=1, handlelength=3.0)
-ax.set_title(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$')
-ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
-fig.set_size_inches(5,3)
-plt.savefig('./plots/radial_velocity_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
-plt.clf()
-plt.close('all')
-
-
-fig,ax = plt.subplots(1,1)
-plot=ax.pcolormesh(data['r_r200m_profile'], data['azimuthal_velocity_bins'], 
-    (((data['azimuthal_velocity_Volume']/np.sum(data['azimuthal_velocity_Volume']))).T/dvphi).T /dlogr, 
-    norm=colors.LogNorm(vmin=1e-3,vmax=3), cmap='plasma')
-
-ax.plot(radii/(rvir*kpc), HSE_rot_halo.average_v_phi(radii)/1e5,  dashes=[4,2,1,2],     color=cm.viridis(0.6), lw=2.5, label='HSE w/ rot. '+r'$\lambda=0.05$')
-cb = fig.colorbar(plot)
-cb.set_label(r'$d^2 (V/V_{\rm tot}) / d v_\phi \, d \log r$',rotation=270,fontsize=12,labelpad=15)
-cb.ax.minorticks_off()
-
-ax.set_xlim(5e-2, 2)
-# ax.set_ylim(1e-1,1e6)
-# ax.set_yscale('log')
-ax.set_xscale('log')
-ax.set_ylabel(r'$v_\phi\,[\mathrm{km/s}]$')
-ax.set_xlabel(r'$r/r_{\rm vir}$')
-ax.legend(loc='lower right', fontsize=8,ncol=1, handlelength=3.0)
-ax.set_title(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$')
-ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
-fig.set_size_inches(5,3)
-plt.savefig('./plots/azimuthal_velocity_Volume_'+fn+'.png',bbox_inches='tight',dpi=200)
-plt.clf()
-
-
-fig,ax = plt.subplots(1,1)
-plot=ax.pcolormesh(data['r_r200m_profile'], data['azimuthal_velocity_bins'], 
-    (data['azimuthal_velocity_Mass'].T/(fb*Mhalo/Msun)/dvphi /dlogr).T, 
-    norm=colors.LogNorm(vmin=3e-4, vmax=3e-1), cmap='viridis')
-
-ax.plot(radii/(rvir*kpc), HSE_rot_halo.average_v_phi(radii)/1e5,  dashes=[4,2,1,2],     color=cm.plasma(0.6), lw=2.5, label='HSE w/ rot. '+r'$\lambda=0.05$')
-cb = fig.colorbar(plot)
-cb.set_label(r'$d^2 (M/ f_b M_{\rm halo}) / d v_\phi \, d \log r$',rotation=270,fontsize=12,labelpad=15)
-cb.ax.minorticks_off()
-
-ax.set_xlim(5e-2, 2)
-# ax.set_ylim(1e-1,1e6)
-# ax.set_yscale('log')
-ax.set_xscale('log')
-ax.set_ylabel(r'$v_\phi\,[\mathrm{km/s}]$')
-ax.set_xlabel(r'$r/r_{\rm vir}$')
-ax.legend(loc='lower right', fontsize=8,ncol=1, handlelength=3.0)
-ax.set_title(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$')
-ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
-fig.set_size_inches(5,3)
-plt.savefig('./plots/azimuthal_velocity_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
-plt.clf()
-plt.close('all')
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-ir = 5
-
-fig,ax = plt.subplots(1,1)
-plot=ax.pcolormesh(data['pressure_bins'], data['entropy_bins'], 
-    data['pressure_entropy_Volume'][...,ir]/np.sum(data['pressure_entropy_Volume'][...,ir]), 
-    norm=colors.LogNorm(vmin=1e-5,vmax=1e-1), cmap='plasma')
-cb = fig.colorbar(plot)
-cb.set_label(r'$\mathrm{Volume\,Fraction}$',rotation=270,fontsize=12,labelpad=15)
-cb.ax.minorticks_off()
-ax.set_yscale('log')
-ax.set_xscale('log')
-ax.set_ylabel(r'$K\,[\mathrm{K\,cm}^{2}]$')
-ax.set_xlabel(r'$P\,[\mathrm{K\,cm}^{-3}]$')
-ax.set_title(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr} \quad '+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$',fontsize=10)
-ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
-fig.set_size_inches(5,3)
-plt.savefig('./plots/pressure_entropy_Volume_r_'+str(ir).zfill(3)+'_'+fn+'.png',bbox_inches='tight',dpi=200)
-plt.clf()       
-
-fig,ax = plt.subplots(1,1)
-plot=ax.pcolormesh(data['pressure_bins'], data['entropy_bins'], 
-    data['pressure_entropy_Mass'][...,ir]/np.sum(data['pressure_entropy_Mass'][...,ir]), 
-    norm=colors.LogNorm(vmin=1e-5,vmax=1e-1), cmap='viridis')
-cb = fig.colorbar(plot)
-cb.set_label(r'$\mathrm{Mass\,Fraction}$',rotation=270,fontsize=12,labelpad=15)
-cb.ax.minorticks_off()
-ax.set_yscale('log')
-ax.set_xscale('log')
-ax.set_ylabel(r'$K\,[\mathrm{K\,cm}^{2}]$')
-ax.set_xlabel(r'$P\,[\mathrm{K\,cm}^{-3}]$')
-ax.set_title(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr} \quad '+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$',fontsize=10)
-ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
-fig.set_size_inches(5,3)
-plt.savefig('./plots/pressure_entropy_Mass_r_'+str(ir).zfill(3)+'_'+fn+'.png',bbox_inches='tight',dpi=200)
-plt.clf()       
-
-
-
-
-
-
-
-
-
-
-fig,ax = plt.subplots(1,1)
-plot=ax.pcolormesh(data['pressure_bins'], data['entropy_bins'], 
-    np.sum(data['pressure_entropy_Volume'],axis=-1)/np.sum(data['pressure_entropy_Volume']), 
-    norm=colors.LogNorm(vmin=1e-5,vmax=1e-1), cmap='plasma')
-cb = fig.colorbar(plot)
-cb.set_label(r'$\mathrm{Volume\,Fraction}$',rotation=270,fontsize=12,labelpad=15)
-cb.ax.minorticks_off()
-ax.set_yscale('log')
-ax.set_xscale('log')
-ax.set_ylabel(r'$K\,[\mathrm{K\,cm}^{2}]$')
-ax.set_xlabel(r'$P\,[\mathrm{K\,cm}^{-3}]$')
-ax.set_title(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$')
-ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
-fig.set_size_inches(5,3)
-plt.savefig('./plots/pressure_entropy_Volume_all_r_'+fn+'.png',bbox_inches='tight',dpi=200)
-plt.clf()       
+# fn="M12_s529643_snap099_TNG100"
+
+
+files = glob.glob('./data/simulations/*npz')
+
+for fn in files:
+    fn = fn[19:-4]
+    print fn
+    data = np.load('./data/simulations/'+fn+'.npz')
+
+    HSE_halo = HSE(2.0,0.05)                                              #    f_cs_HSE = 2.0, f_cgm=0.1):
+    HSE_turb_halo = HSE_turb(2.0,0.05,0.5)                                #    f_cs_HSE_turb = 2.0, f_cgm=0.1, Mach=0.5):
+    HSE_rot_halo = HSE_rot(2.0,0.05,0.05)                                 #    f_cs_HSE_rot = 2.0, f_cgm=0.1, lam=0.05):
+    cooling_flow_halo = cooling_flow(1.5,-4.0*Msun/yr)                   #    f_cs_CF = 2.0, Mdot = -3.0 * Msun/yr):
+    precipitate_halo = precipitate(10.0,0.05*mu*mp*vc(rvir*kpc)**2/kb)   #    tcooltff=10.0, T_outer=0.25*mu*mp*vc(rvir*kpc)**2/kb):
+
+
+
+
+    r_inner  = 0.05*rvir*kpc
+    r_outer  = 2.0*rvir*kpc
+    radii    = np.linspace(r_inner,r_outer,100)
+    vc_outer = np.sqrt(r_outer*grav_acc(r_outer))
+
+
+    dlogT = np.diff(np.log10(data['temperature_bins']))[0]
+    dlogn = np.diff(np.log10(data['number_density_bins']))[0]
+    dlogP = np.diff(np.log10(data['pressure_bins']))[0]
+    dlogK = np.diff(np.log10(data['entropy_bins']))[0]
+    dlogr = np.diff(np.log10(data['r_r200m_profile']))[0]
+    dvr = np.diff(data['radial_velocity_bins'])
+    dvphi = np.diff(data['azimuthal_velocity_bins'])
+
+    fig,ax = plt.subplots(1,1)
+
+    plot=ax.pcolormesh(data['r_r200m_profile'], data['temperature_bins'], 
+        (data['temperature_Volume']/np.sum(data['temperature_Volume']))/dlogT/dlogr, 
+        norm=colors.LogNorm(vmin=1e-2, vmax =3), cmap='plasma')
+
+    ax.plot(radii/(rvir*kpc), HSE_halo.T(radii),                                color=cm.viridis(0.0), lw=2.5, label='HSE')
+    ax.plot(radii/(rvir*kpc), cooling_flow_halo.T(radii), dashes=[1,2],         color=cm.viridis(0.2), lw=2.5, label='Cooling Flow'),
+    ax.plot(radii/(rvir*kpc), HSE_turb_halo.T(radii),     dashes=[4,2],         color=cm.viridis(0.4), lw=2.5, label='HSE w/'+r'$\mathcal{M}=0.5$'+' turb.')
+    ax.plot(radii/(rvir*kpc), HSE_rot_halo.T(radii),      dashes=[4,2,1,2],     color=cm.viridis(0.6), lw=2.5, label='HSE w/ rot. '+r'$\lambda=0.05$')
+    ax.plot(radii/(rvir*kpc), precipitate_halo.T(radii),  dashes=[4,2,1,2,1,2], color=cm.viridis(0.8), lw=2.5, label='HSE w/ ' + r'$\frac{t_{\rm cool}}{t_{\rm ff}} = 10$'+' precip.')
+    cb = fig.colorbar(plot)
+    cb.set_label(r'$d^2 (V/V_{\rm tot}) / d \log T \, d \log r$',rotation=270,fontsize=12,labelpad=15)
+    cb.ax.minorticks_off()
+
+    ax.set_xlim(5e-2, 2)
+    ax.set_ylim(3e3,4e7)
+    ax.set_yscale('log')
+    ax.set_xscale('log')
+    ax.set_ylabel(r'$T\,[\mathrm{K}]$')
+    ax.set_xlabel(r'$r/r_{\rm vir}$')
+    ax.legend(loc='upper right', fontsize=8,ncol=2,columnspacing=-3, handlelength=3.0)
+    ax.set_title(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$')
+    ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    fig.set_size_inches(5,3)
+    plt.savefig('./plots/temperature_Volume_'+fn+'.png',bbox_inches='tight',dpi=200)
+    plt.clf()
+
+
+    fig,ax = plt.subplots(1,1)
+
+    plot=ax.pcolormesh(data['r_r200m_profile'], data['temperature_bins'], 
+        (data['temperature_Mass']/(fb*Mhalo/Msun)/dlogT/dlogr), 
+        norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
+
+    ax.plot(radii/(rvir*kpc), HSE_halo.T(radii),                                color=cm.plasma(0.0), lw=2.5, label='HSE')
+    ax.plot(radii/(rvir*kpc), cooling_flow_halo.T(radii), dashes=[1,2],         color=cm.plasma(0.2), lw=2.5, label='Cooling Flow'),
+    ax.plot(radii/(rvir*kpc), HSE_turb_halo.T(radii),     dashes=[4,2],         color=cm.plasma(0.4), lw=2.5, label='HSE w/'+r'$\mathcal{M}=0.5$'+' turb.')
+    ax.plot(radii/(rvir*kpc), HSE_rot_halo.T(radii),      dashes=[4,2,1,2],     color=cm.plasma(0.6), lw=2.5, label='HSE w/ rot. '+r'$\lambda=0.05$')
+    ax.plot(radii/(rvir*kpc), precipitate_halo.T(radii),  dashes=[4,2,1,2,1,2], color=cm.plasma(0.8), lw=2.5, label='HSE w/ ' + r'$\frac{t_{\rm cool}}{t_{\rm ff}} = 10$'+' precip.')
+    cb = fig.colorbar(plot)
+    cb.set_label(r'$d^2 (M/ f_b M_{\rm halo}) / d \log T \, d \log r$',rotation=270,fontsize=12,labelpad=15)
+    cb.ax.minorticks_off()
+
+    ax.set_xlim(5e-2, 2)
+    ax.set_ylim(3e3,4e7)
+    ax.set_yscale('log')
+    ax.set_xscale('log')
+    ax.set_ylabel(r'$T\,[\mathrm{K}]$')
+    ax.set_xlabel(r'$r/r_{\rm vir}$')
+    ax.legend(loc='upper right', fontsize=8,ncol=2,columnspacing=-3, handlelength=3.0)
+    ax.set_title(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$')
+    ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    fig.set_size_inches(5,3)
+    plt.savefig('./plots/temperature_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
+    plt.clf()
+    plt.close('all')
+
+
+
+
+    fig,ax = plt.subplots(1,1)
+
+    plot=ax.pcolormesh(data['r_r200m_profile'], data['number_density_bins'], 
+        (data['number_density_Volume']/np.sum(data['number_density_Volume']))/dlogn/dlogr, 
+        norm=colors.LogNorm(vmin=1e-2, vmax =3), cmap='plasma')
+
+    ax.plot(radii/(rvir*kpc), HSE_halo.n(radii),                                color=cm.viridis(0.0), lw=2.5, label='HSE')
+    ax.plot(radii/(rvir*kpc), cooling_flow_halo.n(radii), dashes=[1,2],         color=cm.viridis(0.2), lw=2.5, label='Cooling Flow'),
+    ax.plot(radii/(rvir*kpc), HSE_turb_halo.n(radii),     dashes=[4,2],         color=cm.viridis(0.4), lw=2.5, label='HSE w/'+r'$\mathcal{M}=0.5$'+' turb.')
+    ax.plot(radii/(rvir*kpc), HSE_rot_halo.n(radii),      dashes=[4,2,1,2],     color=cm.viridis(0.6), lw=2.5, label='HSE w/ rot. '+r'$\lambda=0.05$')
+    ax.plot(radii/(rvir*kpc), precipitate_halo.n(radii),  dashes=[4,2,1,2,1,2], color=cm.viridis(0.8), lw=2.5, label='HSE w/ ' + r'$\frac{t_{\rm cool}}{t_{\rm ff}} = 10$'+' precip.')
+    cb = fig.colorbar(plot)
+    cb.set_label(r'$d^2 (V/V_{\rm tot}) / d \log n \, d \log r$',rotation=270,fontsize=12,labelpad=15)
+    cb.ax.minorticks_off()
+
+    ax.set_xlim(5e-2, 2)
+    ax.set_ylim(5e-6,3e0)
+    ax.set_yscale('log')
+    ax.set_xscale('log')
+    ax.set_ylabel(r'$n\,[\mathrm{cm}^{-3}]$')
+    ax.set_xlabel(r'$r/r_{\rm vir}$')
+    ax.legend(loc='upper right', fontsize=8,ncol=2,columnspacing=-3, handlelength=3.0)
+    ax.set_title(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$')
+    ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    fig.set_size_inches(5,3)
+    plt.savefig('./plots/number_density_Volume_'+fn+'.png',bbox_inches='tight',dpi=200)
+    plt.clf()
+
+
+
+    fig,ax = plt.subplots(1,1)
+
+    plot=ax.pcolormesh(data['r_r200m_profile'], data['number_density_bins'], 
+        (data['number_density_Mass']/(fb*Mhalo/Msun)/dlogn/dlogr), 
+        norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
+
+    ax.plot(radii/(rvir*kpc), HSE_halo.n(radii),                                color=cm.plasma(0.0), lw=2.5, label='HSE')
+    ax.plot(radii/(rvir*kpc), cooling_flow_halo.n(radii), dashes=[1,2],         color=cm.plasma(0.2), lw=2.5, label='Cooling Flow'),
+    ax.plot(radii/(rvir*kpc), HSE_turb_halo.n(radii),     dashes=[4,2],         color=cm.plasma(0.4), lw=2.5, label='HSE w/'+r'$\mathcal{M}=0.5$'+' turb.')
+    ax.plot(radii/(rvir*kpc), HSE_rot_halo.n(radii),      dashes=[4,2,1,2],     color=cm.plasma(0.6), lw=2.5, label='HSE w/ rot. '+r'$\lambda=0.05$')
+    ax.plot(radii/(rvir*kpc), precipitate_halo.n(radii),  dashes=[4,2,1,2,1,2], color=cm.plasma(0.8), lw=2.5, label='HSE w/ ' + r'$\frac{t_{\rm cool}}{t_{\rm ff}} = 10$'+' precip.')
+    cb = fig.colorbar(plot)
+    cb.set_label(r'$d^2 (M/ f_b M_{\rm halo}) / d \log n \, d \log r$',rotation=270,fontsize=12,labelpad=15)
+    cb.ax.minorticks_off()
+
+    ax.set_xlim(5e-2, 2)
+    ax.set_ylim(5e-6,3e0)
+    ax.set_yscale('log')
+    ax.set_xscale('log')
+    ax.set_ylabel(r'$n\,[\mathrm{cm}^{-3}]$')
+    ax.set_xlabel(r'$r/r_{\rm vir}$')
+    ax.legend(loc='upper right', fontsize=8,ncol=2,columnspacing=-3, handlelength=3.0)
+    ax.set_title(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$')
+    ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    fig.set_size_inches(5,3)
+    plt.savefig('./plots/number_density_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
+    plt.clf()
+    plt.close('all')
+
+
+
+
+    fig,ax = plt.subplots(1,1)
+    plot=ax.pcolormesh(data['r_r200m_profile'], data['pressure_bins'], 
+        (data['pressure_Volume']/np.sum(data['pressure_Volume']))/dlogP/dlogr, 
+        norm=colors.LogNorm(vmin=1e-2, vmax =3), cmap='plasma')
+
+    ax.plot(radii/(rvir*kpc), HSE_halo.P(radii),                                color=cm.viridis(0.0), lw=2.5, label='HSE')
+    ax.plot(radii/(rvir*kpc), cooling_flow_halo.P(radii), dashes=[1,2],         color=cm.viridis(0.2), lw=2.5, label='Cooling Flow'),
+    ax.plot(radii/(rvir*kpc), HSE_turb_halo.P(radii),     dashes=[4,2],         color=cm.viridis(0.4), lw=2.5, label='HSE w/'+r'$\mathcal{M}=0.5$'+' turb.')
+    ax.plot(radii/(rvir*kpc), HSE_rot_halo.P(radii),      dashes=[4,2,1,2],     color=cm.viridis(0.6), lw=2.5, label='HSE w/ rot. '+r'$\lambda=0.05$')
+    ax.plot(radii/(rvir*kpc), precipitate_halo.P(radii),  dashes=[4,2,1,2,1,2], color=cm.viridis(0.8), lw=2.5, label='HSE w/ ' + r'$\frac{t_{\rm cool}}{t_{\rm ff}} = 10$'+' precip.')
+    cb = fig.colorbar(plot)
+    cb.set_label(r'$d^2 (V/V_{\rm tot}) / d \log P \, d \log r$',rotation=270,fontsize=12,labelpad=15)
+    cb.ax.minorticks_off()
+
+    ax.set_xlim(5e-2, 2)
+    ax.set_ylim(1e-1,1e6)
+    ax.set_yscale('log')
+    ax.set_xscale('log')
+    ax.set_ylabel(r'$P\,[\mathrm{K\,cm}^{-3}]$')
+    ax.set_xlabel(r'$r/r_{\rm vir}$')
+    ax.legend(loc='upper right', fontsize=8,ncol=2,columnspacing=-3, handlelength=3.0)
+    ax.set_title(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$')
+    ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    fig.set_size_inches(5,3)
+    plt.savefig('./plots/pressure_Volume_'+fn+'.png',bbox_inches='tight',dpi=200)
+    plt.clf()
+
+
+    fig,ax = plt.subplots(1,1)
+    plot=ax.pcolormesh(data['r_r200m_profile'], data['pressure_bins'], 
+        (data['pressure_Mass']/(fb*Mhalo/Msun)/dlogP/dlogr), 
+        norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
+
+    ax.plot(radii/(rvir*kpc), HSE_halo.P(radii),                                color=cm.plasma(0.0), lw=2.5, label='HSE')
+    ax.plot(radii/(rvir*kpc), cooling_flow_halo.P(radii), dashes=[1,2],         color=cm.plasma(0.2), lw=2.5, label='Cooling Flow'),
+    ax.plot(radii/(rvir*kpc), HSE_turb_halo.P(radii),     dashes=[4,2],         color=cm.plasma(0.4), lw=2.5, label='HSE w/'+r'$\mathcal{M}=0.5$'+' turb.')
+    ax.plot(radii/(rvir*kpc), HSE_rot_halo.P(radii),      dashes=[4,2,1,2],     color=cm.plasma(0.6), lw=2.5, label='HSE w/ rot. '+r'$\lambda=0.05$')
+    ax.plot(radii/(rvir*kpc), precipitate_halo.P(radii),  dashes=[4,2,1,2,1,2], color=cm.plasma(0.8), lw=2.5, label='HSE w/ ' + r'$\frac{t_{\rm cool}}{t_{\rm ff}} = 10$'+' precip.')
+    cb = fig.colorbar(plot)
+    cb.set_label(r'$d^2 (M/ f_b M_{\rm halo}) / d \log P \, d \log r$',rotation=270,fontsize=12,labelpad=15)
+    cb.ax.minorticks_off()
+
+    ax.set_xlim(5e-2, 2)
+    ax.set_ylim(1e-1,1e6)
+    ax.set_yscale('log')
+    ax.set_xscale('log')
+    ax.set_ylabel(r'$P\,[\mathrm{K\,cm}^{-3}]$')
+    ax.set_xlabel(r'$r/r_{\rm vir}$')
+    ax.legend(loc='upper right', fontsize=8,ncol=2,columnspacing=-3, handlelength=3.0)
+    ax.set_title(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$')
+    ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    fig.set_size_inches(5,3)
+    plt.savefig('./plots/pressure_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
+    plt.clf()
+    plt.close('all')
+
+
+    fig,ax = plt.subplots(1,1)
+    plot=ax.pcolormesh(data['r_r200m_profile'], data['entropy_bins'], 
+        (data['entropy_Volume']/np.sum(data['entropy_Volume']))/dlogK/dlogr, 
+        norm=colors.LogNorm(vmin=1e-2, vmax =3), cmap='plasma')
+
+    ax.plot(radii/(rvir*kpc), HSE_halo.K(radii),                                color=cm.viridis(0.0), lw=2.5, label='HSE')
+    ax.plot(radii/(rvir*kpc), cooling_flow_halo.K(radii), dashes=[1,2],         color=cm.viridis(0.2), lw=2.5, label='Cooling Flow'),
+    ax.plot(radii/(rvir*kpc), HSE_turb_halo.K(radii),     dashes=[4,2],         color=cm.viridis(0.4), lw=2.5, label='HSE w/'+r'$\mathcal{M}=0.5$'+' turb.')
+    ax.plot(radii/(rvir*kpc), HSE_rot_halo.K(radii),      dashes=[4,2,1,2],     color=cm.viridis(0.6), lw=2.5, label='HSE w/ rot. '+r'$\lambda=0.05$')
+    ax.plot(radii/(rvir*kpc), precipitate_halo.K(radii),  dashes=[4,2,1,2,1,2], color=cm.viridis(0.8), lw=2.5, label='HSE w/ ' + r'$\frac{t_{\rm cool}}{t_{\rm ff}} = 10$'+' precip.')
+    cb = fig.colorbar(plot)
+    cb.set_label(r'$d^2 (V/V_{\rm tot}) / d \log K \, d \log r$',rotation=270,fontsize=12,labelpad=15)
+    cb.ax.minorticks_off()
+
+    ax.set_xlim(5e-2, 2)
+    # ax.set_ylim(1e-1,1e6)
+    ax.set_yscale('log')
+    ax.set_xscale('log')
+    ax.set_ylabel(r'$K\,[\mathrm{K\,cm}^{2}]$')
+    ax.set_xlabel(r'$r/r_{\rm vir}$')
+    ax.legend(loc='lower right', fontsize=8,ncol=1, handlelength=3.0)
+    ax.set_title(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$')
+    ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    fig.set_size_inches(5,3)
+    plt.savefig('./plots/entropy_Volume_'+fn+'.png',bbox_inches='tight',dpi=200)
+    plt.clf()
+
+
+    fig,ax = plt.subplots(1,1)
+    plot=ax.pcolormesh(data['r_r200m_profile'], data['entropy_bins'], 
+        (data['entropy_Mass']/(fb*Mhalo/Msun)/dlogK/dlogr), 
+        norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
+
+    ax.plot(radii/(rvir*kpc), HSE_halo.K(radii),                                color=cm.plasma(0.0), lw=2.5, label='HSE')
+    ax.plot(radii/(rvir*kpc), cooling_flow_halo.K(radii), dashes=[1,2],         color=cm.plasma(0.2), lw=2.5, label='Cooling Flow'),
+    ax.plot(radii/(rvir*kpc), HSE_turb_halo.K(radii),     dashes=[4,2],         color=cm.plasma(0.4), lw=2.5, label='HSE w/'+r'$\mathcal{M}=0.5$'+' turb.')
+    ax.plot(radii/(rvir*kpc), HSE_rot_halo.K(radii),      dashes=[4,2,1,2],     color=cm.plasma(0.6), lw=2.5, label='HSE w/ rot. '+r'$\lambda=0.05$')
+    ax.plot(radii/(rvir*kpc), precipitate_halo.K(radii),  dashes=[4,2,1,2,1,2], color=cm.plasma(0.8), lw=2.5, label='HSE w/ ' + r'$\frac{t_{\rm cool}}{t_{\rm ff}} = 10$'+' precip.')
+    cb = fig.colorbar(plot)
+    cb.set_label(r'$d^2 (M/ f_b M_{\rm halo}) / d \log K \, d \log r$',rotation=270,fontsize=12,labelpad=15)
+    cb.ax.minorticks_off()
+
+    ax.set_xlim(5e-2, 2)
+    # ax.set_ylim(1e-1,1e6)
+    ax.set_yscale('log')
+    ax.set_xscale('log')
+    ax.set_ylabel(r'$K\,[\mathrm{K\,cm}^{2}]$')
+    ax.set_xlabel(r'$r/r_{\rm vir}$')
+    ax.legend(loc='lower right', fontsize=8,ncol=1, handlelength=3.0)
+    ax.set_title(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$')
+    ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    fig.set_size_inches(5,3)
+    plt.savefig('./plots/entropy_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
+    plt.clf()
+    plt.close('all')
+
+
+
+
+    fig,ax = plt.subplots(1,1)
+    plot=ax.pcolormesh(data['r_r200m_profile'], data['radial_velocity_bins'], 
+        (((data['radial_velocity_Volume']/np.sum(data['radial_velocity_Volume']))).T/dvr).T /dlogr, 
+        norm=colors.LogNorm(vmin=1e-3,vmax=3), cmap='plasma')
+
+    ax.plot(radii/(rvir*kpc), cooling_flow_halo.vr(radii)/1e5, dashes=[1,2],         color=cm.viridis(0.2), lw=2.5, label='Cooling Flow'),
+    cb = fig.colorbar(plot)
+    cb.set_label(r'$d^2 (V/V_{\rm tot}) / d v_r \, d \log r$',rotation=270,fontsize=12,labelpad=15)
+    cb.ax.minorticks_off()
+
+    ax.set_xlim(5e-2, 2)
+    # ax.set_ylim(1e-1,1e6)
+    # ax.set_yscale('log')
+    ax.set_xscale('log')
+    ax.set_ylabel(r'$v_r\,[\mathrm{km/s}]$')
+    ax.set_xlabel(r'$r/r_{\rm vir}$')
+    ax.legend(loc='lower right', fontsize=8,ncol=1, handlelength=3.0)
+    ax.set_title(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$')
+    ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    fig.set_size_inches(5,3)
+    plt.savefig('./plots/radial_velocity_Volume_'+fn+'.png',bbox_inches='tight',dpi=200)
+    plt.clf()
+
+
+    fig,ax = plt.subplots(1,1)
+    plot=ax.pcolormesh(data['r_r200m_profile'], data['radial_velocity_bins'], 
+        (data['radial_velocity_Mass'].T/(fb*Mhalo/Msun)/dvr /dlogr).T, 
+        norm=colors.LogNorm(vmin=3e-4, vmax=3e-1), cmap='viridis')
+
+    ax.plot(radii/(rvir*kpc), cooling_flow_halo.vr(radii)/1e5, dashes=[1,2],         color=cm.plasma(0.2), lw=2.5, label='Cooling Flow'),
+    cb = fig.colorbar(plot)
+    cb.set_label(r'$d^2 (M/ f_b M_{\rm halo}) / d v_r \, d \log r$',rotation=270,fontsize=12,labelpad=15)
+    cb.ax.minorticks_off()
+
+    ax.set_xlim(5e-2, 2)
+    # ax.set_ylim(1e-1,1e6)
+    # ax.set_yscale('log')
+    ax.set_xscale('log')
+    ax.set_ylabel(r'$v_r\,[\mathrm{km/s}]$')
+    ax.set_xlabel(r'$r/r_{\rm vir}$')
+    ax.legend(loc='lower right', fontsize=8,ncol=1, handlelength=3.0)
+    ax.set_title(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$')
+    ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    fig.set_size_inches(5,3)
+    plt.savefig('./plots/radial_velocity_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
+    plt.clf()
+    plt.close('all')
+
+
+    fig,ax = plt.subplots(1,1)
+    plot=ax.pcolormesh(data['r_r200m_profile'], data['azimuthal_velocity_bins'], 
+        (((data['azimuthal_velocity_Volume']/np.sum(data['azimuthal_velocity_Volume']))).T/dvphi).T /dlogr, 
+        norm=colors.LogNorm(vmin=1e-3,vmax=3), cmap='plasma')
+
+    ax.plot(radii/(rvir*kpc), HSE_rot_halo.average_v_phi(radii)/1e5,  dashes=[4,2,1,2],     color=cm.viridis(0.6), lw=2.5, label='HSE w/ rot. '+r'$\lambda=0.05$')
+    cb = fig.colorbar(plot)
+    cb.set_label(r'$d^2 (V/V_{\rm tot}) / d v_\phi \, d \log r$',rotation=270,fontsize=12,labelpad=15)
+    cb.ax.minorticks_off()
+
+    ax.set_xlim(5e-2, 2)
+    # ax.set_ylim(1e-1,1e6)
+    # ax.set_yscale('log')
+    ax.set_xscale('log')
+    ax.set_ylabel(r'$v_\phi\,[\mathrm{km/s}]$')
+    ax.set_xlabel(r'$r/r_{\rm vir}$')
+    ax.legend(loc='lower right', fontsize=8,ncol=1, handlelength=3.0)
+    ax.set_title(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$')
+    ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    fig.set_size_inches(5,3)
+    plt.savefig('./plots/azimuthal_velocity_Volume_'+fn+'.png',bbox_inches='tight',dpi=200)
+    plt.clf()
+
+
+    fig,ax = plt.subplots(1,1)
+    plot=ax.pcolormesh(data['r_r200m_profile'], data['azimuthal_velocity_bins'], 
+        (data['azimuthal_velocity_Mass'].T/(fb*Mhalo/Msun)/dvphi /dlogr).T, 
+        norm=colors.LogNorm(vmin=3e-4, vmax=3e-1), cmap='viridis')
+
+    ax.plot(radii/(rvir*kpc), HSE_rot_halo.average_v_phi(radii)/1e5,  dashes=[4,2,1,2],     color=cm.plasma(0.6), lw=2.5, label='HSE w/ rot. '+r'$\lambda=0.05$')
+    cb = fig.colorbar(plot)
+    cb.set_label(r'$d^2 (M/ f_b M_{\rm halo}) / d v_\phi \, d \log r$',rotation=270,fontsize=12,labelpad=15)
+    cb.ax.minorticks_off()
+
+    ax.set_xlim(5e-2, 2)
+    # ax.set_ylim(1e-1,1e6)
+    # ax.set_yscale('log')
+    ax.set_xscale('log')
+    ax.set_ylabel(r'$v_\phi\,[\mathrm{km/s}]$')
+    ax.set_xlabel(r'$r/r_{\rm vir}$')
+    ax.legend(loc='lower right', fontsize=8,ncol=1, handlelength=3.0)
+    ax.set_title(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$')
+    ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    fig.set_size_inches(5,3)
+    plt.savefig('./plots/azimuthal_velocity_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
+    plt.clf()
+    plt.close('all')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    ir = 5
+
+    fig,ax = plt.subplots(1,1)
+    plot=ax.pcolormesh(data['pressure_bins'], data['entropy_bins'], 
+        data['pressure_entropy_Volume'][...,ir]/np.sum(data['pressure_entropy_Volume'][...,ir]), 
+        norm=colors.LogNorm(vmin=1e-5,vmax=1e-1), cmap='plasma')
+    cb = fig.colorbar(plot)
+    cb.set_label(r'$\mathrm{Volume\,Fraction}$',rotation=270,fontsize=12,labelpad=15)
+    cb.ax.minorticks_off()
+    ax.set_yscale('log')
+    ax.set_xscale('log')
+    ax.set_ylabel(r'$K\,[\mathrm{K\,cm}^{2}]$')
+    ax.set_xlabel(r'$P\,[\mathrm{K\,cm}^{-3}]$')
+    ax.set_title(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr} \quad '+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$',fontsize=10)
+    ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    fig.set_size_inches(5,3)
+    plt.savefig('./plots/pressure_entropy_Volume_r_'+str(ir).zfill(3)+'_'+fn+'.png',bbox_inches='tight',dpi=200)
+    plt.clf()       
+
+    fig,ax = plt.subplots(1,1)
+    plot=ax.pcolormesh(data['pressure_bins'], data['entropy_bins'], 
+        data['pressure_entropy_Mass'][...,ir]/np.sum(data['pressure_entropy_Mass'][...,ir]), 
+        norm=colors.LogNorm(vmin=1e-5,vmax=1e-1), cmap='viridis')
+    cb = fig.colorbar(plot)
+    cb.set_label(r'$\mathrm{Mass\,Fraction}$',rotation=270,fontsize=12,labelpad=15)
+    cb.ax.minorticks_off()
+    ax.set_yscale('log')
+    ax.set_xscale('log')
+    ax.set_ylabel(r'$K\,[\mathrm{K\,cm}^{2}]$')
+    ax.set_xlabel(r'$P\,[\mathrm{K\,cm}^{-3}]$')
+    ax.set_title(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr} \quad '+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$',fontsize=10)
+    ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    fig.set_size_inches(5,3)
+    plt.savefig('./plots/pressure_entropy_Mass_r_'+str(ir).zfill(3)+'_'+fn+'.png',bbox_inches='tight',dpi=200)
+    plt.clf()       
+
+
+
+
+
+
+
+
+
+
+    fig,ax = plt.subplots(1,1)
+    plot=ax.pcolormesh(data['pressure_bins'], data['entropy_bins'], 
+        np.sum(data['pressure_entropy_Volume'],axis=-1)/np.sum(data['pressure_entropy_Volume']), 
+        norm=colors.LogNorm(vmin=1e-5,vmax=1e-1), cmap='plasma')
+    cb = fig.colorbar(plot)
+    cb.set_label(r'$\mathrm{Volume\,Fraction}$',rotation=270,fontsize=12,labelpad=15)
+    cb.ax.minorticks_off()
+    ax.set_yscale('log')
+    ax.set_xscale('log')
+    ax.set_ylabel(r'$K\,[\mathrm{K\,cm}^{2}]$')
+    ax.set_xlabel(r'$P\,[\mathrm{K\,cm}^{-3}]$')
+    ax.set_title(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$')
+    ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    fig.set_size_inches(5,3)
+    plt.savefig('./plots/pressure_entropy_Volume_all_r_'+fn+'.png',bbox_inches='tight',dpi=200)
+    plt.clf()       
+
+
+
+    fig,ax = plt.subplots(1,1)
+    plot=ax.pcolormesh(data['pressure_bins'], data['entropy_bins'], 
+        np.sum(data['pressure_entropy_Mass'],axis=-1)/(fb*Mhalo/Msun)/dlogK/dlogP,
+        norm=colors.LogNorm(vmin=1e-3,vmax=1e-0), cmap='binary')
+    cb = fig.colorbar(plot)
+    cb.set_label(r'$\frac{d^2 \log (M/ f_b M_{\rm halo})}{d \log P \, d \log K}$',rotation=270,fontsize=12,labelpad=15)
+    cb.ax.minorticks_off()
+
+    ir = 1
+    plot=ax.contour(data['pressure_bins'][:-1], data['entropy_bins'][:-1], 
+        (data['pressure_entropy_Mass'][...,ir]/(fb*Mhalo/Msun)/dlogK/dlogP),
+        [1.5e-2], colors='#6600cc',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color="#6600cc", label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+
+    ir = 2
+    plot=ax.contour(data['pressure_bins'][:-1], data['entropy_bins'][:-1], 
+        (data['pressure_entropy_Mass'][...,ir]/(fb*Mhalo/Msun)/dlogK/dlogP),
+        [1.5e-2], colors='#0066ff',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color="#0066ff", label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+
+    ir = 3
+    plot=ax.contour(data['pressure_bins'][:-1], data['entropy_bins'][:-1], 
+        (data['pressure_entropy_Mass'][...,ir]/(fb*Mhalo/Msun)/dlogK/dlogP),
+        [1.5e-2], colors='#66cc00',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color="#66cc00", label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+
+    ir = 5
+    plot=ax.contour(data['pressure_bins'][:-1], data['entropy_bins'][:-1], 
+        (data['pressure_entropy_Mass'][...,ir]/(fb*Mhalo/Msun)/dlogK/dlogP),
+        [1.5e-2], colors='#ff9900',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color="#ff9900", label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+
+    ir = 7
+    plot=ax.contour(data['pressure_bins'][:-1], data['entropy_bins'][:-1], 
+        (data['pressure_entropy_Mass'][...,ir]/(fb*Mhalo/Msun)/dlogK/dlogP),
+        [1.5e-2], colors='#cc3300',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color="#cc3300", label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
 
+    ax.legend(loc='lower left', fontsize=6, ncol=1)
+    ax.set_yscale('log')
+    ax.set_xscale('log')
+    ax.set_ylim((1e4,1e10))
+    ax.set_xlim((7e-1,2e4))
+    ax.set_ylabel(r'$K\,[\mathrm{K\,cm}^{2}]$')
+    ax.set_xlabel(r'$P\,[\mathrm{K\,cm}^{-3}]$')
+    ax.set_title(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$')
+    ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    fig.set_size_inches(5,3)
+    plt.savefig('./plots/pressure_entropy_Mass_all_r_'+fn+'.png',bbox_inches='tight',dpi=200)
+    plt.clf()       
 
 
-fig,ax = plt.subplots(1,1)
-plot=ax.pcolormesh(data['pressure_bins'], data['entropy_bins'], 
-    np.sum(data['pressure_entropy_Mass'],axis=-1)/np.sum(data['pressure_entropy_Mass']), 
-    norm=colors.LogNorm(vmin=1e-6,vmax=1e-2), cmap='bone_r')
-cb = fig.colorbar(plot)
-cb.set_label(r'$\mathrm{Mass\,Fraction}$',rotation=270,fontsize=12,labelpad=15)
-cb.ax.minorticks_off()
 
-ir = 2
-plot=ax.contour(data['pressure_bins'][:-1], data['entropy_bins'][:-1], 
-    (data['pressure_entropy_Volume'][...,ir]/np.sum(data['pressure_entropy_Volume'][...,ir])), 
-    np.logspace(-6,-2,5), cmap='Blues',norm=colors.LogNorm())
-ax.plot([1e-2,1e-2], [1e11,1e11], color=cm.Blues(1.), label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+    from matplotlib import gridspec
 
-ir = 10
-plot=ax.contour(data['pressure_bins'][:-1], data['entropy_bins'][:-1], 
-    (data['pressure_entropy_Volume'][...,ir]/np.sum(data['pressure_entropy_Volume'][...,ir])), 
-    np.logspace(-6,-2,5), cmap='Oranges',norm=colors.LogNorm())
-ax.plot([1e-2,1e-2], [1e11,1e11], color=cm.Oranges(1.), label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+    fig = plt.figure()
+    gs  = gridspec.GridSpec(100, 100, wspace=0.1, hspace=0.05)
+    cax = plt.subplot(gs[15:85, 88:  ])
+    ax  = plt.subplot(gs[:,      0:82])
+    for ir in np.arange(0,11,1):
+        # ir = 19-ir
+        color = cm.Spectral(ir/10.)
+        N = 256
+        vals = np.ones((N, 4))
+        vals[:, 0] *= color[0]
+        vals[:, 1] *= color[1]
+        vals[:, 2] *= color[2]
+        vals[:, 3] *= np.linspace(1.0,0,N)
+        newcmp = ListedColormap(vals[::-1])
 
-ax.legend(loc='best', fontsize=8)
-ax.set_yscale('log')
-ax.set_xscale('log')
-ax.set_ylim((1e4,1e10))
-ax.set_xlim((1e-1,1e5))
-ax.set_ylabel(r'$K\,[\mathrm{K\,cm}^{2}]$')
-ax.set_xlabel(r'$P\,[\mathrm{K\,cm}^{-3}]$')
-ax.set_title(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$')
-ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
-fig.set_size_inches(5,3)
-plt.savefig('./plots/pressure_entropy_Mass_all_r_'+fn+'.png',bbox_inches='tight',dpi=200)
-plt.clf()       
+        logmassfrac=np.log10(data['pressure_entropy_Mass'][...,ir]/(fb*Mhalo/Msun)/dlogK/dlogP)
+        logmassfrac[np.isinf(logmassfrac)] = -10.
 
+        plot=ax.contourf(data['pressure_bins'][:-1], data['entropy_bins'][:-1], 
+            logmassfrac, np.linspace(-3,-0.9,100),
+            vmin=-3,vmax=-1, cmap=newcmp, antialiased=True, extend='both')
+
+        cax.contourf(data['r_r200m_phase'][ir:ir+2]-0.05, np.linspace(-3,-0.9,100), np.array([np.linspace(-3,-0.9,100),np.linspace(-3,-0.9,100)]).T,50,cmap=newcmp, antialiased=True)
+
+    cax.yaxis.set_label_position("right")
+    cax.yaxis.tick_right()
+    cax.set_title(r'$\frac{d^2 \log (M/ f_b M_{\rm halo})}{d \log P \, d \log K}$')#, fontsize=10,rotation=270,labelpad=15)
+    cax.set_xlabel(r'$r/r_{\rm 200m}$',fontsize=10)
+    # cb.set_ticks(np.arange(-6,-2.9,1))
+    # cb.ax.minorticks_off()
+    ax.set_yscale('log')
+    ax.set_xscale('log')
+    ax.set_ylabel(r'$K\,[\mathrm{K\,cm}^{2}]$')
+    ax.set_xlabel(r'$P\,[\mathrm{K\,cm}^{-3}]$')
+    ax.set_title(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$')
+    ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    ax.set_ylim((1e4,1e10))
+    ax.set_xlim((7e-1,2e4))
+    fig.set_size_inches(5,3)
+    plt.savefig('./plots/pressure_entropy_Mass_afew_r_rainbow_'+fn+'.png',bbox_inches='tight',dpi=200)
+    plt.clf()       
+
+
+
 
 
-fig,ax = plt.subplots(1,1)
-for ir in xrange(20):
-    # ir = 19-ir
-    color = cm.Spectral(ir/19.)
+
+
 
-    N = 256
-    vals = np.ones((N, 4))
-    vals[:, 0] *= color[0]
-    vals[:, 1] *= color[1]
-    vals[:, 2] *= color[2]
-    vals[:, 3] *= np.linspace(0.3,0,N)
-    newcmp = ListedColormap(vals[::-1])
 
-    plot=ax.contourf(data['pressure_bins'][:-1], data['entropy_bins'][:-1], 
-        data['pressure_entropy_Mass'][...,ir]/(fb*Mhalo/Msun), np.logspace(-6,-0.9,100),
-        norm=colors.LogNorm(vmin=1e-6,vmax=1e-1), cmap=newcmp, antialiased=True)
-cb = fig.colorbar(plot)
-cb.set_label(r'$\mathrm{Mass\,Fraction}$',rotation=270,fontsize=12,labelpad=15)
-cb.set_ticks(10**np.arange(-6,-0.9,1))
-cb.ax.minorticks_off()
-ax.set_yscale('log')
-ax.set_xscale('log')
-ax.set_ylabel(r'$K\,[\mathrm{K\,cm}^{2}]$')
-ax.set_xlabel(r'$P\,[\mathrm{K\,cm}^{-3}]$')
-ax.set_title(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$')
-ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
-ax.set_ylim((1e4,1e10))
-ax.set_xlim((1e-1,1e5))
-fig.set_size_inches(5,3)
-plt.savefig('./plots/pressure_entropy_Mass_all_r_rainbow_'+fn+'.png',bbox_inches='tight',dpi=200)
-plt.clf()       
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    HSE_halo = HSE(2.0,0.05)                                              #    f_cs_HSE = 2.0, f_cgm=0.1):
+    HSE_turb_halo = HSE_turb(2.0,0.05,0.5)                                #    f_cs_HSE_turb = 2.0, f_cgm=0.1, Mach=0.5):
+    HSE_rot_halo = HSE_rot(2.0,0.05,0.05)                                 #    f_cs_HSE_rot = 2.0, f_cgm=0.1, lam=0.05):
+    cooling_flow_halo = cooling_flow(1.5,-4.0*Msun/yr)                   #    f_cs_CF = 2.0, Mdot = -3.0 * Msun/yr):
+    precipitate_halo = precipitate(10.0,0.05*mu*mp*vc(rvir*kpc)**2/kb)   #    tcooltff=10.0, T_outer=0.25*mu*mp*vc(rvir*kpc)**2/kb):
+
+
+
+
+
+
+
+    fig, axarr = plt.subplots(2,1,sharex=True)
+
+    plot=axarr[0].pcolormesh(data['r_r200m_profile'], data['temperature_bins'], 
+        (data['temperature_Mass']/(fb*Mhalo/Msun)/dlogT/dlogr), 
+        norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
+
+    HSE_halo = HSE(4.0,0.05)                                              
+    axarr[0].plot(radii/(rvir*kpc), HSE_halo.T(radii), color=cm.plasma(0.0), lw=2.5, label=r'$\frac{v_c^2}{c_s^2} = 4$')
+    HSE_halo = HSE(2.0,0.05)                                              
+    axarr[0].plot(radii/(rvir*kpc), HSE_halo.T(radii), color=cm.plasma(0.3), lw=2.5, label=r'$\frac{v_c^2}{c_s^2} = 2$')
+    HSE_halo = HSE(1.0,0.05)                                              
+    axarr[0].plot(radii/(rvir*kpc), HSE_halo.T(radii), color=cm.plasma(0.6), lw=2.5, label=r'$\frac{v_c^2}{c_s^2} = 1$')
+    HSE_halo = HSE(0.5,0.05)                                              
+    axarr[0].plot(radii/(rvir*kpc), HSE_halo.T(radii), color=cm.plasma(0.9), lw=2.5, label=r'$\frac{v_c^2}{c_s^2} = 1/2$')
+
+    cb = fig.colorbar(plot,ax=axarr[0])
+    cb.set_label(r'$\frac{d^2 (M/f_b M_{\rm halo}) }{d \log T \, d \log r}$',rotation=270,fontsize=12,labelpad=15)
+    cb.ax.minorticks_off()
+    axarr[0].set_xlim(5e-2, 2)
+    axarr[0].set_ylim(3e3,4e7)
+    axarr[0].set_yscale('log')
+    axarr[0].set_xscale('log')
+    axarr[0].set_ylabel(r'$T\,[\mathrm{K}]$')
+    axarr[0].legend(loc='upper left', fontsize=6,ncol=4)
+    axarr[0].grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+
 
 
+    plot=axarr[1].pcolormesh(data['r_r200m_profile'], data['number_density_bins'], 
+        (data['number_density_Mass']/(fb*Mhalo/Msun)/dlogn/dlogr), 
+        norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
 
+    HSE_halo = HSE(4.0,0.05)                                              
+    axarr[1].plot(radii/(rvir*kpc), HSE_halo.n(radii), color=cm.plasma(0.0), lw=2.5, label=r'$\frac{v_c^2}{c_s^2} = 4$')
+    HSE_halo = HSE(2.0,0.05)                                              
+    axarr[1].plot(radii/(rvir*kpc), HSE_halo.n(radii), color=cm.plasma(0.3), lw=2.5, label=r'$\frac{v_c^2}{c_s^2} = 2$')
+    HSE_halo = HSE(1.0,0.05)                                              
+    axarr[1].plot(radii/(rvir*kpc), HSE_halo.n(radii), color=cm.plasma(0.6), lw=2.5, label=r'$\frac{v_c^2}{c_s^2} = 1$')
+    HSE_halo = HSE(0.5,0.05)                                              
+    axarr[1].plot(radii/(rvir*kpc), HSE_halo.n(radii), color=cm.plasma(0.9), lw=2.5, label=r'$\frac{v_c^2}{c_s^2} = 1/2$')
 
+    cb = fig.colorbar(plot,ax=axarr[1])
+    cb.set_label(r'$\frac{d^2 (M/ f_b M_{\rm halo})}{ d \log n \, d \log r}$',rotation=270,fontsize=12,labelpad=15)
+    cb.ax.minorticks_off()
 
+    axarr[1].set_xlim(5e-2, 2)
+    axarr[1].set_ylim(5e-6,1e-1)
+    axarr[1].set_yscale('log')
+    axarr[1].set_xscale('log')
+    axarr[1].set_ylabel(r'$n\,[\mathrm{cm}^{-3}]$')
+    axarr[1].set_xlabel(r'$r/r_{\rm vir}$')
+    axarr[1].legend(loc='upper right', fontsize=6,ncol=2)
+    axarr[1].grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
 
+    # fig.suptitle(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$', y = 0.96)
+    fig.set_size_inches(5,5)
+    plt.savefig('./plots/HSE_f_cs_comparison_T_n_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
+    plt.clf()
 
 
 
+    fig, axarr = plt.subplots(2,1,sharex=True)
 
+    plot=axarr[0].pcolormesh(data['r_r200m_profile'], data['temperature_bins'], 
+        (data['temperature_Mass']/(fb*Mhalo/Msun)/dlogT/dlogr), 
+        norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
 
+    HSE_halo = HSE(2.0,0.01)                                              
+    axarr[0].plot(radii/(rvir*kpc), HSE_halo.T(radii), color=cm.plasma(0.0), lw=2.5, label=r'$\frac{M_{\rm CGM}}{M_{\rm halo}} = 0.01$')
+    HSE_halo = HSE(2.0,0.05)                                              
+    axarr[0].plot(radii/(rvir*kpc), HSE_halo.T(radii), color=cm.plasma(0.3), lw=2.5, label=r'$\frac{M_{\rm CGM}}{M_{\rm halo}} = 0.05$')
+    HSE_halo = HSE(2.0,0.1)                                              
+    axarr[0].plot(radii/(rvir*kpc), HSE_halo.T(radii), color=cm.plasma(0.6), lw=2.5, label=r'$\frac{M_{\rm CGM}}{M_{\rm halo}} = 0.1$')
+    HSE_halo = HSE(2.0,0.15)                                              
+    axarr[0].plot(radii/(rvir*kpc), HSE_halo.T(radii), color=cm.plasma(0.9), lw=2.5, label=r'$\frac{M_{\rm CGM}}{M_{\rm halo}} = 0.15$')
 
+    cb = fig.colorbar(plot,ax=axarr[0])
+    cb.set_label(r'$\frac{d^2 (M/f_b M_{\rm halo}) }{d \log T \, d \log r}$',rotation=270,fontsize=12,labelpad=15)
+    cb.ax.minorticks_off()
+    axarr[0].set_xlim(5e-2, 2)
+    axarr[0].set_ylim(3e3,4e7)
+    axarr[0].set_yscale('log')
+    axarr[0].set_xscale('log')
+    axarr[0].set_ylabel(r'$T\,[\mathrm{K}]$')
+    axarr[0].legend(loc='upper left', fontsize=6,ncol=4, columnspacing=1)
+    axarr[0].grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
 
 
 
+    plot=axarr[1].pcolormesh(data['r_r200m_profile'], data['number_density_bins'], 
+        (data['number_density_Mass']/(fb*Mhalo/Msun)/dlogn/dlogr), 
+        norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
 
+    HSE_halo = HSE(2.0,0.01)                                              
+    axarr[1].plot(radii/(rvir*kpc), HSE_halo.n(radii), color=cm.plasma(0.0), lw=2.5, label=r'$\frac{M_{\rm CGM}}{M_{\rm halo}} = 0.01$')
+    HSE_halo = HSE(2.0,0.05)                                              
+    axarr[1].plot(radii/(rvir*kpc), HSE_halo.n(radii), color=cm.plasma(0.3), lw=2.5, label=r'$\frac{M_{\rm CGM}}{M_{\rm halo}} = 0.05$')
+    HSE_halo = HSE(2.0,0.1)                                              
+    axarr[1].plot(radii/(rvir*kpc), HSE_halo.n(radii), color=cm.plasma(0.6), lw=2.5, label=r'$\frac{M_{\rm CGM}}{M_{\rm halo}} = 0.1$')
+    HSE_halo = HSE(2.0,0.15)                                              
+    axarr[1].plot(radii/(rvir*kpc), HSE_halo.n(radii), color=cm.plasma(0.9), lw=2.5, label=r'$\frac{M_{\rm CGM}}{M_{\rm halo}} = 0.15$')
 
+    cb = fig.colorbar(plot,ax=axarr[1])
+    cb.set_label(r'$\frac{d^2 (M/ f_b M_{\rm halo})}{ d \log n \, d \log r}$',rotation=270,fontsize=12,labelpad=15)
+    cb.ax.minorticks_off()
 
+    axarr[1].set_xlim(5e-2, 2)
+    axarr[1].set_ylim(5e-6,1e-1)
+    axarr[1].set_yscale('log')
+    axarr[1].set_xscale('log')
+    axarr[1].set_ylabel(r'$n\,[\mathrm{cm}^{-3}]$')
+    axarr[1].set_xlabel(r'$r/r_{\rm vir}$')
+    axarr[1].legend(loc='upper right', fontsize=6,ncol=2, columnspacing=1)
+    axarr[1].grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
 
+    # fig.suptitle(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$', y = 0.96)
+    fig.set_size_inches(5,5)
+    plt.savefig('./plots/HSE_f_cgm_comparison_T_n_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
+    plt.clf()
 
 
 
@@ -1162,209 +1339,204 @@ plt.clf()
 
 
 
-HSE_halo = HSE(2.0,0.05)                                              #    f_cs_HSE = 2.0, f_cgm=0.1):
-HSE_turb_halo = HSE_turb(2.0,0.05,0.5)                                #    f_cs_HSE_turb = 2.0, f_cgm=0.1, Mach=0.5):
-HSE_rot_halo = HSE_rot(2.0,0.05,0.05)                                 #    f_cs_HSE_rot = 2.0, f_cgm=0.1, lam=0.05):
-cooling_flow_halo = cooling_flow(1.5,-4.0*Msun/yr)                   #    f_cs_CF = 2.0, Mdot = -3.0 * Msun/yr):
-precipitate_halo = precipitate(10.0,0.05*mu*mp*vc(rvir*kpc)**2/kb)   #    tcooltff=10.0, T_outer=0.25*mu*mp*vc(rvir*kpc)**2/kb):
 
+    fig, axarr = plt.subplots(2,1,sharex=True)
 
+    plot=axarr[0].pcolormesh(data['r_r200m_profile'], data['temperature_bins'], 
+        (data['temperature_Mass']/(fb*Mhalo/Msun)/dlogT/dlogr), 
+        norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
 
+    HSE_rot_halo = HSE_rot(2.0,0.05,0.01)
+    axarr[0].plot(radii/(rvir*kpc), HSE_rot_halo.T(radii), color=cm.plasma(0.0), lw=2.5, label=r'$\lambda = 0.01$')
+    HSE_rot_halo = HSE_rot(2.0,0.05,0.05)
+    axarr[0].plot(radii/(rvir*kpc), HSE_rot_halo.T(radii), color=cm.plasma(0.3), lw=2.5, label=r'$\lambda = 0.05$')
+    HSE_rot_halo = HSE_rot(2.0,0.05,0.1)
+    axarr[0].plot(radii/(rvir*kpc), HSE_rot_halo.T(radii), color=cm.plasma(0.6), lw=2.5, label=r'$\lambda = 0.1$')
+    HSE_rot_halo = HSE_rot(2.0,0.05,0.15)
+    axarr[0].plot(radii/(rvir*kpc), HSE_rot_halo.T(radii), color=cm.plasma(0.9), lw=2.5, label=r'$\lambda = 0.15$')
 
+    cb = fig.colorbar(plot,ax=axarr[0])
+    cb.set_label(r'$\frac{d^2 (M/f_b M_{\rm halo}) }{d \log T \, d \log r}$',rotation=270,fontsize=12,labelpad=15)
+    cb.ax.minorticks_off()
+    axarr[0].set_xlim(5e-2, 2)
+    axarr[0].set_ylim(3e3,4e7)
+    axarr[0].set_yscale('log')
+    axarr[0].set_xscale('log')
+    axarr[0].set_ylabel(r'$T\,[\mathrm{K}]$')
+    axarr[0].legend(loc='upper left', fontsize=6,ncol=4, columnspacing=1)
+    axarr[0].grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
 
 
 
-fig, axarr = plt.subplots(2,1,sharex=True)
+    plot=axarr[1].pcolormesh(data['r_r200m_profile'], data['number_density_bins'], 
+        (data['number_density_Mass']/(fb*Mhalo/Msun)/dlogn/dlogr), 
+        norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
 
-plot=axarr[0].pcolormesh(data['r_r200m_profile'], data['temperature_bins'], 
-    (data['temperature_Mass']/(fb*Mhalo/Msun)/dlogT/dlogr), 
-    norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
+    HSE_rot_halo = HSE_rot(2.0,0.05,0.01)
+    axarr[1].plot(radii/(rvir*kpc), HSE_rot_halo.n(radii), color=cm.plasma(0.0), lw=2.5, label=r'$\lambda = 0.01$')
+    HSE_rot_halo = HSE_rot(2.0,0.05,0.05)
+    axarr[1].plot(radii/(rvir*kpc), HSE_rot_halo.n(radii), color=cm.plasma(0.3), lw=2.5, label=r'$\lambda = 0.05$')
+    HSE_rot_halo = HSE_rot(2.0,0.05,0.1)
+    axarr[1].plot(radii/(rvir*kpc), HSE_rot_halo.n(radii), color=cm.plasma(0.6), lw=2.5, label=r'$\lambda = 0.1$')
+    HSE_rot_halo = HSE_rot(2.0,0.05,0.15)
+    axarr[1].plot(radii/(rvir*kpc), HSE_rot_halo.n(radii), color=cm.plasma(0.9), lw=2.5, label=r'$\lambda = 0.15$')
 
-HSE_halo = HSE(4.0,0.05)                                              
-axarr[0].plot(radii/(rvir*kpc), HSE_halo.T(radii), color=cm.plasma(0.0), lw=2.5, label=r'$\frac{v_c^2}{c_s^2} = 4$')
-HSE_halo = HSE(2.0,0.05)                                              
-axarr[0].plot(radii/(rvir*kpc), HSE_halo.T(radii), color=cm.plasma(0.3), lw=2.5, label=r'$\frac{v_c^2}{c_s^2} = 2$')
-HSE_halo = HSE(1.0,0.05)                                              
-axarr[0].plot(radii/(rvir*kpc), HSE_halo.T(radii), color=cm.plasma(0.6), lw=2.5, label=r'$\frac{v_c^2}{c_s^2} = 1$')
-HSE_halo = HSE(0.5,0.05)                                              
-axarr[0].plot(radii/(rvir*kpc), HSE_halo.T(radii), color=cm.plasma(0.9), lw=2.5, label=r'$\frac{v_c^2}{c_s^2} = 1/2$')
+    cb = fig.colorbar(plot,ax=axarr[1])
+    cb.set_label(r'$\frac{d^2 (M/ f_b M_{\rm halo})}{ d \log n \, d \log r}$',rotation=270,fontsize=12,labelpad=15)
+    cb.ax.minorticks_off()
 
-cb = fig.colorbar(plot,ax=axarr[0])
-cb.set_label(r'$\frac{d^2 (M/f_b M_{\rm halo}) }{d \log T \, d \log r}$',rotation=270,fontsize=12,labelpad=15)
-cb.ax.minorticks_off()
-axarr[0].set_xlim(5e-2, 2)
-axarr[0].set_ylim(3e3,4e7)
-axarr[0].set_yscale('log')
-axarr[0].set_xscale('log')
-axarr[0].set_ylabel(r'$T\,[\mathrm{K}]$')
-axarr[0].legend(loc='upper left', fontsize=6,ncol=4)
-axarr[0].grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    axarr[1].set_xlim(5e-2, 2)
+    axarr[1].set_ylim(5e-6,1e-1)
+    axarr[1].set_yscale('log')
+    axarr[1].set_xscale('log')
+    axarr[1].set_ylabel(r'$n\,[\mathrm{cm}^{-3}]$')
+    axarr[1].set_xlabel(r'$r/r_{\rm vir}$')
+    axarr[1].legend(loc='upper right', fontsize=6,ncol=2, columnspacing=1)
+    axarr[1].grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
 
+    # fig.suptitle(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$', y = 0.96)
+    fig.set_size_inches(5,5)
+    plt.savefig('./plots/HSE_rot_lambda_comparison_T_n_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
+    plt.clf()
 
 
-plot=axarr[1].pcolormesh(data['r_r200m_profile'], data['number_density_bins'], 
-    (data['number_density_Mass']/(fb*Mhalo/Msun)/dlogn/dlogr), 
-    norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
 
-HSE_halo = HSE(4.0,0.05)                                              
-axarr[1].plot(radii/(rvir*kpc), HSE_halo.n(radii), color=cm.plasma(0.0), lw=2.5, label=r'$\frac{v_c^2}{c_s^2} = 4$')
-HSE_halo = HSE(2.0,0.05)                                              
-axarr[1].plot(radii/(rvir*kpc), HSE_halo.n(radii), color=cm.plasma(0.3), lw=2.5, label=r'$\frac{v_c^2}{c_s^2} = 2$')
-HSE_halo = HSE(1.0,0.05)                                              
-axarr[1].plot(radii/(rvir*kpc), HSE_halo.n(radii), color=cm.plasma(0.6), lw=2.5, label=r'$\frac{v_c^2}{c_s^2} = 1$')
-HSE_halo = HSE(0.5,0.05)                                              
-axarr[1].plot(radii/(rvir*kpc), HSE_halo.n(radii), color=cm.plasma(0.9), lw=2.5, label=r'$\frac{v_c^2}{c_s^2} = 1/2$')
 
-cb = fig.colorbar(plot,ax=axarr[1])
-cb.set_label(r'$\frac{d^2 (M/ f_b M_{\rm halo})}{ d \log n \, d \log r}$',rotation=270,fontsize=12,labelpad=15)
-cb.ax.minorticks_off()
 
-axarr[1].set_xlim(5e-2, 2)
-axarr[1].set_ylim(5e-6,1e-1)
-axarr[1].set_yscale('log')
-axarr[1].set_xscale('log')
-axarr[1].set_ylabel(r'$n\,[\mathrm{cm}^{-3}]$')
-axarr[1].set_xlabel(r'$r/r_{\rm vir}$')
-axarr[1].legend(loc='upper right', fontsize=6,ncol=2)
-axarr[1].grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
 
-# fig.suptitle(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$', y = 0.96)
-fig.set_size_inches(5,5)
-plt.savefig('./plots/HSE_f_cs_comparison_T_n_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
-plt.clf()
 
 
 
-fig, axarr = plt.subplots(2,1,sharex=True)
 
-plot=axarr[0].pcolormesh(data['r_r200m_profile'], data['temperature_bins'], 
-    (data['temperature_Mass']/(fb*Mhalo/Msun)/dlogT/dlogr), 
-    norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
 
-HSE_halo = HSE(2.0,0.01)                                              
-axarr[0].plot(radii/(rvir*kpc), HSE_halo.T(radii), color=cm.plasma(0.0), lw=2.5, label=r'$\frac{M_{\rm CGM}}{M_{\rm halo}} = 0.01$')
-HSE_halo = HSE(2.0,0.05)                                              
-axarr[0].plot(radii/(rvir*kpc), HSE_halo.T(radii), color=cm.plasma(0.3), lw=2.5, label=r'$\frac{M_{\rm CGM}}{M_{\rm halo}} = 0.05$')
-HSE_halo = HSE(2.0,0.1)                                              
-axarr[0].plot(radii/(rvir*kpc), HSE_halo.T(radii), color=cm.plasma(0.6), lw=2.5, label=r'$\frac{M_{\rm CGM}}{M_{\rm halo}} = 0.1$')
-HSE_halo = HSE(2.0,0.15)                                              
-axarr[0].plot(radii/(rvir*kpc), HSE_halo.T(radii), color=cm.plasma(0.9), lw=2.5, label=r'$\frac{M_{\rm CGM}}{M_{\rm halo}} = 0.15$')
 
-cb = fig.colorbar(plot,ax=axarr[0])
-cb.set_label(r'$\frac{d^2 (M/f_b M_{\rm halo}) }{d \log T \, d \log r}$',rotation=270,fontsize=12,labelpad=15)
-cb.ax.minorticks_off()
-axarr[0].set_xlim(5e-2, 2)
-axarr[0].set_ylim(3e3,4e7)
-axarr[0].set_yscale('log')
-axarr[0].set_xscale('log')
-axarr[0].set_ylabel(r'$T\,[\mathrm{K}]$')
-axarr[0].legend(loc='upper left', fontsize=6,ncol=4, columnspacing=1)
-axarr[0].grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
 
 
 
-plot=axarr[1].pcolormesh(data['r_r200m_profile'], data['number_density_bins'], 
-    (data['number_density_Mass']/(fb*Mhalo/Msun)/dlogn/dlogr), 
-    norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
 
-HSE_halo = HSE(2.0,0.01)                                              
-axarr[1].plot(radii/(rvir*kpc), HSE_halo.n(radii), color=cm.plasma(0.0), lw=2.5, label=r'$\frac{M_{\rm CGM}}{M_{\rm halo}} = 0.01$')
-HSE_halo = HSE(2.0,0.05)                                              
-axarr[1].plot(radii/(rvir*kpc), HSE_halo.n(radii), color=cm.plasma(0.3), lw=2.5, label=r'$\frac{M_{\rm CGM}}{M_{\rm halo}} = 0.05$')
-HSE_halo = HSE(2.0,0.1)                                              
-axarr[1].plot(radii/(rvir*kpc), HSE_halo.n(radii), color=cm.plasma(0.6), lw=2.5, label=r'$\frac{M_{\rm CGM}}{M_{\rm halo}} = 0.1$')
-HSE_halo = HSE(2.0,0.15)                                              
-axarr[1].plot(radii/(rvir*kpc), HSE_halo.n(radii), color=cm.plasma(0.9), lw=2.5, label=r'$\frac{M_{\rm CGM}}{M_{\rm halo}} = 0.15$')
 
-cb = fig.colorbar(plot,ax=axarr[1])
-cb.set_label(r'$\frac{d^2 (M/ f_b M_{\rm halo})}{ d \log n \, d \log r}$',rotation=270,fontsize=12,labelpad=15)
-cb.ax.minorticks_off()
+    fig, axarr = plt.subplots(2,1,sharex=True)
 
-axarr[1].set_xlim(5e-2, 2)
-axarr[1].set_ylim(5e-6,1e-1)
-axarr[1].set_yscale('log')
-axarr[1].set_xscale('log')
-axarr[1].set_ylabel(r'$n\,[\mathrm{cm}^{-3}]$')
-axarr[1].set_xlabel(r'$r/r_{\rm vir}$')
-axarr[1].legend(loc='upper right', fontsize=6,ncol=2, columnspacing=1)
-axarr[1].grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    plot=axarr[0].pcolormesh(data['r_r200m_profile'], data['temperature_bins'], 
+        (data['temperature_Mass']/(fb*Mhalo/Msun)/dlogT/dlogr), 
+        norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
 
-# fig.suptitle(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$', y = 0.96)
-fig.set_size_inches(5,5)
-plt.savefig('./plots/HSE_f_cgm_comparison_T_n_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
-plt.clf()
+    cooling_flow_halo = cooling_flow(1.5,-0.5*Msun/yr)
+    axarr[0].plot(radii/(rvir*kpc), cooling_flow_halo.T(radii), color=cm.plasma(0.0), lw=2.5, label=r'$\dot{M} = 0.5 M_\odot/{\rm yr}$')
+    cooling_flow_halo = cooling_flow(1.5,-1.0*Msun/yr)
+    axarr[0].plot(radii/(rvir*kpc), cooling_flow_halo.T(radii), color=cm.plasma(0.3), lw=2.5, label=r'$\dot{M} = 1 M_\odot/{\rm yr}$')
+    cooling_flow_halo = cooling_flow(1.5,-2.0*Msun/yr)
+    axarr[0].plot(radii/(rvir*kpc), cooling_flow_halo.T(radii), color=cm.plasma(0.6), lw=2.5, label=r'$\dot{M} = 2 M_\odot/{\rm yr}$')
+    cooling_flow_halo = cooling_flow(1.5,-4.0*Msun/yr)
+    axarr[0].plot(radii/(rvir*kpc), cooling_flow_halo.T(radii), color=cm.plasma(0.9), lw=2.5, label=r'$\dot{M} = 4 M_\odot/{\rm yr}$')
 
+    cb = fig.colorbar(plot,ax=axarr[0])
+    cb.set_label(r'$\frac{d^2 (M/f_b M_{\rm halo}) }{d \log T \, d \log r}$',rotation=270,fontsize=12,labelpad=15)
+    cb.ax.minorticks_off()
+    axarr[0].set_xlim(5e-2, 2)
+    axarr[0].set_ylim(3e3,4e7)
+    axarr[0].set_yscale('log')
+    axarr[0].set_xscale('log')
+    axarr[0].set_ylabel(r'$T\,[\mathrm{K}]$')
+    axarr[0].legend(loc='upper left', fontsize=6,ncol=4, columnspacing=1)
+    axarr[0].grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
 
 
 
+    plot=axarr[1].pcolormesh(data['r_r200m_profile'], data['number_density_bins'], 
+        (data['number_density_Mass']/(fb*Mhalo/Msun)/dlogn/dlogr), 
+        norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
 
+    cooling_flow_halo = cooling_flow(1.5,-0.5*Msun/yr)
+    axarr[1].plot(radii/(rvir*kpc), cooling_flow_halo.n(radii), color=cm.plasma(0.0), lw=2.5, label=r'$\dot{M} = 0.5 M_\odot/{\rm yr}$')
+    cooling_flow_halo = cooling_flow(1.5,-1.0*Msun/yr)
+    axarr[1].plot(radii/(rvir*kpc), cooling_flow_halo.n(radii), color=cm.plasma(0.3), lw=2.5, label=r'$\dot{M} = 1.0 M_\odot/{\rm yr}$')
+    cooling_flow_halo = cooling_flow(1.5,-2.0*Msun/yr)
+    axarr[1].plot(radii/(rvir*kpc), cooling_flow_halo.n(radii), color=cm.plasma(0.6), lw=2.5, label=r'$\dot{M} = 2 M_\odot/{\rm yr}$')
+    cooling_flow_halo = cooling_flow(1.5,-4.0*Msun/yr)
+    axarr[1].plot(radii/(rvir*kpc), cooling_flow_halo.n(radii), color=cm.plasma(0.9), lw=2.5, label=r'$\dot{M} = 4 M_\odot/{\rm yr}$')
 
+    cb = fig.colorbar(plot,ax=axarr[1])
+    cb.set_label(r'$\frac{d^2 (M/ f_b M_{\rm halo})}{ d \log n \, d \log r}$',rotation=270,fontsize=12,labelpad=15)
+    cb.ax.minorticks_off()
 
+    axarr[1].set_xlim(5e-2, 2)
+    axarr[1].set_ylim(5e-6,1e-1)
+    axarr[1].set_yscale('log')
+    axarr[1].set_xscale('log')
+    axarr[1].set_ylabel(r'$n\,[\mathrm{cm}^{-3}]$')
+    axarr[1].set_xlabel(r'$r/r_{\rm vir}$')
+    axarr[1].legend(loc='upper right', fontsize=6,ncol=2, columnspacing=1)
+    axarr[1].grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
 
+    # fig.suptitle(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$', y = 0.96)
+    fig.set_size_inches(5,5)
+    plt.savefig('./plots/cooling_flow_fcs15_mdot_comparison_T_n_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
+    plt.clf()
 
 
 
 
+    fig, axarr = plt.subplots(2,1,sharex=True)
 
+    plot=axarr[0].pcolormesh(data['r_r200m_profile'], data['temperature_bins'], 
+        (data['temperature_Mass']/(fb*Mhalo/Msun)/dlogT/dlogr), 
+        norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
 
-fig, axarr = plt.subplots(2,1,sharex=True)
+    cooling_flow_halo = cooling_flow(4.0,-2.0*Msun/yr)
+    axarr[0].plot(radii/(rvir*kpc), cooling_flow_halo.T(radii), color=cm.plasma(0.0), lw=2.5, label=r'$\frac{v_c^2}{c_s^2}=4.0$')
+    cooling_flow_halo = cooling_flow(2.0,-2.0*Msun/yr)
+    axarr[0].plot(radii/(rvir*kpc), cooling_flow_halo.T(radii), color=cm.plasma(0.3), lw=2.5, label=r'$\frac{v_c^2}{c_s^2}=2.0$')
+    cooling_flow_halo = cooling_flow(1.0,-2.0*Msun/yr)
+    axarr[0].plot(radii/(rvir*kpc), cooling_flow_halo.T(radii), color=cm.plasma(0.6), lw=2.5, label=r'$\frac{v_c^2}{c_s^2}=1.0$')
+    cooling_flow_halo = cooling_flow(0.5,-2.0*Msun/yr)
+    axarr[0].plot(radii/(rvir*kpc), cooling_flow_halo.T(radii), color=cm.plasma(0.9), lw=2.5, label=r'$\frac{v_c^2}{c_s^2}=0.5$')
 
-plot=axarr[0].pcolormesh(data['r_r200m_profile'], data['temperature_bins'], 
-    (data['temperature_Mass']/(fb*Mhalo/Msun)/dlogT/dlogr), 
-    norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
+    cb = fig.colorbar(plot,ax=axarr[0])
+    cb.set_label(r'$\frac{d^2 (M/f_b M_{\rm halo}) }{d \log T \, d \log r}$',rotation=270,fontsize=12,labelpad=15)
+    cb.ax.minorticks_off()
+    axarr[0].set_xlim(5e-2, 2)
+    axarr[0].set_ylim(3e3,4e7)
+    axarr[0].set_yscale('log')
+    axarr[0].set_xscale('log')
+    axarr[0].set_ylabel(r'$T\,[\mathrm{K}]$')
+    axarr[0].legend(loc='upper left', fontsize=6,ncol=4, columnspacing=1)
+    axarr[0].grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
 
-HSE_rot_halo = HSE_rot(2.0,0.05,0.01)
-axarr[0].plot(radii/(rvir*kpc), HSE_rot_halo.T(radii), color=cm.plasma(0.0), lw=2.5, label=r'$\lambda = 0.01$')
-HSE_rot_halo = HSE_rot(2.0,0.05,0.05)
-axarr[0].plot(radii/(rvir*kpc), HSE_rot_halo.T(radii), color=cm.plasma(0.3), lw=2.5, label=r'$\lambda = 0.05$')
-HSE_rot_halo = HSE_rot(2.0,0.05,0.1)
-axarr[0].plot(radii/(rvir*kpc), HSE_rot_halo.T(radii), color=cm.plasma(0.6), lw=2.5, label=r'$\lambda = 0.1$')
-HSE_rot_halo = HSE_rot(2.0,0.05,0.15)
-axarr[0].plot(radii/(rvir*kpc), HSE_rot_halo.T(radii), color=cm.plasma(0.9), lw=2.5, label=r'$\lambda = 0.15$')
 
-cb = fig.colorbar(plot,ax=axarr[0])
-cb.set_label(r'$\frac{d^2 (M/f_b M_{\rm halo}) }{d \log T \, d \log r}$',rotation=270,fontsize=12,labelpad=15)
-cb.ax.minorticks_off()
-axarr[0].set_xlim(5e-2, 2)
-axarr[0].set_ylim(3e3,4e7)
-axarr[0].set_yscale('log')
-axarr[0].set_xscale('log')
-axarr[0].set_ylabel(r'$T\,[\mathrm{K}]$')
-axarr[0].legend(loc='upper left', fontsize=6,ncol=4, columnspacing=1)
-axarr[0].grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
 
+    plot=axarr[1].pcolormesh(data['r_r200m_profile'], data['number_density_bins'], 
+        (data['number_density_Mass']/(fb*Mhalo/Msun)/dlogn/dlogr), 
+        norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
 
+    cooling_flow_halo = cooling_flow(4.0,-2.0*Msun/yr)
+    axarr[1].plot(radii/(rvir*kpc), cooling_flow_halo.n(radii), color=cm.plasma(0.0), lw=2.5, label=r'$\frac{v_c^2}{c_s^2}=4.0$')
+    cooling_flow_halo = cooling_flow(2.0,-2.0*Msun/yr)
+    axarr[1].plot(radii/(rvir*kpc), cooling_flow_halo.n(radii), color=cm.plasma(0.3), lw=2.5, label=r'$\frac{v_c^2}{c_s^2}=2.0$')
+    cooling_flow_halo = cooling_flow(1.0,-2.0*Msun/yr)
+    axarr[1].plot(radii/(rvir*kpc), cooling_flow_halo.n(radii), color=cm.plasma(0.6), lw=2.5, label=r'$\frac{v_c^2}{c_s^2}=1.0$')
+    cooling_flow_halo = cooling_flow(0.5,-2.0*Msun/yr)
+    axarr[1].plot(radii/(rvir*kpc), cooling_flow_halo.n(radii), color=cm.plasma(0.9), lw=2.5, label=r'$\frac{v_c^2}{c_s^2}=0.5$')
 
-plot=axarr[1].pcolormesh(data['r_r200m_profile'], data['number_density_bins'], 
-    (data['number_density_Mass']/(fb*Mhalo/Msun)/dlogn/dlogr), 
-    norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
+    cb = fig.colorbar(plot,ax=axarr[1])
+    cb.set_label(r'$\frac{d^2 (M/ f_b M_{\rm halo})}{ d \log n \, d \log r}$',rotation=270,fontsize=12,labelpad=15)
+    cb.ax.minorticks_off()
 
-HSE_rot_halo = HSE_rot(2.0,0.05,0.01)
-axarr[1].plot(radii/(rvir*kpc), HSE_rot_halo.n(radii), color=cm.plasma(0.0), lw=2.5, label=r'$\lambda = 0.01$')
-HSE_rot_halo = HSE_rot(2.0,0.05,0.05)
-axarr[1].plot(radii/(rvir*kpc), HSE_rot_halo.n(radii), color=cm.plasma(0.3), lw=2.5, label=r'$\lambda = 0.05$')
-HSE_rot_halo = HSE_rot(2.0,0.05,0.1)
-axarr[1].plot(radii/(rvir*kpc), HSE_rot_halo.n(radii), color=cm.plasma(0.6), lw=2.5, label=r'$\lambda = 0.1$')
-HSE_rot_halo = HSE_rot(2.0,0.05,0.15)
-axarr[1].plot(radii/(rvir*kpc), HSE_rot_halo.n(radii), color=cm.plasma(0.9), lw=2.5, label=r'$\lambda = 0.15$')
+    axarr[1].set_xlim(5e-2, 2)
+    axarr[1].set_ylim(5e-6,1e-1)
+    axarr[1].set_yscale('log')
+    axarr[1].set_xscale('log')
+    axarr[1].set_ylabel(r'$n\,[\mathrm{cm}^{-3}]$')
+    axarr[1].set_xlabel(r'$r/r_{\rm vir}$')
+    axarr[1].legend(loc='upper right', fontsize=6,ncol=2, columnspacing=1)
+    axarr[1].grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
 
-cb = fig.colorbar(plot,ax=axarr[1])
-cb.set_label(r'$\frac{d^2 (M/ f_b M_{\rm halo})}{ d \log n \, d \log r}$',rotation=270,fontsize=12,labelpad=15)
-cb.ax.minorticks_off()
+    # fig.suptitle(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$', y = 0.96)
+    fig.set_size_inches(5,5)
+    plt.savefig('./plots/cooling_flow_mdot_2_fcs_comparison_T_n_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
+    plt.clf()
 
-axarr[1].set_xlim(5e-2, 2)
-axarr[1].set_ylim(5e-6,1e-1)
-axarr[1].set_yscale('log')
-axarr[1].set_xscale('log')
-axarr[1].set_ylabel(r'$n\,[\mathrm{cm}^{-3}]$')
-axarr[1].set_xlabel(r'$r/r_{\rm vir}$')
-axarr[1].legend(loc='upper right', fontsize=6,ncol=2, columnspacing=1)
-axarr[1].grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
 
-# fig.suptitle(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$', y = 0.96)
-fig.set_size_inches(5,5)
-plt.savefig('./plots/HSE_rot_lambda_comparison_T_n_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
-plt.clf()
 
 
 
@@ -1382,130 +1554,126 @@ plt.clf()
 
 
 
-fig, axarr = plt.subplots(2,1,sharex=True)
 
-plot=axarr[0].pcolormesh(data['r_r200m_profile'], data['temperature_bins'], 
-    (data['temperature_Mass']/(fb*Mhalo/Msun)/dlogT/dlogr), 
-    norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
 
-cooling_flow_halo = cooling_flow(1.5,-0.5*Msun/yr)
-axarr[0].plot(radii/(rvir*kpc), cooling_flow_halo.T(radii), color=cm.plasma(0.0), lw=2.5, label=r'$\dot{M} = 0.5 M_\odot/{\rm yr}$')
-cooling_flow_halo = cooling_flow(1.5,-1.0*Msun/yr)
-axarr[0].plot(radii/(rvir*kpc), cooling_flow_halo.T(radii), color=cm.plasma(0.3), lw=2.5, label=r'$\dot{M} = 1 M_\odot/{\rm yr}$')
-cooling_flow_halo = cooling_flow(1.5,-2.0*Msun/yr)
-axarr[0].plot(radii/(rvir*kpc), cooling_flow_halo.T(radii), color=cm.plasma(0.6), lw=2.5, label=r'$\dot{M} = 2 M_\odot/{\rm yr}$')
-cooling_flow_halo = cooling_flow(1.5,-4.0*Msun/yr)
-axarr[0].plot(radii/(rvir*kpc), cooling_flow_halo.T(radii), color=cm.plasma(0.9), lw=2.5, label=r'$\dot{M} = 4 M_\odot/{\rm yr}$')
 
-cb = fig.colorbar(plot,ax=axarr[0])
-cb.set_label(r'$\frac{d^2 (M/f_b M_{\rm halo}) }{d \log T \, d \log r}$',rotation=270,fontsize=12,labelpad=15)
-cb.ax.minorticks_off()
-axarr[0].set_xlim(5e-2, 2)
-axarr[0].set_ylim(3e3,4e7)
-axarr[0].set_yscale('log')
-axarr[0].set_xscale('log')
-axarr[0].set_ylabel(r'$T\,[\mathrm{K}]$')
-axarr[0].legend(loc='upper left', fontsize=6,ncol=4, columnspacing=1)
-axarr[0].grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
 
+    fig, axarr = plt.subplots(2,1,sharex=True)
 
+    plot=axarr[0].pcolormesh(data['r_r200m_profile'], data['temperature_bins'], 
+        (data['temperature_Mass']/(fb*Mhalo/Msun)/dlogT/dlogr), 
+        norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
 
-plot=axarr[1].pcolormesh(data['r_r200m_profile'], data['number_density_bins'], 
-    (data['number_density_Mass']/(fb*Mhalo/Msun)/dlogn/dlogr), 
-    norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
+    precipitate_halo = precipitate(1.0,0.05*mu*mp*vc(rvir*kpc)**2/kb)
+    axarr[0].plot(radii/(rvir*kpc), precipitate_halo.T(radii), color=cm.plasma(0.0), lw=2.5, label=r'$\frac{t_{\rm cool}}{t_{\rm ff}}=1$')
+    precipitate_halo = precipitate(3.0,0.05*mu*mp*vc(rvir*kpc)**2/kb)
+    axarr[0].plot(radii/(rvir*kpc), precipitate_halo.T(radii), color=cm.plasma(0.3), lw=2.5, label=r'$\frac{t_{\rm cool}}{t_{\rm ff}}=3$')
+    precipitate_halo = precipitate(10.0,0.05*mu*mp*vc(rvir*kpc)**2/kb)
+    axarr[0].plot(radii/(rvir*kpc), precipitate_halo.T(radii), color=cm.plasma(0.6), lw=2.5, label=r'$\frac{t_{\rm cool}}{t_{\rm ff}}=10$')
+    precipitate_halo = precipitate(30.0,0.05*mu*mp*vc(rvir*kpc)**2/kb)
+    axarr[0].plot(radii/(rvir*kpc), precipitate_halo.T(radii), color=cm.plasma(0.9), lw=2.5, label=r'$\frac{t_{\rm cool}}{t_{\rm ff}}=30$')
 
-cooling_flow_halo = cooling_flow(1.5,-0.5*Msun/yr)
-axarr[1].plot(radii/(rvir*kpc), cooling_flow_halo.n(radii), color=cm.plasma(0.0), lw=2.5, label=r'$\dot{M} = 0.5 M_\odot/{\rm yr}$')
-cooling_flow_halo = cooling_flow(1.5,-1.0*Msun/yr)
-axarr[1].plot(radii/(rvir*kpc), cooling_flow_halo.n(radii), color=cm.plasma(0.3), lw=2.5, label=r'$\dot{M} = 1.0 M_\odot/{\rm yr}$')
-cooling_flow_halo = cooling_flow(1.5,-2.0*Msun/yr)
-axarr[1].plot(radii/(rvir*kpc), cooling_flow_halo.n(radii), color=cm.plasma(0.6), lw=2.5, label=r'$\dot{M} = 2 M_\odot/{\rm yr}$')
-cooling_flow_halo = cooling_flow(1.5,-4.0*Msun/yr)
-axarr[1].plot(radii/(rvir*kpc), cooling_flow_halo.n(radii), color=cm.plasma(0.9), lw=2.5, label=r'$\dot{M} = 4 M_\odot/{\rm yr}$')
+    cb = fig.colorbar(plot,ax=axarr[0])
+    cb.set_label(r'$\frac{d^2 (M/f_b M_{\rm halo}) }{d \log T \, d \log r}$',rotation=270,fontsize=12,labelpad=15)
+    cb.ax.minorticks_off()
+    axarr[0].set_xlim(5e-2, 2)
+    axarr[0].set_ylim(3e3,4e7)
+    axarr[0].set_yscale('log')
+    axarr[0].set_xscale('log')
+    axarr[0].set_ylabel(r'$T\,[\mathrm{K}]$')
+    axarr[0].legend(loc='upper left', fontsize=6,ncol=4, columnspacing=1)
+    axarr[0].grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
 
-cb = fig.colorbar(plot,ax=axarr[1])
-cb.set_label(r'$\frac{d^2 (M/ f_b M_{\rm halo})}{ d \log n \, d \log r}$',rotation=270,fontsize=12,labelpad=15)
-cb.ax.minorticks_off()
 
-axarr[1].set_xlim(5e-2, 2)
-axarr[1].set_ylim(5e-6,1e-1)
-axarr[1].set_yscale('log')
-axarr[1].set_xscale('log')
-axarr[1].set_ylabel(r'$n\,[\mathrm{cm}^{-3}]$')
-axarr[1].set_xlabel(r'$r/r_{\rm vir}$')
-axarr[1].legend(loc='upper right', fontsize=6,ncol=2, columnspacing=1)
-axarr[1].grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
 
-# fig.suptitle(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$', y = 0.96)
-fig.set_size_inches(5,5)
-plt.savefig('./plots/cooling_flow_fcs15_mdot_comparison_T_n_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
-plt.clf()
+    plot=axarr[1].pcolormesh(data['r_r200m_profile'], data['number_density_bins'], 
+        (data['number_density_Mass']/(fb*Mhalo/Msun)/dlogn/dlogr), 
+        norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
 
+    precipitate_halo = precipitate(1.0 ,0.05*mu*mp*vc(rvir*kpc)**2/kb)
+    axarr[1].plot(radii/(rvir*kpc), precipitate_halo.n(radii), color=cm.plasma(0.0), lw=2.5, label=r'$\frac{t_{\rm cool}}{t_{\rm ff}}=1$')
+    precipitate_halo = precipitate(3.0 ,0.05*mu*mp*vc(rvir*kpc)**2/kb)
+    axarr[1].plot(radii/(rvir*kpc), precipitate_halo.n(radii), color=cm.plasma(0.3), lw=2.5, label=r'$\frac{t_{\rm cool}}{t_{\rm ff}}=3$')
+    precipitate_halo = precipitate(10.0 ,0.05*mu*mp*vc(rvir*kpc)**2/kb)
+    axarr[1].plot(radii/(rvir*kpc), precipitate_halo.n(radii), color=cm.plasma(0.6), lw=2.5, label=r'$\frac{t_{\rm cool}}{t_{\rm ff}}=10$')
+    precipitate_halo = precipitate(30.0 ,0.05*mu*mp*vc(rvir*kpc)**2/kb)
+    axarr[1].plot(radii/(rvir*kpc), precipitate_halo.n(radii), color=cm.plasma(0.9), lw=2.5, label=r'$\frac{t_{\rm cool}}{t_{\rm ff}}=30$')
 
+    cb = fig.colorbar(plot,ax=axarr[1])
+    cb.set_label(r'$\frac{d^2 (M/ f_b M_{\rm halo})}{ d \log n \, d \log r}$',rotation=270,fontsize=12,labelpad=15)
+    cb.ax.minorticks_off()
 
+    axarr[1].set_xlim(5e-2, 2)
+    axarr[1].set_ylim(5e-6,1e-1)
+    axarr[1].set_yscale('log')
+    axarr[1].set_xscale('log')
+    axarr[1].set_ylabel(r'$n\,[\mathrm{cm}^{-3}]$')
+    axarr[1].set_xlabel(r'$r/r_{\rm vir}$')
+    axarr[1].legend(loc='upper right', fontsize=6,ncol=2, columnspacing=1)
+    axarr[1].grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
 
-fig, axarr = plt.subplots(2,1,sharex=True)
+    # fig.suptitle(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$', y = 0.96)
+    fig.set_size_inches(5,5)
+    plt.savefig('./plots/precipitate_tcool_tff_comparison_T_n_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
+    plt.clf()
 
-plot=axarr[0].pcolormesh(data['r_r200m_profile'], data['temperature_bins'], 
-    (data['temperature_Mass']/(fb*Mhalo/Msun)/dlogT/dlogr), 
-    norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
 
-cooling_flow_halo = cooling_flow(4.0,-2.0*Msun/yr)
-axarr[0].plot(radii/(rvir*kpc), cooling_flow_halo.T(radii), color=cm.plasma(0.0), lw=2.5, label=r'$\frac{v_c^2}{c_s^2}=4.0$')
-cooling_flow_halo = cooling_flow(2.0,-2.0*Msun/yr)
-axarr[0].plot(radii/(rvir*kpc), cooling_flow_halo.T(radii), color=cm.plasma(0.3), lw=2.5, label=r'$\frac{v_c^2}{c_s^2}=2.0$')
-cooling_flow_halo = cooling_flow(1.0,-2.0*Msun/yr)
-axarr[0].plot(radii/(rvir*kpc), cooling_flow_halo.T(radii), color=cm.plasma(0.6), lw=2.5, label=r'$\frac{v_c^2}{c_s^2}=1.0$')
-cooling_flow_halo = cooling_flow(0.5,-2.0*Msun/yr)
-axarr[0].plot(radii/(rvir*kpc), cooling_flow_halo.T(radii), color=cm.plasma(0.9), lw=2.5, label=r'$\frac{v_c^2}{c_s^2}=0.5$')
 
-cb = fig.colorbar(plot,ax=axarr[0])
-cb.set_label(r'$\frac{d^2 (M/f_b M_{\rm halo}) }{d \log T \, d \log r}$',rotation=270,fontsize=12,labelpad=15)
-cb.ax.minorticks_off()
-axarr[0].set_xlim(5e-2, 2)
-axarr[0].set_ylim(3e3,4e7)
-axarr[0].set_yscale('log')
-axarr[0].set_xscale('log')
-axarr[0].set_ylabel(r'$T\,[\mathrm{K}]$')
-axarr[0].legend(loc='upper left', fontsize=6,ncol=4, columnspacing=1)
-axarr[0].grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
 
+    fig, axarr = plt.subplots(2,1,sharex=True)
 
+    plot=axarr[0].pcolormesh(data['r_r200m_profile'], data['temperature_bins'], 
+        (data['temperature_Mass']/(fb*Mhalo/Msun)/dlogT/dlogr), 
+        norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
 
-plot=axarr[1].pcolormesh(data['r_r200m_profile'], data['number_density_bins'], 
-    (data['number_density_Mass']/(fb*Mhalo/Msun)/dlogn/dlogr), 
-    norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
+    precipitate_halo = precipitate(10.0,0.05*mu*mp*vc(rvir*kpc)**2/kb)
+    axarr[0].plot(radii/(rvir*kpc), precipitate_halo.T(radii), color=cm.plasma(0.3), lw=2.5, label=r'$T_{\rm out}=\frac{1}{20} \frac{\mu m_p}{k_B} v_{\rm vir}^2 $')
+    precipitate_halo = precipitate(10.0,0.2*mu*mp*vc(rvir*kpc)**2/kb)
+    axarr[0].plot(radii/(rvir*kpc), precipitate_halo.T(radii), color=cm.plasma(0.6), lw=2.5, label=r'$T_{\rm out}=\frac{1}{4} \frac{\mu m_p}{k_B} v_{\rm vir}^2 $')
+    precipitate_halo = precipitate(10.0,1.0*mu*mp*vc(rvir*kpc)**2/kb)
+    axarr[0].plot(radii/(rvir*kpc), precipitate_halo.T(radii), color=cm.plasma(0.9), lw=2.5, label=r'$T_{\rm out}= \frac{\mu m_p}{k_B} v_{\rm vir}^2 $')
 
-cooling_flow_halo = cooling_flow(4.0,-2.0*Msun/yr)
-axarr[1].plot(radii/(rvir*kpc), cooling_flow_halo.n(radii), color=cm.plasma(0.0), lw=2.5, label=r'$\frac{v_c^2}{c_s^2}=4.0$')
-cooling_flow_halo = cooling_flow(2.0,-2.0*Msun/yr)
-axarr[1].plot(radii/(rvir*kpc), cooling_flow_halo.n(radii), color=cm.plasma(0.3), lw=2.5, label=r'$\frac{v_c^2}{c_s^2}=2.0$')
-cooling_flow_halo = cooling_flow(1.0,-2.0*Msun/yr)
-axarr[1].plot(radii/(rvir*kpc), cooling_flow_halo.n(radii), color=cm.plasma(0.6), lw=2.5, label=r'$\frac{v_c^2}{c_s^2}=1.0$')
-cooling_flow_halo = cooling_flow(0.5,-2.0*Msun/yr)
-axarr[1].plot(radii/(rvir*kpc), cooling_flow_halo.n(radii), color=cm.plasma(0.9), lw=2.5, label=r'$\frac{v_c^2}{c_s^2}=0.5$')
+    cb = fig.colorbar(plot,ax=axarr[0])
+    cb.set_label(r'$\frac{d^2 (M/f_b M_{\rm halo}) }{d \log T \, d \log r}$',rotation=270,fontsize=12,labelpad=15)
+    cb.ax.minorticks_off()
+    axarr[0].set_xlim(5e-2, 2)
+    axarr[0].set_ylim(3e3,4e7)
+    axarr[0].set_yscale('log')
+    axarr[0].set_xscale('log')
+    axarr[0].set_ylabel(r'$T\,[\mathrm{K}]$')
+    axarr[0].legend(loc='upper left', fontsize=6,ncol=4, columnspacing=1)
+    axarr[0].grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
 
-cb = fig.colorbar(plot,ax=axarr[1])
-cb.set_label(r'$\frac{d^2 (M/ f_b M_{\rm halo})}{ d \log n \, d \log r}$',rotation=270,fontsize=12,labelpad=15)
-cb.ax.minorticks_off()
 
-axarr[1].set_xlim(5e-2, 2)
-axarr[1].set_ylim(5e-6,1e-1)
-axarr[1].set_yscale('log')
-axarr[1].set_xscale('log')
-axarr[1].set_ylabel(r'$n\,[\mathrm{cm}^{-3}]$')
-axarr[1].set_xlabel(r'$r/r_{\rm vir}$')
-axarr[1].legend(loc='upper right', fontsize=6,ncol=2, columnspacing=1)
-axarr[1].grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
 
-# fig.suptitle(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$', y = 0.96)
-fig.set_size_inches(5,5)
-plt.savefig('./plots/cooling_flow_mdot_2_fcs_comparison_T_n_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
-plt.clf()
+    plot=axarr[1].pcolormesh(data['r_r200m_profile'], data['number_density_bins'], 
+        (data['number_density_Mass']/(fb*Mhalo/Msun)/dlogn/dlogr), 
+        norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
 
+    precipitate_halo = precipitate(10.0 ,0.05*mu*mp*vc(rvir*kpc)**2/kb)
+    axarr[1].plot(radii/(rvir*kpc), precipitate_halo.n(radii), color=cm.plasma(0.3), lw=2.5, label=r'$T_{\rm out}=\frac{1}{20} \frac{\mu m_p}{k_B} v_{\rm vir}^2 $')
+    precipitate_halo = precipitate(10.0 ,0.2*mu*mp*vc(rvir*kpc)**2/kb)
+    axarr[1].plot(radii/(rvir*kpc), precipitate_halo.n(radii), color=cm.plasma(0.6), lw=2.5, label=r'$T_{\rm out}=\frac{1}{4} \frac{\mu m_p}{k_B} v_{\rm vir}^2 $')
+    precipitate_halo = precipitate(10.0 ,1.0*mu*mp*vc(rvir*kpc)**2/kb)
+    axarr[1].plot(radii/(rvir*kpc), precipitate_halo.n(radii), color=cm.plasma(0.9), lw=2.5, label=r'$T_{\rm out}= \frac{\mu m_p}{k_B} v_{\rm vir}^2 $')
 
+    cb = fig.colorbar(plot,ax=axarr[1])
+    cb.set_label(r'$\frac{d^2 (M/ f_b M_{\rm halo})}{ d \log n \, d \log r}$',rotation=270,fontsize=12,labelpad=15)
+    cb.ax.minorticks_off()
 
+    axarr[1].set_xlim(5e-2, 2)
+    axarr[1].set_ylim(5e-6,1e-1)
+    axarr[1].set_yscale('log')
+    axarr[1].set_xscale('log')
+    axarr[1].set_ylabel(r'$n\,[\mathrm{cm}^{-3}]$')
+    axarr[1].set_xlabel(r'$r/r_{\rm vir}$')
+    axarr[1].legend(loc='upper right', fontsize=6,ncol=2, columnspacing=1)
+    axarr[1].grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
 
+    # fig.suptitle(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$', y = 0.96)
+    fig.set_size_inches(5,5)
+    plt.savefig('./plots/precipitate_T_out_comparison_T_n_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
+    plt.clf()
 
 
 
@@ -1513,192 +1681,57 @@ plt.clf()
 
 
 
+    fig, axarr = plt.subplots(2,1,sharex=True)
 
+    plot=axarr[0].pcolormesh(data['r_r200m_profile'], data['temperature_bins'], 
+        (data['temperature_Mass']/(fb*Mhalo/Msun)/dlogT/dlogr), 
+        norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
 
+    precipitate_halo = precipitate(3.0,0.05*mu*mp*vc(rvir*kpc)**2/kb)
+    axarr[0].plot(radii/(rvir*kpc), precipitate_halo.T(radii), color=cm.plasma(0.3), lw=2.5, label=r'$T_{\rm out}=\frac{1}{20} \frac{\mu m_p}{k_B} v_{\rm vir}^2 $')
+    precipitate_halo = precipitate(3.0,0.2*mu*mp*vc(rvir*kpc)**2/kb)
+    axarr[0].plot(radii/(rvir*kpc), precipitate_halo.T(radii), color=cm.plasma(0.6), lw=2.5, label=r'$T_{\rm out}=\frac{1}{4} \frac{\mu m_p}{k_B} v_{\rm vir}^2 $')
+    precipitate_halo = precipitate(3.0,1.0*mu*mp*vc(rvir*kpc)**2/kb)
+    axarr[0].plot(radii/(rvir*kpc), precipitate_halo.T(radii), color=cm.plasma(0.9), lw=2.5, label=r'$T_{\rm out}= \frac{\mu m_p}{k_B} v_{\rm vir}^2 $')
 
+    cb = fig.colorbar(plot,ax=axarr[0])
+    cb.set_label(r'$\frac{d^2 (M/f_b M_{\rm halo}) }{d \log T \, d \log r}$',rotation=270,fontsize=12,labelpad=15)
+    cb.ax.minorticks_off()
+    axarr[0].set_xlim(5e-2, 2)
+    axarr[0].set_ylim(3e3,4e7)
+    axarr[0].set_yscale('log')
+    axarr[0].set_xscale('log')
+    axarr[0].set_ylabel(r'$T\,[\mathrm{K}]$')
+    axarr[0].legend(loc='upper left', fontsize=6,ncol=4, columnspacing=1)
+    axarr[0].grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
 
 
 
+    plot=axarr[1].pcolormesh(data['r_r200m_profile'], data['number_density_bins'], 
+        (data['number_density_Mass']/(fb*Mhalo/Msun)/dlogn/dlogr), 
+        norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
 
+    precipitate_halo = precipitate(3.0 ,0.05*mu*mp*vc(rvir*kpc)**2/kb)
+    axarr[1].plot(radii/(rvir*kpc), precipitate_halo.n(radii), color=cm.plasma(0.3), lw=2.5, label=r'$T_{\rm out}=\frac{1}{20} \frac{\mu m_p}{k_B} v_{\rm vir}^2 $')
+    precipitate_halo = precipitate(3.0 ,0.2*mu*mp*vc(rvir*kpc)**2/kb)
+    axarr[1].plot(radii/(rvir*kpc), precipitate_halo.n(radii), color=cm.plasma(0.6), lw=2.5, label=r'$T_{\rm out}=\frac{1}{4} \frac{\mu m_p}{k_B} v_{\rm vir}^2 $')
+    precipitate_halo = precipitate(3.0 ,1.0*mu*mp*vc(rvir*kpc)**2/kb)
+    axarr[1].plot(radii/(rvir*kpc), precipitate_halo.n(radii), color=cm.plasma(0.9), lw=2.5, label=r'$T_{\rm out}= \frac{\mu m_p}{k_B} v_{\rm vir}^2 $')
 
+    cb = fig.colorbar(plot,ax=axarr[1])
+    cb.set_label(r'$\frac{d^2 (M/ f_b M_{\rm halo})}{ d \log n \, d \log r}$',rotation=270,fontsize=12,labelpad=15)
+    cb.ax.minorticks_off()
 
+    axarr[1].set_xlim(5e-2, 2)
+    axarr[1].set_ylim(5e-6,1e-1)
+    axarr[1].set_yscale('log')
+    axarr[1].set_xscale('log')
+    axarr[1].set_ylabel(r'$n\,[\mathrm{cm}^{-3}]$')
+    axarr[1].set_xlabel(r'$r/r_{\rm vir}$')
+    axarr[1].legend(loc='upper right', fontsize=6,ncol=2, columnspacing=1)
+    axarr[1].grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
 
-
-
-fig, axarr = plt.subplots(2,1,sharex=True)
-
-plot=axarr[0].pcolormesh(data['r_r200m_profile'], data['temperature_bins'], 
-    (data['temperature_Mass']/(fb*Mhalo/Msun)/dlogT/dlogr), 
-    norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
-
-precipitate_halo = precipitate(1.0,0.05*mu*mp*vc(rvir*kpc)**2/kb)
-axarr[0].plot(radii/(rvir*kpc), precipitate_halo.T(radii), color=cm.plasma(0.0), lw=2.5, label=r'$\frac{t_{\rm cool}}{t_{\rm ff}}=1$')
-precipitate_halo = precipitate(3.0,0.05*mu*mp*vc(rvir*kpc)**2/kb)
-axarr[0].plot(radii/(rvir*kpc), precipitate_halo.T(radii), color=cm.plasma(0.3), lw=2.5, label=r'$\frac{t_{\rm cool}}{t_{\rm ff}}=3$')
-precipitate_halo = precipitate(10.0,0.05*mu*mp*vc(rvir*kpc)**2/kb)
-axarr[0].plot(radii/(rvir*kpc), precipitate_halo.T(radii), color=cm.plasma(0.6), lw=2.5, label=r'$\frac{t_{\rm cool}}{t_{\rm ff}}=10$')
-precipitate_halo = precipitate(30.0,0.05*mu*mp*vc(rvir*kpc)**2/kb)
-axarr[0].plot(radii/(rvir*kpc), precipitate_halo.T(radii), color=cm.plasma(0.9), lw=2.5, label=r'$\frac{t_{\rm cool}}{t_{\rm ff}}=30$')
-
-cb = fig.colorbar(plot,ax=axarr[0])
-cb.set_label(r'$\frac{d^2 (M/f_b M_{\rm halo}) }{d \log T \, d \log r}$',rotation=270,fontsize=12,labelpad=15)
-cb.ax.minorticks_off()
-axarr[0].set_xlim(5e-2, 2)
-axarr[0].set_ylim(3e3,4e7)
-axarr[0].set_yscale('log')
-axarr[0].set_xscale('log')
-axarr[0].set_ylabel(r'$T\,[\mathrm{K}]$')
-axarr[0].legend(loc='upper left', fontsize=6,ncol=4, columnspacing=1)
-axarr[0].grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
-
-
-
-plot=axarr[1].pcolormesh(data['r_r200m_profile'], data['number_density_bins'], 
-    (data['number_density_Mass']/(fb*Mhalo/Msun)/dlogn/dlogr), 
-    norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
-
-precipitate_halo = precipitate(1.0 ,0.05*mu*mp*vc(rvir*kpc)**2/kb)
-axarr[1].plot(radii/(rvir*kpc), precipitate_halo.n(radii), color=cm.plasma(0.0), lw=2.5, label=r'$\frac{t_{\rm cool}}{t_{\rm ff}}=1$')
-precipitate_halo = precipitate(3.0 ,0.05*mu*mp*vc(rvir*kpc)**2/kb)
-axarr[1].plot(radii/(rvir*kpc), precipitate_halo.n(radii), color=cm.plasma(0.3), lw=2.5, label=r'$\frac{t_{\rm cool}}{t_{\rm ff}}=3$')
-precipitate_halo = precipitate(10.0 ,0.05*mu*mp*vc(rvir*kpc)**2/kb)
-axarr[1].plot(radii/(rvir*kpc), precipitate_halo.n(radii), color=cm.plasma(0.6), lw=2.5, label=r'$\frac{t_{\rm cool}}{t_{\rm ff}}=10$')
-precipitate_halo = precipitate(30.0 ,0.05*mu*mp*vc(rvir*kpc)**2/kb)
-axarr[1].plot(radii/(rvir*kpc), precipitate_halo.n(radii), color=cm.plasma(0.9), lw=2.5, label=r'$\frac{t_{\rm cool}}{t_{\rm ff}}=30$')
-
-cb = fig.colorbar(plot,ax=axarr[1])
-cb.set_label(r'$\frac{d^2 (M/ f_b M_{\rm halo})}{ d \log n \, d \log r}$',rotation=270,fontsize=12,labelpad=15)
-cb.ax.minorticks_off()
-
-axarr[1].set_xlim(5e-2, 2)
-axarr[1].set_ylim(5e-6,1e-1)
-axarr[1].set_yscale('log')
-axarr[1].set_xscale('log')
-axarr[1].set_ylabel(r'$n\,[\mathrm{cm}^{-3}]$')
-axarr[1].set_xlabel(r'$r/r_{\rm vir}$')
-axarr[1].legend(loc='upper right', fontsize=6,ncol=2, columnspacing=1)
-axarr[1].grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
-
-# fig.suptitle(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$', y = 0.96)
-fig.set_size_inches(5,5)
-plt.savefig('./plots/precipitate_tcool_tff_comparison_T_n_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
-plt.clf()
-
-
-
-
-fig, axarr = plt.subplots(2,1,sharex=True)
-
-plot=axarr[0].pcolormesh(data['r_r200m_profile'], data['temperature_bins'], 
-    (data['temperature_Mass']/(fb*Mhalo/Msun)/dlogT/dlogr), 
-    norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
-
-precipitate_halo = precipitate(10.0,0.05*mu*mp*vc(rvir*kpc)**2/kb)
-axarr[0].plot(radii/(rvir*kpc), precipitate_halo.T(radii), color=cm.plasma(0.3), lw=2.5, label=r'$T_{\rm out}=\frac{1}{20} \frac{\mu m_p}{k_B} v_{\rm vir}^2 $')
-precipitate_halo = precipitate(10.0,0.2*mu*mp*vc(rvir*kpc)**2/kb)
-axarr[0].plot(radii/(rvir*kpc), precipitate_halo.T(radii), color=cm.plasma(0.6), lw=2.5, label=r'$T_{\rm out}=\frac{1}{4} \frac{\mu m_p}{k_B} v_{\rm vir}^2 $')
-precipitate_halo = precipitate(10.0,1.0*mu*mp*vc(rvir*kpc)**2/kb)
-axarr[0].plot(radii/(rvir*kpc), precipitate_halo.T(radii), color=cm.plasma(0.9), lw=2.5, label=r'$T_{\rm out}= \frac{\mu m_p}{k_B} v_{\rm vir}^2 $')
-
-cb = fig.colorbar(plot,ax=axarr[0])
-cb.set_label(r'$\frac{d^2 (M/f_b M_{\rm halo}) }{d \log T \, d \log r}$',rotation=270,fontsize=12,labelpad=15)
-cb.ax.minorticks_off()
-axarr[0].set_xlim(5e-2, 2)
-axarr[0].set_ylim(3e3,4e7)
-axarr[0].set_yscale('log')
-axarr[0].set_xscale('log')
-axarr[0].set_ylabel(r'$T\,[\mathrm{K}]$')
-axarr[0].legend(loc='upper left', fontsize=6,ncol=4, columnspacing=1)
-axarr[0].grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
-
-
-
-plot=axarr[1].pcolormesh(data['r_r200m_profile'], data['number_density_bins'], 
-    (data['number_density_Mass']/(fb*Mhalo/Msun)/dlogn/dlogr), 
-    norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
-
-precipitate_halo = precipitate(10.0 ,0.05*mu*mp*vc(rvir*kpc)**2/kb)
-axarr[1].plot(radii/(rvir*kpc), precipitate_halo.n(radii), color=cm.plasma(0.3), lw=2.5, label=r'$T_{\rm out}=\frac{1}{20} \frac{\mu m_p}{k_B} v_{\rm vir}^2 $')
-precipitate_halo = precipitate(10.0 ,0.2*mu*mp*vc(rvir*kpc)**2/kb)
-axarr[1].plot(radii/(rvir*kpc), precipitate_halo.n(radii), color=cm.plasma(0.6), lw=2.5, label=r'$T_{\rm out}=\frac{1}{4} \frac{\mu m_p}{k_B} v_{\rm vir}^2 $')
-precipitate_halo = precipitate(10.0 ,1.0*mu*mp*vc(rvir*kpc)**2/kb)
-axarr[1].plot(radii/(rvir*kpc), precipitate_halo.n(radii), color=cm.plasma(0.9), lw=2.5, label=r'$T_{\rm out}= \frac{\mu m_p}{k_B} v_{\rm vir}^2 $')
-
-cb = fig.colorbar(plot,ax=axarr[1])
-cb.set_label(r'$\frac{d^2 (M/ f_b M_{\rm halo})}{ d \log n \, d \log r}$',rotation=270,fontsize=12,labelpad=15)
-cb.ax.minorticks_off()
-
-axarr[1].set_xlim(5e-2, 2)
-axarr[1].set_ylim(5e-6,1e-1)
-axarr[1].set_yscale('log')
-axarr[1].set_xscale('log')
-axarr[1].set_ylabel(r'$n\,[\mathrm{cm}^{-3}]$')
-axarr[1].set_xlabel(r'$r/r_{\rm vir}$')
-axarr[1].legend(loc='upper right', fontsize=6,ncol=2, columnspacing=1)
-axarr[1].grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
-
-# fig.suptitle(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$', y = 0.96)
-fig.set_size_inches(5,5)
-plt.savefig('./plots/precipitate_T_out_comparison_T_n_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
-plt.clf()
-
-
-
-
-
-
-
-fig, axarr = plt.subplots(2,1,sharex=True)
-
-plot=axarr[0].pcolormesh(data['r_r200m_profile'], data['temperature_bins'], 
-    (data['temperature_Mass']/(fb*Mhalo/Msun)/dlogT/dlogr), 
-    norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
-
-precipitate_halo = precipitate(3.0,0.05*mu*mp*vc(rvir*kpc)**2/kb)
-axarr[0].plot(radii/(rvir*kpc), precipitate_halo.T(radii), color=cm.plasma(0.3), lw=2.5, label=r'$T_{\rm out}=\frac{1}{20} \frac{\mu m_p}{k_B} v_{\rm vir}^2 $')
-precipitate_halo = precipitate(3.0,0.2*mu*mp*vc(rvir*kpc)**2/kb)
-axarr[0].plot(radii/(rvir*kpc), precipitate_halo.T(radii), color=cm.plasma(0.6), lw=2.5, label=r'$T_{\rm out}=\frac{1}{4} \frac{\mu m_p}{k_B} v_{\rm vir}^2 $')
-precipitate_halo = precipitate(3.0,1.0*mu*mp*vc(rvir*kpc)**2/kb)
-axarr[0].plot(radii/(rvir*kpc), precipitate_halo.T(radii), color=cm.plasma(0.9), lw=2.5, label=r'$T_{\rm out}= \frac{\mu m_p}{k_B} v_{\rm vir}^2 $')
-
-cb = fig.colorbar(plot,ax=axarr[0])
-cb.set_label(r'$\frac{d^2 (M/f_b M_{\rm halo}) }{d \log T \, d \log r}$',rotation=270,fontsize=12,labelpad=15)
-cb.ax.minorticks_off()
-axarr[0].set_xlim(5e-2, 2)
-axarr[0].set_ylim(3e3,4e7)
-axarr[0].set_yscale('log')
-axarr[0].set_xscale('log')
-axarr[0].set_ylabel(r'$T\,[\mathrm{K}]$')
-axarr[0].legend(loc='upper left', fontsize=6,ncol=4, columnspacing=1)
-axarr[0].grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
-
-
-
-plot=axarr[1].pcolormesh(data['r_r200m_profile'], data['number_density_bins'], 
-    (data['number_density_Mass']/(fb*Mhalo/Msun)/dlogn/dlogr), 
-    norm=colors.LogNorm(vmin=1e-2, vmax=3), cmap='viridis')
-
-precipitate_halo = precipitate(3.0 ,0.05*mu*mp*vc(rvir*kpc)**2/kb)
-axarr[1].plot(radii/(rvir*kpc), precipitate_halo.n(radii), color=cm.plasma(0.3), lw=2.5, label=r'$T_{\rm out}=\frac{1}{20} \frac{\mu m_p}{k_B} v_{\rm vir}^2 $')
-precipitate_halo = precipitate(3.0 ,0.2*mu*mp*vc(rvir*kpc)**2/kb)
-axarr[1].plot(radii/(rvir*kpc), precipitate_halo.n(radii), color=cm.plasma(0.6), lw=2.5, label=r'$T_{\rm out}=\frac{1}{4} \frac{\mu m_p}{k_B} v_{\rm vir}^2 $')
-precipitate_halo = precipitate(3.0 ,1.0*mu*mp*vc(rvir*kpc)**2/kb)
-axarr[1].plot(radii/(rvir*kpc), precipitate_halo.n(radii), color=cm.plasma(0.9), lw=2.5, label=r'$T_{\rm out}= \frac{\mu m_p}{k_B} v_{\rm vir}^2 $')
-
-cb = fig.colorbar(plot,ax=axarr[1])
-cb.set_label(r'$\frac{d^2 (M/ f_b M_{\rm halo})}{ d \log n \, d \log r}$',rotation=270,fontsize=12,labelpad=15)
-cb.ax.minorticks_off()
-
-axarr[1].set_xlim(5e-2, 2)
-axarr[1].set_ylim(5e-6,1e-1)
-axarr[1].set_yscale('log')
-axarr[1].set_xscale('log')
-axarr[1].set_ylabel(r'$n\,[\mathrm{cm}^{-3}]$')
-axarr[1].set_xlabel(r'$r/r_{\rm vir}$')
-axarr[1].legend(loc='upper right', fontsize=6,ncol=2, columnspacing=1)
-axarr[1].grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
-
-# fig.suptitle(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$', y = 0.96)
-fig.set_size_inches(5,5)
-plt.savefig('./plots/precipitate_tcooltff3_T_out_comparison_T_n_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
-plt.clf()
+    # fig.suptitle(r'$t='+str(np.round(data['time'],2))+r'\,\mathrm{Gyr}$', y = 0.96)
+    fig.set_size_inches(5,5)
+    plt.savefig('./plots/precipitate_tcooltff3_T_out_comparison_T_n_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
+    plt.clf()
