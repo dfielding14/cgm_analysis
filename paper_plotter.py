@@ -910,37 +910,88 @@ def plotter(data,fn):
     fig,ax = plt.subplots(1,1)
     plot=ax.pcolormesh(data['pressure_bins'], data['entropy_bins'], 
         np.sum(data['pressure_entropy_Mass'][...,:10],axis=-1)/np.sum(data['pressure_entropy_Mass'][...,:10]),
-        norm=colors.LogNorm(vmin=1e-5, vmax=1e-1), cmap='binary')
+        norm=colors.LogNorm(vmin=1e-5, vmax=1e-1), cmap='magma')
     cb = fig.colorbar(plot)
     cb.set_label(r'$M(P,K)/M_{\rm tot}$',rotation=270,fontsize=12,labelpad=15)
 
     ir = 1
     plot=ax.contour(data['pressure_bins'][:-1], data['entropy_bins'][:-1], 
         (data['pressure_entropy_Mass'][...,ir]/np.sum(data['pressure_entropy_Mass'][...,ir])),
+        [3e-3], colors='0.0',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color='0.0', label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+
+    ir = 2
+    plot=ax.contour(data['pressure_bins'][:-1], data['entropy_bins'][:-1], 
+        (data['pressure_entropy_Mass'][...,ir]/np.sum(data['pressure_entropy_Mass'][...,ir])),
+        [3e-3], colors='0.2',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color='0.2', label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+
+    ir = 3
+    plot=ax.contour(data['pressure_bins'][:-1], data['entropy_bins'][:-1], 
+        (data['pressure_entropy_Mass'][...,ir]/np.sum(data['pressure_entropy_Mass'][...,ir])),
+        [3e-3], colors='0.4',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color='0.4', label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+
+    ir = 5
+    plot=ax.contour(data['pressure_bins'][:-1], data['entropy_bins'][:-1], 
+        (data['pressure_entropy_Mass'][...,ir]/np.sum(data['pressure_entropy_Mass'][...,ir])),
+        [3e-3], colors='0.6',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color='0.6', label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+
+    ir = 7
+    plot=ax.contour(data['pressure_bins'][:-1], data['entropy_bins'][:-1], 
+        (data['pressure_entropy_Mass'][...,ir]/np.sum(data['pressure_entropy_Mass'][...,ir])),
+        [3e-3], colors='0.8',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color='0.8', label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+
+    ax.legend(loc='lower left', fontsize=6, ncol=1)
+    ax.set_yscale('log')
+    ax.set_xscale('log')
+    ax.set_ylim((1e4,1e10))
+    ax.set_xlim((7e-1,2e4))
+    ax.set_ylabel(r'$K\,[\mathrm{K\,cm}^{2}]$')
+    ax.set_xlabel(r'$P\,[\mathrm{K\,cm}^{-3}]$')
+    ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    fig.set_size_inches(5,3)
+    plt.savefig('./plots/pressure_entropy_Mass_all_r_'+fn+'.png',bbox_inches='tight',dpi=200)
+    plt.clf()       
+
+
+
+    fig,ax = plt.subplots(1,1)
+    plot=ax.pcolormesh(data['pressure_bins'], data['entropy_bins'], 
+        np.sum(data['pressure_entropy_Volume'][...,:10],axis=-1)/np.sum(data['pressure_entropy_Volume'][...,:10]),
+        norm=colors.LogNorm(vmin=1e-7, vmax=1e-1), cmap='binary')
+    cb = fig.colorbar(plot)
+    cb.set_label(r'$V(P,K)/V_{\rm tot}$',rotation=270,fontsize=12,labelpad=15)
+
+    ir = 1
+    plot=ax.contour(data['pressure_bins'][:-1], data['entropy_bins'][:-1], 
+        (data['pressure_entropy_Volume'][...,ir]/np.sum(data['pressure_entropy_Volume'][...,ir])),
         [3e-3], colors='#6600cc',norm=colors.LogNorm(),antialiased=True)
     ax.plot([1e-2,1e-2], [1e11,1e11], color="#6600cc", label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
 
     ir = 2
     plot=ax.contour(data['pressure_bins'][:-1], data['entropy_bins'][:-1], 
-        (data['pressure_entropy_Mass'][...,ir]/np.sum(data['pressure_entropy_Mass'][...,ir])),
+        (data['pressure_entropy_Volume'][...,ir]/np.sum(data['pressure_entropy_Volume'][...,ir])),
         [3e-3], colors='#0066ff',norm=colors.LogNorm(),antialiased=True)
     ax.plot([1e-2,1e-2], [1e11,1e11], color="#0066ff", label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
 
     ir = 3
     plot=ax.contour(data['pressure_bins'][:-1], data['entropy_bins'][:-1], 
-        (data['pressure_entropy_Mass'][...,ir]/np.sum(data['pressure_entropy_Mass'][...,ir])),
+        (data['pressure_entropy_Volume'][...,ir]/np.sum(data['pressure_entropy_Volume'][...,ir])),
         [3e-3], colors='#66cc00',norm=colors.LogNorm(),antialiased=True)
     ax.plot([1e-2,1e-2], [1e11,1e11], color="#66cc00", label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
 
     ir = 5
     plot=ax.contour(data['pressure_bins'][:-1], data['entropy_bins'][:-1], 
-        (data['pressure_entropy_Mass'][...,ir]/np.sum(data['pressure_entropy_Mass'][...,ir])),
+        (data['pressure_entropy_Volume'][...,ir]/np.sum(data['pressure_entropy_Volume'][...,ir])),
         [3e-3], colors='#ff9900',norm=colors.LogNorm(),antialiased=True)
     ax.plot([1e-2,1e-2], [1e11,1e11], color="#ff9900", label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
 
     ir = 7
     plot=ax.contour(data['pressure_bins'][:-1], data['entropy_bins'][:-1], 
-        (data['pressure_entropy_Mass'][...,ir]/np.sum(data['pressure_entropy_Mass'][...,ir])),
+        (data['pressure_entropy_Volume'][...,ir]/np.sum(data['pressure_entropy_Volume'][...,ir])),
         [3e-3], colors='#cc3300',norm=colors.LogNorm(),antialiased=True)
     ax.plot([1e-2,1e-2], [1e11,1e11], color="#cc3300", label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
 
@@ -953,7 +1004,109 @@ def plotter(data,fn):
     ax.set_xlabel(r'$P\,[\mathrm{K\,cm}^{-3}]$')
     ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
     fig.set_size_inches(5,3)
-    plt.savefig('./plots/pressure_entropy_Mass_all_r_'+fn+'.png',bbox_inches='tight',dpi=200)
+    plt.savefig('./plots/pressure_entropy_Volume_all_r_'+fn+'.png',bbox_inches='tight',dpi=200)
+    plt.clf()       
+
+##############################################################################################################
+
+    fig,ax = plt.subplots(1,1)
+    plot=ax.pcolormesh(data['number_density_bins'], data['temperature_bins'], 
+        np.sum(data['density_temperature_Mass'][...,:10],axis=-1)/np.sum(data['density_temperature_Mass'][...,:10]),
+        norm=colors.LogNorm(vmin=1e-5, vmax=1e-1), cmap='magma')
+    cb = fig.colorbar(plot)
+    cb.set_label(r'$M(n,T)/M_{\rm tot}$',rotation=270,fontsize=12,labelpad=15)
+
+    ir = 1
+    plot=ax.contour(data['number_density_bins'][:-1], data['temperature_bins'][:-1], 
+        (data['density_temperature_Mass'][...,ir]/np.sum(data['density_temperature_Mass'][...,ir])),
+        [3e-3], colors='0.0',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color='0.0', label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+
+    ir = 2
+    plot=ax.contour(data['number_density_bins'][:-1], data['temperature_bins'][:-1], 
+        (data['density_temperature_Mass'][...,ir]/np.sum(data['density_temperature_Mass'][...,ir])),
+        [3e-3], colors='0.2',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color='0.2', label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+
+    ir = 3
+    plot=ax.contour(data['number_density_bins'][:-1], data['temperature_bins'][:-1], 
+        (data['density_temperature_Mass'][...,ir]/np.sum(data['density_temperature_Mass'][...,ir])),
+        [3e-3], colors='0.4',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color='0.4', label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+
+    ir = 5
+    plot=ax.contour(data['number_density_bins'][:-1], data['temperature_bins'][:-1], 
+        (data['density_temperature_Mass'][...,ir]/np.sum(data['density_temperature_Mass'][...,ir])),
+        [3e-3], colors='0.6',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color='0.6', label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+
+    ir = 7
+    plot=ax.contour(data['number_density_bins'][:-1], data['temperature_bins'][:-1], 
+        (data['density_temperature_Mass'][...,ir]/np.sum(data['density_temperature_Mass'][...,ir])),
+        [3e-3], colors='0.8',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color='0.8', label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+
+    ax.legend(loc='upper right', fontsize=6, ncol=1)
+    ax.set_yscale('log')
+    ax.set_xscale('log')
+    ax.set_ylim((3e3,3e7))
+    ax.set_xlim((3e-6,1e-1))
+    ax.set_ylabel(r'$T\,[\mathrm{K}]$')
+    ax.set_xlabel(r'$n\,[\mathrm{cm}^{-3}]$')
+    ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    fig.set_size_inches(5,3)
+    plt.savefig('./plots/density_temperature_Mass_all_r_'+fn+'.png',bbox_inches='tight',dpi=200)
+    plt.clf()       
+
+
+
+    fig,ax = plt.subplots(1,1)
+    plot=ax.pcolormesh(data['number_density_bins'], data['temperature_bins'], 
+        np.sum(data['density_temperature_Volume'][...,:10],axis=-1)/np.sum(data['density_temperature_Volume'][...,:10]),
+        norm=colors.LogNorm(vmin=1e-7, vmax=1e-1), cmap='binary')
+    cb = fig.colorbar(plot)
+    cb.set_label(r'$V(P,K)/V_{\rm tot}$',rotation=270,fontsize=12,labelpad=15)
+
+    ir = 1
+    plot=ax.contour(data['number_density_bins'][:-1], data['temperature_bins'][:-1], 
+        (data['density_temperature_Volume'][...,ir]/np.sum(data['density_temperature_Volume'][...,ir])),
+        [3e-3], colors='#6600cc',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color="#6600cc", label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+
+    ir = 2
+    plot=ax.contour(data['number_density_bins'][:-1], data['temperature_bins'][:-1], 
+        (data['density_temperature_Volume'][...,ir]/np.sum(data['density_temperature_Volume'][...,ir])),
+        [3e-3], colors='#0066ff',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color="#0066ff", label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+
+    ir = 3
+    plot=ax.contour(data['number_density_bins'][:-1], data['temperature_bins'][:-1], 
+        (data['density_temperature_Volume'][...,ir]/np.sum(data['density_temperature_Volume'][...,ir])),
+        [3e-3], colors='#66cc00',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color="#66cc00", label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+
+    ir = 5
+    plot=ax.contour(data['number_density_bins'][:-1], data['temperature_bins'][:-1], 
+        (data['density_temperature_Volume'][...,ir]/np.sum(data['density_temperature_Volume'][...,ir])),
+        [3e-3], colors='#ff9900',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color="#ff9900", label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+
+    ir = 7
+    plot=ax.contour(data['number_density_bins'][:-1], data['temperature_bins'][:-1], 
+        (data['density_temperature_Volume'][...,ir]/np.sum(data['density_temperature_Volume'][...,ir])),
+        [3e-3], colors='#cc3300',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color="#cc3300", label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+
+    ax.legend(loc='lower left', fontsize=6, ncol=1)
+    ax.set_yscale('log')
+    ax.set_xscale('log')
+    ax.set_ylim((3e3,3e7))
+    ax.set_xlim((3e-6,1e-1))
+    ax.set_ylabel(r'$T\,[\mathrm{K}]$')
+    ax.set_xlabel(r'$n\,[\mathrm{cm}^{-3}]$')
+    ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    fig.set_size_inches(5,3)
+    plt.savefig('./plots/density_temperature_Volume_all_r_'+fn+'.png',bbox_inches='tight',dpi=200)
     plt.clf()       
 
 ##############################################################################################################
@@ -1342,7 +1495,14 @@ data = averager(files)
 plotter(data, "daniel_M12_TNG100_quenched_averaged")
 
 
+fn = './data/simulations/daniel_M12_TNG100_quenched/Subhalo536830_snap099_TNG100.npz'
+data = np.load(fn)
+plotter(data,fn.split('/')[-1][:-4])
 
+
+fn = './data/simulations/daniel_M12_TNG100_starforming/Subhalo518236_snap099_TNG100.npz'
+data = np.load(fn)
+plotter(data,fn.split('/')[-1][:-4])
 
 
 
