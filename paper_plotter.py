@@ -1169,313 +1169,184 @@ def plotter(data,fn):
 
 
 
+def averager(files):
+    for i,fn in enumerate(files):
+        fn = fn[19:-4]
+        print(fn)
+        data = np.load('./data/simulations/'+fn+'.npz')
+        if i == 0 :
+            azimuthal_velocity_Mass               = data['azimuthal_velocity_Mass']
+            azimuthal_velocity_entropy_Mass       = data['azimuthal_velocity_entropy_Mass']
+            azimuthal_velocity_temperature_Mass   = data['azimuthal_velocity_temperature_Mass']
+            density_temperature_Mass              = data['density_temperature_Mass']
+            entropy_Mass                          = data['entropy_Mass']
+            number_density_Mass                   = data['number_density_Mass']
+            polar_velocity_Mass                   = data['polar_velocity_Mass']
+            pressure_Mass                         = data['pressure_Mass']
+            pressure_entropy_Mass                 = data['pressure_entropy_Mass']
+            radial_velocity_Mass                  = data['radial_velocity_Mass']
+            radial_velocity_entropy_Mass          = data['radial_velocity_entropy_Mass']
+            radial_velocity_temperature_Mass      = data['radial_velocity_temperature_Mass']
+            specific_angular_momentum_x_Mass      = data['specific_angular_momentum_x_Mass']
+            specific_angular_momentum_y_Mass      = data['specific_angular_momentum_y_Mass']
+            specific_angular_momentum_z_Mass      = data['specific_angular_momentum_z_Mass']
+            # tcool_Mass                            = data['tcool_Mass']
+            temperature_Mass                      = data['temperature_Mass']
+            azimuthal_velocity_Volume             = data['azimuthal_velocity_Volume']
+            azimuthal_velocity_entropy_Volume     = data['azimuthal_velocity_entropy_Volume']
+            azimuthal_velocity_temperature_Volume = data['azimuthal_velocity_temperature_Volume']
+            density_temperature_Volume            = data['density_temperature_Volume']
+            entropy_Volume                        = data['entropy_Volume']
+            number_density_Volume                 = data['number_density_Volume']
+            polar_velocity_Volume                 = data['polar_velocity_Volume']
+            pressure_Volume                       = data['pressure_Volume']
+            pressure_entropy_Volume               = data['pressure_entropy_Volume']
+            radial_velocity_Volume                = data['radial_velocity_Volume']
+            radial_velocity_entropy_Volume        = data['radial_velocity_entropy_Volume']
+            radial_velocity_temperature_Volume    = data['radial_velocity_temperature_Volume']
+            specific_angular_momentum_x_Volume    = data['specific_angular_momentum_x_Volume']
+            specific_angular_momentum_y_Volume    = data['specific_angular_momentum_y_Volume']
+            specific_angular_momentum_z_Volume    = data['specific_angular_momentum_z_Volume']
+            # tcool_Volume                          = data['tcool_Volume']
+            temperature_Volume                    = data['temperature_Volume']
 
+        azimuthal_velocity_Mass               += data['azimuthal_velocity_Mass']
+        azimuthal_velocity_entropy_Mass       += data['azimuthal_velocity_entropy_Mass']
+        azimuthal_velocity_temperature_Mass   += data['azimuthal_velocity_temperature_Mass']
+        density_temperature_Mass              += data['density_temperature_Mass']
+        entropy_Mass                          += data['entropy_Mass']
+        number_density_Mass                   += data['number_density_Mass']
+        polar_velocity_Mass                   += data['polar_velocity_Mass']
+        pressure_Mass                         += data['pressure_Mass']
+        pressure_entropy_Mass                 += data['pressure_entropy_Mass']
+        radial_velocity_Mass                  += data['radial_velocity_Mass']
+        radial_velocity_entropy_Mass          += data['radial_velocity_entropy_Mass']
+        radial_velocity_temperature_Mass      += data['radial_velocity_temperature_Mass']
+        specific_angular_momentum_x_Mass      += data['specific_angular_momentum_x_Mass']
+        specific_angular_momentum_y_Mass      += data['specific_angular_momentum_y_Mass']
+        specific_angular_momentum_z_Mass      += data['specific_angular_momentum_z_Mass']
+        # tcool_Mass                            += data['tcool_Mass']
+        temperature_Mass                      += data['temperature_Mass']
+        azimuthal_velocity_Volume             += data['azimuthal_velocity_Volume']
+        azimuthal_velocity_entropy_Volume     += data['azimuthal_velocity_entropy_Volume']
+        azimuthal_velocity_temperature_Volume += data['azimuthal_velocity_temperature_Volume']
+        density_temperature_Volume            += data['density_temperature_Volume']
+        entropy_Volume                        += data['entropy_Volume']
+        number_density_Volume                 += data['number_density_Volume']
+        polar_velocity_Volume                 += data['polar_velocity_Volume']
+        pressure_Volume                       += data['pressure_Volume']
+        pressure_entropy_Volume               += data['pressure_entropy_Volume']
+        radial_velocity_Volume                += data['radial_velocity_Volume']
+        radial_velocity_entropy_Volume        += data['radial_velocity_entropy_Volume']
+        radial_velocity_temperature_Volume    += data['radial_velocity_temperature_Volume']
+        specific_angular_momentum_x_Volume    += data['specific_angular_momentum_x_Volume']
+        specific_angular_momentum_y_Volume    += data['specific_angular_momentum_y_Volume']
+        specific_angular_momentum_z_Volume    += data['specific_angular_momentum_z_Volume']
+        # tcool_Volume                          += data['tcool_Volume']
+        temperature_Volume                    += data['temperature_Volume']
 
-files = np.sort(glob.glob('./data/simulations/*drummond*var*npz'))
+        r_r200m_phase                      = data['r_r200m_phase']
+        r_r200m_profile                    = data['r_r200m_profile']
+        halo_mass                          = data['halo_mass']
+        time                               = data['time']
+        r200m                              = data['r200m']
+        azimuthal_velocity_bins            = data['azimuthal_velocity_bins']
+        entropy_bins                       = data['entropy_bins']
+        number_density_bins                = data['number_density_bins']
+        polar_velocity_bins                = data['polar_velocity_bins']
+        pressure_bins                      = data['pressure_bins']
+        radial_velocity_bins               = data['radial_velocity_bins']
+        specific_angular_momentum_x_bins   = data['specific_angular_momentum_x_bins']
+        specific_angular_momentum_y_bins   = data['specific_angular_momentum_y_bins']
+        specific_angular_momentum_z_bins   = data['specific_angular_momentum_z_bins']
+        temperature_bins                   = data['temperature_bins']
 
-for i,fn in enumerate(files):
-    fn = fn[19:-4]
-    print(fn)
-    data = np.load('./data/simulations/'+fn+'.npz')
-    if i == 0 :
-        azimuthal_velocity_Mass               = data['azimuthal_velocity_Mass']
-        azimuthal_velocity_entropy_Mass       = data['azimuthal_velocity_entropy_Mass']
-        azimuthal_velocity_temperature_Mass   = data['azimuthal_velocity_temperature_Mass']
-        density_temperature_Mass              = data['density_temperature_Mass']
-        entropy_Mass                          = data['entropy_Mass']
-        number_density_Mass                   = data['number_density_Mass']
-        polar_velocity_Mass                   = data['polar_velocity_Mass']
-        pressure_Mass                         = data['pressure_Mass']
-        pressure_entropy_Mass                 = data['pressure_entropy_Mass']
-        radial_velocity_Mass                  = data['radial_velocity_Mass']
-        radial_velocity_entropy_Mass          = data['radial_velocity_entropy_Mass']
-        radial_velocity_temperature_Mass      = data['radial_velocity_temperature_Mass']
-        specific_angular_momentum_x_Mass      = data['specific_angular_momentum_x_Mass']
-        specific_angular_momentum_y_Mass      = data['specific_angular_momentum_y_Mass']
-        specific_angular_momentum_z_Mass      = data['specific_angular_momentum_z_Mass']
-        tcool_Mass                            = data['tcool_Mass']
-        temperature_Mass                      = data['temperature_Mass']
-        azimuthal_velocity_Volume             = data['azimuthal_velocity_Volume']
-        azimuthal_velocity_entropy_Volume     = data['azimuthal_velocity_entropy_Volume']
-        azimuthal_velocity_temperature_Volume = data['azimuthal_velocity_temperature_Volume']
-        density_temperature_Volume            = data['density_temperature_Volume']
-        entropy_Volume                        = data['entropy_Volume']
-        number_density_Volume                 = data['number_density_Volume']
-        polar_velocity_Volume                 = data['polar_velocity_Volume']
-        pressure_Volume                       = data['pressure_Volume']
-        pressure_entropy_Volume               = data['pressure_entropy_Volume']
-        radial_velocity_Volume                = data['radial_velocity_Volume']
-        radial_velocity_entropy_Volume        = data['radial_velocity_entropy_Volume']
-        radial_velocity_temperature_Volume    = data['radial_velocity_temperature_Volume']
-        specific_angular_momentum_x_Volume    = data['specific_angular_momentum_x_Volume']
-        specific_angular_momentum_y_Volume    = data['specific_angular_momentum_y_Volume']
-        specific_angular_momentum_z_Volume    = data['specific_angular_momentum_z_Volume']
-        tcool_Volume                          = data['tcool_Volume']
-        temperature_Volume                    = data['temperature_Volume']
+        if i == len(files)-1:
+            data={}
+            data['azimuthal_velocity_Mass']               =        azimuthal_velocity_Mass/len(files)
+            data['azimuthal_velocity_entropy_Mass']       =        azimuthal_velocity_entropy_Mass/len(files)
+            data['azimuthal_velocity_temperature_Mass']   =        azimuthal_velocity_temperature_Mass/len(files)
+            data['density_temperature_Mass']              =        density_temperature_Mass/len(files)
+            data['entropy_Mass']                          =        entropy_Mass/len(files)
+            data['number_density_Mass']                   =        number_density_Mass/len(files)
+            data['polar_velocity_Mass']                   =        polar_velocity_Mass/len(files)
+            data['pressure_Mass']                         =        pressure_Mass/len(files)
+            data['pressure_entropy_Mass']                 =        pressure_entropy_Mass/len(files)
+            data['radial_velocity_Mass']                  =        radial_velocity_Mass/len(files)
+            data['radial_velocity_entropy_Mass']          =        radial_velocity_entropy_Mass/len(files)
+            data['radial_velocity_temperature_Mass']      =        radial_velocity_temperature_Mass/len(files)
+            data['specific_angular_momentum_x_Mass']      =        specific_angular_momentum_x_Mass/len(files)
+            data['specific_angular_momentum_y_Mass']      =        specific_angular_momentum_y_Mass/len(files)
+            data['specific_angular_momentum_z_Mass']      =        specific_angular_momentum_z_Mass/len(files)
+            # data['tcool_Mass']                            =        tcool_Mass/len(files)
+            data['temperature_Mass']                      =        temperature_Mass/len(files)
+            data['azimuthal_velocity_Volume']             =        azimuthal_velocity_Volume/len(files)
+            data['azimuthal_velocity_entropy_Volume']     =        azimuthal_velocity_entropy_Volume/len(files)
+            data['azimuthal_velocity_temperature_Volume'] =        azimuthal_velocity_temperature_Volume/len(files)
+            data['density_temperature_Volume']            =        density_temperature_Volume/len(files)
+            data['entropy_Volume']                        =        entropy_Volume/len(files)
+            data['number_density_Volume']                 =        number_density_Volume/len(files)
+            data['polar_velocity_Volume']                 =        polar_velocity_Volume/len(files)
+            data['pressure_Volume']                       =        pressure_Volume/len(files)
+            data['pressure_entropy_Volume']               =        pressure_entropy_Volume/len(files)
+            data['radial_velocity_Volume']                =        radial_velocity_Volume/len(files)
+            data['radial_velocity_entropy_Volume']        =        radial_velocity_entropy_Volume/len(files)
+            data['radial_velocity_temperature_Volume']    =        radial_velocity_temperature_Volume/len(files)
+            data['specific_angular_momentum_x_Volume']    =        specific_angular_momentum_x_Volume/len(files)
+            data['specific_angular_momentum_y_Volume']    =        specific_angular_momentum_y_Volume/len(files)
+            data['specific_angular_momentum_z_Volume']    =        specific_angular_momentum_z_Volume/len(files)
+            # data['tcool_Volume']                          =        tcool_Volume/len(files)
+            data['temperature_Volume']                    =        temperature_Volume/len(files)
 
-    azimuthal_velocity_Mass               += data['azimuthal_velocity_Mass']
-    azimuthal_velocity_entropy_Mass       += data['azimuthal_velocity_entropy_Mass']
-    azimuthal_velocity_temperature_Mass   += data['azimuthal_velocity_temperature_Mass']
-    density_temperature_Mass              += data['density_temperature_Mass']
-    entropy_Mass                          += data['entropy_Mass']
-    number_density_Mass                   += data['number_density_Mass']
-    polar_velocity_Mass                   += data['polar_velocity_Mass']
-    pressure_Mass                         += data['pressure_Mass']
-    pressure_entropy_Mass                 += data['pressure_entropy_Mass']
-    radial_velocity_Mass                  += data['radial_velocity_Mass']
-    radial_velocity_entropy_Mass          += data['radial_velocity_entropy_Mass']
-    radial_velocity_temperature_Mass      += data['radial_velocity_temperature_Mass']
-    specific_angular_momentum_x_Mass      += data['specific_angular_momentum_x_Mass']
-    specific_angular_momentum_y_Mass      += data['specific_angular_momentum_y_Mass']
-    specific_angular_momentum_z_Mass      += data['specific_angular_momentum_z_Mass']
-    tcool_Mass                            += data['tcool_Mass']
-    temperature_Mass                      += data['temperature_Mass']
-    azimuthal_velocity_Volume             += data['azimuthal_velocity_Volume']
-    azimuthal_velocity_entropy_Volume     += data['azimuthal_velocity_entropy_Volume']
-    azimuthal_velocity_temperature_Volume += data['azimuthal_velocity_temperature_Volume']
-    density_temperature_Volume            += data['density_temperature_Volume']
-    entropy_Volume                        += data['entropy_Volume']
-    number_density_Volume                 += data['number_density_Volume']
-    polar_velocity_Volume                 += data['polar_velocity_Volume']
-    pressure_Volume                       += data['pressure_Volume']
-    pressure_entropy_Volume               += data['pressure_entropy_Volume']
-    radial_velocity_Volume                += data['radial_velocity_Volume']
-    radial_velocity_entropy_Volume        += data['radial_velocity_entropy_Volume']
-    radial_velocity_temperature_Volume    += data['radial_velocity_temperature_Volume']
-    specific_angular_momentum_x_Volume    += data['specific_angular_momentum_x_Volume']
-    specific_angular_momentum_y_Volume    += data['specific_angular_momentum_y_Volume']
-    specific_angular_momentum_z_Volume    += data['specific_angular_momentum_z_Volume']
-    tcool_Volume                          += data['tcool_Volume']
-    temperature_Volume                    += data['temperature_Volume']
-
-    r_r200m_phase                      = data['r_r200m_phase']
-    r_r200m_profile                    = data['r_r200m_profile']
-    halo_mass                          = data['halo_mass']
-    time                               = data['time']
-    r200m                              = data['r200m']
-    azimuthal_velocity_bins            = data['azimuthal_velocity_bins']
-    entropy_bins                       = data['entropy_bins']
-    number_density_bins                = data['number_density_bins']
-    polar_velocity_bins                = data['polar_velocity_bins']
-    pressure_bins                      = data['pressure_bins']
-    radial_velocity_bins               = data['radial_velocity_bins']
-    specific_angular_momentum_x_bins   = data['specific_angular_momentum_x_bins']
-    specific_angular_momentum_y_bins   = data['specific_angular_momentum_y_bins']
-    specific_angular_momentum_z_bins   = data['specific_angular_momentum_z_bins']
-    temperature_bins                   = data['temperature_bins']
-
-    if i == len(files)-1:
-        data={}
-        data['azimuthal_velocity_Mass']               =        azimuthal_velocity_Mass/len(files)
-        data['azimuthal_velocity_entropy_Mass']       =        azimuthal_velocity_entropy_Mass/len(files)
-        data['azimuthal_velocity_temperature_Mass']   =        azimuthal_velocity_temperature_Mass/len(files)
-        data['density_temperature_Mass']              =        density_temperature_Mass/len(files)
-        data['entropy_Mass']                          =        entropy_Mass/len(files)
-        data['number_density_Mass']                   =        number_density_Mass/len(files)
-        data['polar_velocity_Mass']                   =        polar_velocity_Mass/len(files)
-        data['pressure_Mass']                         =        pressure_Mass/len(files)
-        data['pressure_entropy_Mass']                 =        pressure_entropy_Mass/len(files)
-        data['radial_velocity_Mass']                  =        radial_velocity_Mass/len(files)
-        data['radial_velocity_entropy_Mass']          =        radial_velocity_entropy_Mass/len(files)
-        data['radial_velocity_temperature_Mass']      =        radial_velocity_temperature_Mass/len(files)
-        data['specific_angular_momentum_x_Mass']      =        specific_angular_momentum_x_Mass/len(files)
-        data['specific_angular_momentum_y_Mass']      =        specific_angular_momentum_y_Mass/len(files)
-        data['specific_angular_momentum_z_Mass']      =        specific_angular_momentum_z_Mass/len(files)
-        data['tcool_Mass']                            =        tcool_Mass/len(files)
-        data['temperature_Mass']                      =        temperature_Mass/len(files)
-        data['azimuthal_velocity_Volume']             =        azimuthal_velocity_Volume/len(files)
-        data['azimuthal_velocity_entropy_Volume']     =        azimuthal_velocity_entropy_Volume/len(files)
-        data['azimuthal_velocity_temperature_Volume'] =        azimuthal_velocity_temperature_Volume/len(files)
-        data['density_temperature_Volume']            =        density_temperature_Volume/len(files)
-        data['entropy_Volume']                        =        entropy_Volume/len(files)
-        data['number_density_Volume']                 =        number_density_Volume/len(files)
-        data['polar_velocity_Volume']                 =        polar_velocity_Volume/len(files)
-        data['pressure_Volume']                       =        pressure_Volume/len(files)
-        data['pressure_entropy_Volume']               =        pressure_entropy_Volume/len(files)
-        data['radial_velocity_Volume']                =        radial_velocity_Volume/len(files)
-        data['radial_velocity_entropy_Volume']        =        radial_velocity_entropy_Volume/len(files)
-        data['radial_velocity_temperature_Volume']    =        radial_velocity_temperature_Volume/len(files)
-        data['specific_angular_momentum_x_Volume']    =        specific_angular_momentum_x_Volume/len(files)
-        data['specific_angular_momentum_y_Volume']    =        specific_angular_momentum_y_Volume/len(files)
-        data['specific_angular_momentum_z_Volume']    =        specific_angular_momentum_z_Volume/len(files)
-        data['tcool_Volume']                          =        tcool_Volume/len(files)
-        data['temperature_Volume']                    =        temperature_Volume/len(files)
-
-        data['r_r200m_phase'] = r_r200m_phase
-        data['r_r200m_profile'] = r_r200m_profile
-        data['halo_mass'] = halo_mass
-        data['time'] = time
-        data['r200m'] = r200m
-        data['azimuthal_velocity_bins'] = azimuthal_velocity_bins
-        data['entropy_bins'] = entropy_bins
-        data['number_density_bins'] = number_density_bins
-        data['polar_velocity_bins'] = polar_velocity_bins
-        data['pressure_bins'] = pressure_bins
-        data['radial_velocity_bins'] = radial_velocity_bins
-        data['specific_angular_momentum_x_bins'] = specific_angular_momentum_x_bins
-        data['specific_angular_momentum_y_bins'] = specific_angular_momentum_y_bins
-        data['specific_angular_momentum_z_bins'] = specific_angular_momentum_z_bins
-        data['temperature_bins'] = temperature_bins
-
+            data['r_r200m_phase'] = r_r200m_phase
+            data['r_r200m_profile'] = r_r200m_profile
+            data['halo_mass'] = halo_mass
+            data['time'] = time
+            data['r200m'] = r200m
+            data['azimuthal_velocity_bins'] = azimuthal_velocity_bins
+            data['entropy_bins'] = entropy_bins
+            data['number_density_bins'] = number_density_bins
+            data['polar_velocity_bins'] = polar_velocity_bins
+            data['pressure_bins'] = pressure_bins
+            data['radial_velocity_bins'] = radial_velocity_bins
+            data['specific_angular_momentum_x_bins'] = specific_angular_momentum_x_bins
+            data['specific_angular_momentum_y_bins'] = specific_angular_momentum_y_bins
+            data['specific_angular_momentum_z_bins'] = specific_angular_momentum_z_bins
+            data['temperature_bins'] = temperature_bins
+    return data
 
 
 
+files = np.sort(glob.glob('./data/simulations/drummond/*drummond*var*npz'))
+data = averager(files)
 plotter(data, "drummond_M12_var_time_averaged")
 
-
-
-
-
-
-files = np.sort(glob.glob('./data/simulations/*drummond*ref*npz'))
-
-for i,fn in enumerate(files):
-    fn = fn[19:-4]
-    print(fn)
-    data = np.load('./data/simulations/'+fn+'.npz')
-    if i == 0 :
-        azimuthal_velocity_Mass               = data['azimuthal_velocity_Mass']
-        azimuthal_velocity_entropy_Mass       = data['azimuthal_velocity_entropy_Mass']
-        azimuthal_velocity_temperature_Mass   = data['azimuthal_velocity_temperature_Mass']
-        density_temperature_Mass              = data['density_temperature_Mass']
-        entropy_Mass                          = data['entropy_Mass']
-        number_density_Mass                   = data['number_density_Mass']
-        polar_velocity_Mass                   = data['polar_velocity_Mass']
-        pressure_Mass                         = data['pressure_Mass']
-        pressure_entropy_Mass                 = data['pressure_entropy_Mass']
-        radial_velocity_Mass                  = data['radial_velocity_Mass']
-        radial_velocity_entropy_Mass          = data['radial_velocity_entropy_Mass']
-        radial_velocity_temperature_Mass      = data['radial_velocity_temperature_Mass']
-        specific_angular_momentum_x_Mass      = data['specific_angular_momentum_x_Mass']
-        specific_angular_momentum_y_Mass      = data['specific_angular_momentum_y_Mass']
-        specific_angular_momentum_z_Mass      = data['specific_angular_momentum_z_Mass']
-        tcool_Mass                            = data['tcool_Mass']
-        temperature_Mass                      = data['temperature_Mass']
-        azimuthal_velocity_Volume             = data['azimuthal_velocity_Volume']
-        azimuthal_velocity_entropy_Volume     = data['azimuthal_velocity_entropy_Volume']
-        azimuthal_velocity_temperature_Volume = data['azimuthal_velocity_temperature_Volume']
-        density_temperature_Volume            = data['density_temperature_Volume']
-        entropy_Volume                        = data['entropy_Volume']
-        number_density_Volume                 = data['number_density_Volume']
-        polar_velocity_Volume                 = data['polar_velocity_Volume']
-        pressure_Volume                       = data['pressure_Volume']
-        pressure_entropy_Volume               = data['pressure_entropy_Volume']
-        radial_velocity_Volume                = data['radial_velocity_Volume']
-        radial_velocity_entropy_Volume        = data['radial_velocity_entropy_Volume']
-        radial_velocity_temperature_Volume    = data['radial_velocity_temperature_Volume']
-        specific_angular_momentum_x_Volume    = data['specific_angular_momentum_x_Volume']
-        specific_angular_momentum_y_Volume    = data['specific_angular_momentum_y_Volume']
-        specific_angular_momentum_z_Volume    = data['specific_angular_momentum_z_Volume']
-        tcool_Volume                          = data['tcool_Volume']
-        temperature_Volume                    = data['temperature_Volume']
-
-    azimuthal_velocity_Mass               += data['azimuthal_velocity_Mass']
-    azimuthal_velocity_entropy_Mass       += data['azimuthal_velocity_entropy_Mass']
-    azimuthal_velocity_temperature_Mass   += data['azimuthal_velocity_temperature_Mass']
-    density_temperature_Mass              += data['density_temperature_Mass']
-    entropy_Mass                          += data['entropy_Mass']
-    number_density_Mass                   += data['number_density_Mass']
-    polar_velocity_Mass                   += data['polar_velocity_Mass']
-    pressure_Mass                         += data['pressure_Mass']
-    pressure_entropy_Mass                 += data['pressure_entropy_Mass']
-    radial_velocity_Mass                  += data['radial_velocity_Mass']
-    radial_velocity_entropy_Mass          += data['radial_velocity_entropy_Mass']
-    radial_velocity_temperature_Mass      += data['radial_velocity_temperature_Mass']
-    specific_angular_momentum_x_Mass      += data['specific_angular_momentum_x_Mass']
-    specific_angular_momentum_y_Mass      += data['specific_angular_momentum_y_Mass']
-    specific_angular_momentum_z_Mass      += data['specific_angular_momentum_z_Mass']
-    tcool_Mass                            += data['tcool_Mass']
-    temperature_Mass                      += data['temperature_Mass']
-    azimuthal_velocity_Volume             += data['azimuthal_velocity_Volume']
-    azimuthal_velocity_entropy_Volume     += data['azimuthal_velocity_entropy_Volume']
-    azimuthal_velocity_temperature_Volume += data['azimuthal_velocity_temperature_Volume']
-    density_temperature_Volume            += data['density_temperature_Volume']
-    entropy_Volume                        += data['entropy_Volume']
-    number_density_Volume                 += data['number_density_Volume']
-    polar_velocity_Volume                 += data['polar_velocity_Volume']
-    pressure_Volume                       += data['pressure_Volume']
-    pressure_entropy_Volume               += data['pressure_entropy_Volume']
-    radial_velocity_Volume                += data['radial_velocity_Volume']
-    radial_velocity_entropy_Volume        += data['radial_velocity_entropy_Volume']
-    radial_velocity_temperature_Volume    += data['radial_velocity_temperature_Volume']
-    specific_angular_momentum_x_Volume    += data['specific_angular_momentum_x_Volume']
-    specific_angular_momentum_y_Volume    += data['specific_angular_momentum_y_Volume']
-    specific_angular_momentum_z_Volume    += data['specific_angular_momentum_z_Volume']
-    tcool_Volume                          += data['tcool_Volume']
-    temperature_Volume                    += data['temperature_Volume']
-
-    r_r200m_phase                      = data['r_r200m_phase']
-    r_r200m_profile                    = data['r_r200m_profile']
-    halo_mass                          = data['halo_mass']
-    time                               = data['time']
-    r200m                              = data['r200m']
-    azimuthal_velocity_bins            = data['azimuthal_velocity_bins']
-    entropy_bins                       = data['entropy_bins']
-    number_density_bins                = data['number_density_bins']
-    polar_velocity_bins                = data['polar_velocity_bins']
-    pressure_bins                      = data['pressure_bins']
-    radial_velocity_bins               = data['radial_velocity_bins']
-    specific_angular_momentum_x_bins   = data['specific_angular_momentum_x_bins']
-    specific_angular_momentum_y_bins   = data['specific_angular_momentum_y_bins']
-    specific_angular_momentum_z_bins   = data['specific_angular_momentum_z_bins']
-    temperature_bins                   = data['temperature_bins']
-
-    if i == len(files)-1:
-        data={}
-        data['azimuthal_velocity_Mass']               =        azimuthal_velocity_Mass/len(files)
-        data['azimuthal_velocity_entropy_Mass']       =        azimuthal_velocity_entropy_Mass/len(files)
-        data['azimuthal_velocity_temperature_Mass']   =        azimuthal_velocity_temperature_Mass/len(files)
-        data['density_temperature_Mass']              =        density_temperature_Mass/len(files)
-        data['entropy_Mass']                          =        entropy_Mass/len(files)
-        data['number_density_Mass']                   =        number_density_Mass/len(files)
-        data['polar_velocity_Mass']                   =        polar_velocity_Mass/len(files)
-        data['pressure_Mass']                         =        pressure_Mass/len(files)
-        data['pressure_entropy_Mass']                 =        pressure_entropy_Mass/len(files)
-        data['radial_velocity_Mass']                  =        radial_velocity_Mass/len(files)
-        data['radial_velocity_entropy_Mass']          =        radial_velocity_entropy_Mass/len(files)
-        data['radial_velocity_temperature_Mass']      =        radial_velocity_temperature_Mass/len(files)
-        data['specific_angular_momentum_x_Mass']      =        specific_angular_momentum_x_Mass/len(files)
-        data['specific_angular_momentum_y_Mass']      =        specific_angular_momentum_y_Mass/len(files)
-        data['specific_angular_momentum_z_Mass']      =        specific_angular_momentum_z_Mass/len(files)
-        data['tcool_Mass']                            =        tcool_Mass/len(files)
-        data['temperature_Mass']                      =        temperature_Mass/len(files)
-        data['azimuthal_velocity_Volume']             =        azimuthal_velocity_Volume/len(files)
-        data['azimuthal_velocity_entropy_Volume']     =        azimuthal_velocity_entropy_Volume/len(files)
-        data['azimuthal_velocity_temperature_Volume'] =        azimuthal_velocity_temperature_Volume/len(files)
-        data['density_temperature_Volume']            =        density_temperature_Volume/len(files)
-        data['entropy_Volume']                        =        entropy_Volume/len(files)
-        data['number_density_Volume']                 =        number_density_Volume/len(files)
-        data['polar_velocity_Volume']                 =        polar_velocity_Volume/len(files)
-        data['pressure_Volume']                       =        pressure_Volume/len(files)
-        data['pressure_entropy_Volume']               =        pressure_entropy_Volume/len(files)
-        data['radial_velocity_Volume']                =        radial_velocity_Volume/len(files)
-        data['radial_velocity_entropy_Volume']        =        radial_velocity_entropy_Volume/len(files)
-        data['radial_velocity_temperature_Volume']    =        radial_velocity_temperature_Volume/len(files)
-        data['specific_angular_momentum_x_Volume']    =        specific_angular_momentum_x_Volume/len(files)
-        data['specific_angular_momentum_y_Volume']    =        specific_angular_momentum_y_Volume/len(files)
-        data['specific_angular_momentum_z_Volume']    =        specific_angular_momentum_z_Volume/len(files)
-        data['tcool_Volume']                          =        tcool_Volume/len(files)
-        data['temperature_Volume']                    =        temperature_Volume/len(files)
-
-        data['r_r200m_phase'] = r_r200m_phase
-        data['r_r200m_profile'] = r_r200m_profile
-        data['halo_mass'] = halo_mass
-        data['time'] = time
-        data['r200m'] = r200m
-        data['azimuthal_velocity_bins'] = azimuthal_velocity_bins
-        data['entropy_bins'] = entropy_bins
-        data['number_density_bins'] = number_density_bins
-        data['polar_velocity_bins'] = polar_velocity_bins
-        data['pressure_bins'] = pressure_bins
-        data['radial_velocity_bins'] = radial_velocity_bins
-        data['specific_angular_momentum_x_bins'] = specific_angular_momentum_x_bins
-        data['specific_angular_momentum_y_bins'] = specific_angular_momentum_y_bins
-        data['specific_angular_momentum_z_bins'] = specific_angular_momentum_z_bins
-        data['temperature_bins'] = temperature_bins
-
-
-
-
+files = np.sort(glob.glob('./data/simulations/drummond/*drummond*ref*npz'))
+data = averager(files)
 plotter(data, "drummond_M12_ref_time_averaged")
 
+files = np.sort(glob.glob('./data/simulations/MLi/*MLi*_SFR10*npz'))
+data = averager(files)
+plotter(data, "MLi_SFR10_time_averaged")
 
+files = np.sort(glob.glob('./data/simulations/MLi/*MLi*_SFR3*npz'))
+data = averager(files)
+plotter(data, "MLi_SFR3_time_averaged")
+
+files = np.sort(glob.glob('./data/simulations/daniel_M12_TNG100_starforming/*npz'))
+data = averager(files)
+plotter(data, "daniel_M12_TNG100_starforming_averaged")
+
+files = np.sort(glob.glob('./data/simulations/daniel_M12_TNG100_quenched/*npz'))
+data = averager(files)
+plotter(data, "daniel_M12_TNG100_quenched_averaged")
+
+
+
+
+
+
+files = np.sort(glob.glob("./data/simulations/*/*npz"))
+for fn in files:
+    data = np.load(fn)
+    plotter(data,fn.split('/')[-1][:-4])
