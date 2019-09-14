@@ -1922,7 +1922,7 @@ def averager(files):
     return data
 
 
-drummond_M12_var_palet = palettable.cubehelix.Cubehelix.make(start=0.75, rotation=-0.25, reverse=True, max_light=1.0, min_light=0.1, n=64).mpl_colormap
+drummond_M12_var_palet = palettable.cubehelix.Cubehelix.make(start=0.75, rotation=0., reverse=True, max_light=1.0, min_light=0.1, n=64).mpl_colormap
 files = np.sort(glob.glob('./data/simulations/drummond/*drummond*var*npz'))
 data = averager(files)
 plotter(data, "drummond_M12_var_time_averaged",drummond_M12_var_palet)
