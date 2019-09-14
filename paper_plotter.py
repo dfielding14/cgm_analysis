@@ -626,10 +626,10 @@ HSE_rot_halo = HSE_rot(2.0,0.05,0.05)                                 #    f_cs_
 cooling_flow_halo = cooling_flow(1.5,-4.0*Msun/yr)                   #    f_cs_CF = 2.0, Mdot = -3.0 * Msun/yr):
 precipitate_halo = precipitate(10.0,0.05*mu*mp*vc(rvir*kpc)**2/kb)   #    tcooltff=10.0, T_outer=0.25*mu*mp*vc(rvir*kpc)**2/kb):
 
-palette_Volume = palettable.cubehelix.Cubehelix.make(start=1.5, rotation=2/3., reverse=True, max_light=1.0, min_light=0.1, n=64)
-palette_Mass   = palettable.cubehelix.Cubehelix.make(start=2.5, rotation=-2/3., reverse=True, max_light=1.0, min_light=0.1, n=64)
+# palette_Volume = palettable.cubehelix.Cubehelix.make(start=1.5, rotation=2/3., reverse=True, max_light=1.0, min_light=0.1, n=64)
+# palette_Mass   = palettable.cubehelix.Cubehelix.make(start=2.5, rotation=-2/3., reverse=True, max_light=1.0, min_light=0.1, n=64)
 
-def plotter(data,fn):
+def plotter(data,fn, palet):
     dlogT = np.diff(np.log10(data['temperature_bins']))[0]
     dlogn = np.diff(np.log10(data['number_density_bins']))[0]
     dlogP = np.diff(np.log10(data['pressure_bins']))[0]
@@ -644,7 +644,7 @@ def plotter(data,fn):
     fig,ax = plt.subplots(1,1)
     plot=ax.pcolormesh(data['r_r200m_profile'], data['temperature_bins'], 
         (data['temperature_Volume']/np.sum(data['temperature_Volume'],axis=0)), 
-        norm=colors.LogNorm(vmin=1e-4,vmax=1), cmap=palettable.cubehelix.jim_special_16_r.mpl_colormap)
+        norm=colors.LogNorm(vmin=1e-4,vmax=1), cmap=palet)#palettable.cubehelix.jim_special_16_r.mpl_colormap)
 
     ax.plot(radii/(rvir*kpc), HSE_halo.T(radii), lw=2.5, label='HSE', color = '#cc3300', alpha=0.75)
     ax.plot(radii/(rvir*kpc), HSE_turb_halo.T(radii), lw=2.5, label=r'HSE w/ $\mathcal{M} = 0.5$', color = '#cc3300', alpha=0.75, ls='--')
@@ -665,7 +665,7 @@ def plotter(data,fn):
     fig,ax = plt.subplots(1,1)
     plot=ax.pcolormesh(data['r_r200m_profile'], data['temperature_bins'], 
         (data['temperature_Mass']/np.sum(data['temperature_Mass'],axis=0)), 
-        norm=colors.LogNorm(vmin=1e-4, vmax=1), cmap=palettable.cubehelix.red_16_r.mpl_colormap)
+        norm=colors.LogNorm(vmin=1e-4, vmax=1), cmap=palet)#palettable.cubehelix.red_16_r.mpl_colormap)
 
     ax.plot(radii/(rvir*kpc), HSE_halo.T(radii), lw=2.5, label='HSE', color = '#0066ff', alpha=0.75)
     ax.plot(radii/(rvir*kpc), HSE_turb_halo.T(radii), lw=2.5, label=r'HSE w/ $\mathcal{M} = 0.5$', color = '#0066ff', alpha=0.75, ls='--')
@@ -690,7 +690,7 @@ def plotter(data,fn):
     fig,ax = plt.subplots(1,1)
     plot=ax.pcolormesh(data['r_r200m_profile'], data['number_density_bins'], 
         (data['number_density_Volume']/np.sum(data['number_density_Volume'],axis=0)), 
-        norm=colors.LogNorm(vmin=1e-4,vmax=1), cmap=palettable.cubehelix.jim_special_16_r.mpl_colormap)
+        norm=colors.LogNorm(vmin=1e-4,vmax=1), cmap=palet)#palettable.cubehelix.jim_special_16_r.mpl_colormap)
 
     ax.plot(radii/(rvir*kpc), HSE_halo.n(radii), lw=2.5, label='HSE', color = '#cc3300', alpha=0.75)
     ax.plot(radii/(rvir*kpc), HSE_turb_halo.n(radii), lw=2.5, label=r'HSE w/ $\mathcal{M} = 0.5$', color = '#cc3300', alpha=0.75, ls='--')
@@ -711,7 +711,7 @@ def plotter(data,fn):
     fig,ax = plt.subplots(1,1)
     plot=ax.pcolormesh(data['r_r200m_profile'], data['number_density_bins'], 
         (data['number_density_Mass']/np.sum(data['number_density_Mass'],axis=0)), 
-        norm=colors.LogNorm(vmin=1e-4, vmax=1), cmap=palettable.cubehelix.red_16_r.mpl_colormap)
+        norm=colors.LogNorm(vmin=1e-4, vmax=1), cmap=palet)#palettable.cubehelix.red_16_r.mpl_colormap)
 
     ax.plot(radii/(rvir*kpc), HSE_halo.n(radii), lw=2.5, label='HSE', color = '#0066ff', alpha=0.75)
     ax.plot(radii/(rvir*kpc), HSE_turb_halo.n(radii), lw=2.5, label=r'HSE w/ $\mathcal{M} = 0.5$', color = '#0066ff', alpha=0.75, ls='--')
@@ -736,7 +736,7 @@ def plotter(data,fn):
     fig,ax = plt.subplots(1,1)
     plot=ax.pcolormesh(data['r_r200m_profile'], data['pressure_bins'], 
         (data['pressure_Volume']/np.sum(data['pressure_Volume'],axis=0)), 
-        norm=colors.LogNorm(vmin=1e-4,vmax=1), cmap=palettable.cubehelix.jim_special_16_r.mpl_colormap)
+        norm=colors.LogNorm(vmin=1e-4,vmax=1), cmap=palet)#palettable.cubehelix.jim_special_16_r.mpl_colormap)
 
     ax.plot(radii/(rvir*kpc), HSE_halo.P(radii), lw=2.5, label='HSE', color = '#cc3300', alpha=0.75)
     ax.plot(radii/(rvir*kpc), HSE_turb_halo.P(radii), lw=2.5, label=r'HSE w/ $\mathcal{M} = 0.5$', color = '#cc3300', alpha=0.75, ls='--')
@@ -757,7 +757,7 @@ def plotter(data,fn):
     fig,ax = plt.subplots(1,1)
     plot=ax.pcolormesh(data['r_r200m_profile'], data['pressure_bins'], 
         (data['pressure_Mass']/np.sum(data['pressure_Mass'],axis=0)), 
-        norm=colors.LogNorm(vmin=1e-4, vmax=1), cmap=palettable.cubehelix.red_16_r.mpl_colormap)
+        norm=colors.LogNorm(vmin=1e-4, vmax=1), cmap=palet)#palettable.cubehelix.red_16_r.mpl_colormap)
 
     ax.plot(radii/(rvir*kpc), HSE_halo.P(radii), lw=2.5, label='HSE', color = '#0066ff', alpha=0.75)
     ax.plot(radii/(rvir*kpc), HSE_turb_halo.P(radii), lw=2.5, label=r'HSE w/ $\mathcal{M} = 0.5$', color = '#0066ff', alpha=0.75, ls='--')
@@ -781,7 +781,7 @@ def plotter(data,fn):
     fig,ax = plt.subplots(1,1)
     plot=ax.pcolormesh(data['r_r200m_profile'], data['entropy_bins'], 
         (data['entropy_Volume']/np.sum(data['entropy_Volume'],axis=0)), 
-        norm=colors.LogNorm(vmin=1e-4,vmax=1), cmap=palettable.cubehelix.jim_special_16_r.mpl_colormap)
+        norm=colors.LogNorm(vmin=1e-4,vmax=1), cmap=palet)#palettable.cubehelix.jim_special_16_r.mpl_colormap)
 
     ax.plot(radii/(rvir*kpc), HSE_halo.K(radii), lw=2.5, label='HSE', color = '#cc3300', alpha=0.75)
     ax.plot(radii/(rvir*kpc), HSE_turb_halo.K(radii), lw=2.5, label=r'HSE w/ $\mathcal{M} = 0.5$', color = '#cc3300', alpha=0.75, ls='--')
@@ -802,7 +802,7 @@ def plotter(data,fn):
     fig,ax = plt.subplots(1,1)
     plot=ax.pcolormesh(data['r_r200m_profile'], data['entropy_bins'], 
         (data['entropy_Mass']/np.sum(data['entropy_Mass'],axis=0)), 
-        norm=colors.LogNorm(vmin=1e-4, vmax=1), cmap=palettable.cubehelix.red_16_r.mpl_colormap)
+        norm=colors.LogNorm(vmin=1e-4, vmax=1), cmap=palet)#palettable.cubehelix.red_16_r.mpl_colormap)
 
     ax.plot(radii/(rvir*kpc), HSE_halo.K(radii), lw=2.5, label='HSE', color = '#0066ff', alpha=0.75)
     ax.plot(radii/(rvir*kpc), HSE_turb_halo.K(radii), lw=2.5, label=r'HSE w/ $\mathcal{M} = 0.5$', color = '#0066ff', alpha=0.75, ls='--')
@@ -826,7 +826,7 @@ def plotter(data,fn):
     fig,ax = plt.subplots(1,1)
     plot=ax.pcolormesh(data['r_r200m_profile'], data['radial_velocity_bins'], 
         (data['radial_velocity_Volume']/np.sum(data['radial_velocity_Volume'],axis=0)), 
-        norm=colors.LogNorm(vmin=1e-4,vmax=1), cmap=palettable.cubehelix.jim_special_16_r.mpl_colormap)
+        norm=colors.LogNorm(vmin=1e-4,vmax=1), cmap=palet)#palettable.cubehelix.jim_special_16_r.mpl_colormap)
 
     ax.plot(radii/(rvir*kpc), cooling_flow_halo.vr(radii)/1e5, lw=2.5, label='cooling flow', color = '#cc3300', alpha=0.75)
     cb = fig.colorbar(plot)
@@ -845,7 +845,7 @@ def plotter(data,fn):
     fig,ax = plt.subplots(1,1)
     plot=ax.pcolormesh(data['r_r200m_profile'], data['radial_velocity_bins'], 
         (data['radial_velocity_Mass']/np.sum(data['radial_velocity_Mass'],axis=0)), 
-        norm=colors.LogNorm(vmin=1e-4, vmax=1), cmap=palettable.cubehelix.red_16_r.mpl_colormap)
+        norm=colors.LogNorm(vmin=1e-4, vmax=1), cmap=palet)#palettable.cubehelix.red_16_r.mpl_colormap)
 
     ax.plot(radii/(rvir*kpc), cooling_flow_halo.vr(radii)/1e5, lw=2.5, label='cooling flow', color = '#0066ff', alpha=0.75)
     cb = fig.colorbar(plot)
@@ -868,7 +868,7 @@ def plotter(data,fn):
     fig,ax = plt.subplots(1,1)
     plot=ax.pcolormesh(data['r_r200m_profile'], data['azimuthal_velocity_bins'], 
         (data['azimuthal_velocity_Volume']/np.sum(data['azimuthal_velocity_Volume'],axis=0)), 
-        norm=colors.LogNorm(vmin=1e-4,vmax=1), cmap=palettable.cubehelix.jim_special_16_r.mpl_colormap)
+        norm=colors.LogNorm(vmin=1e-4,vmax=1), cmap=palet)#palettable.cubehelix.jim_special_16_r.mpl_colormap)
 
     ax.plot(radii/(rvir*kpc), HSE_rot_halo.average_v_phi(radii)/1e5, lw=2.5, label='HSE w/ rot. '+r'$\lambda=0.05$', color = '#cc3300', alpha=0.75)
     cb = fig.colorbar(plot)
@@ -887,7 +887,7 @@ def plotter(data,fn):
     fig,ax = plt.subplots(1,1)
     plot=ax.pcolormesh(data['r_r200m_profile'], data['azimuthal_velocity_bins'], 
         (data['azimuthal_velocity_Mass']/np.sum(data['azimuthal_velocity_Mass'],axis=0)), 
-        norm=colors.LogNorm(vmin=1e-4, vmax=1), cmap=palettable.cubehelix.red_16_r.mpl_colormap)
+        norm=colors.LogNorm(vmin=1e-4, vmax=1), cmap=palet)#palettable.cubehelix.red_16_r.mpl_colormap)
 
     ax.plot(radii/(rvir*kpc), HSE_rot_halo.average_v_phi(radii)/1e5, lw=2.5, label='HSE w/ rot. '+r'$\lambda=0.05$', color = '#0066ff', alpha=0.75)
     cb = fig.colorbar(plot)
@@ -918,7 +918,7 @@ def plotter(data,fn):
 
     plot = ax.pcolormesh(data['pressure_bins'], data['entropy_bins'], 
         np.sum(data['pressure_entropy_Mass'][...,2:4],axis=-1)/np.sum(data['pressure_entropy_Mass'][...,2:4]),
-        cmap=palettable.cubehelix.red_16_r.mpl_colormap, 
+        cmap=palet,#cmap=palettable.cubehelix.red_16_r.mpl_colormap, 
         norm=colors.LogNorm(vmin=1e-6,vmax=1e-1),rasterized=True)
     cb = fig.colorbar(plot, orientation='horizontal', cax=cax)
     cb.ax.set_title(r'$M(P,K,0.2\leq r/r_{\rm vir} \leq 0.4) / M(0.2\leq r/r_{\rm vir} \leq 0.4)$', fontsize=10, loc='left')
@@ -959,7 +959,7 @@ def plotter(data,fn):
 
     plot = ax.pcolormesh(data['pressure_bins'], data['entropy_bins'], 
         np.sum(data['pressure_entropy_Mass'][...,1:10],axis=-1)/np.sum(data['pressure_entropy_Mass'][...,1:10]),
-        cmap=palettable.cubehelix.red_16_r.mpl_colormap, 
+        cmap=palet,#cmap=palettable.cubehelix.red_16_r.mpl_colormap, 
         norm=colors.LogNorm(vmin=1e-6,vmax=1e-1),rasterized=True)
     cb = fig.colorbar(plot, orientation='horizontal', cax=cax)
     cb.ax.set_title(r'$M(P,K,0.1\leq r/r_{\rm vir} \leq 1) / M(0.1\leq r/r_{\rm vir} \leq 1)$', fontsize=10, loc='left')
@@ -1039,7 +1039,7 @@ def plotter(data,fn):
 
     plot = ax.pcolormesh(data['number_density_bins'], data['temperature_bins'], 
         np.sum(data['density_temperature_Mass'][...,2:4],axis=-1)/np.sum(data['density_temperature_Mass'][...,2:4]),
-        cmap=palettable.cubehelix.red_16_r.mpl_colormap, 
+        cmap=palet,#cmap=palettable.cubehelix.red_16_r.mpl_colormap, 
         norm=colors.LogNorm(vmin=1e-6,vmax=1e-1),rasterized=True)
     cb = fig.colorbar(plot, orientation='horizontal', cax=cax)
     cb.ax.set_title(r'$M(n,T,0.2\leq r/r_{\rm vir} \leq 0.4) / M(0.2\leq r/r_{\rm vir} \leq 0.4)$', fontsize=10, loc='left')
@@ -1080,7 +1080,7 @@ def plotter(data,fn):
 
     plot = ax.pcolormesh(data['number_density_bins'], data['temperature_bins'], 
         np.sum(data['density_temperature_Mass'][...,1:10],axis=-1)/np.sum(data['density_temperature_Mass'][...,1:10]),
-        cmap=palettable.cubehelix.red_16_r.mpl_colormap, 
+        cmap=palet,#cmap=palettable.cubehelix.red_16_r.mpl_colormap, 
         norm=colors.LogNorm(vmin=1e-6,vmax=1e-1),rasterized=True)
     cb = fig.colorbar(plot, orientation='horizontal', cax=cax)
     cb.ax.set_title(r'$M(n,T,0.1\leq r/r_{\rm vir} \leq 1) / M(0.1\leq r/r_{\rm vir} \leq 1)$', fontsize=10, loc='left')
@@ -1367,7 +1367,7 @@ def plotter(data,fn):
 
     plot = ax.pcolormesh(data['radial_velocity_bins'], data['entropy_bins'], 
         np.sum(data['radial_velocity_entropy_Mass'][...,1:10],axis=-1)/np.sum(data['radial_velocity_entropy_Mass'][...,1:10]),
-        cmap=palettable.cubehelix.red_16_r.mpl_colormap, 
+        cmap=palet,#cmap=palettable.cubehelix.red_16_r.mpl_colormap, 
         norm=colors.LogNorm(vmin=1e-6,vmax=1e-1),rasterized=True)
     cb = fig.colorbar(plot, orientation='vertical', cax=cax)
     cb.set_label(r'$M(K,v_r,0.1\leq r/r_{\rm vir} \leq 1) / M(0.1\leq r/r_{\rm vir} \leq 1)$', fontsize=10, rotation=270, labelpad=15)
@@ -1442,7 +1442,7 @@ def plotter(data,fn):
 
     plot = ax.pcolormesh(data['azimuthal_velocity_bins'], data['entropy_bins'], 
         np.sum(data['azimuthal_velocity_entropy_Mass'][...,1:10],axis=-1)/np.sum(data['azimuthal_velocity_entropy_Mass'][...,1:10]),
-        cmap=palettable.cubehelix.red_16_r.mpl_colormap, 
+        cmap=palet,#cmap=palettable.cubehelix.red_16_r.mpl_colormap, 
         norm=colors.LogNorm(vmin=1e-6,vmax=1e-1),rasterized=True)
     cb = fig.colorbar(plot, orientation='vertical', cax=cax)
     cb.set_label(r'$M(K,v_\phi,0.1\leq r/r_{\rm vir} \leq 1) / M(0.1\leq r/r_{\rm vir} \leq 1)$', fontsize=10, rotation=270, labelpad=15)
@@ -1511,7 +1511,7 @@ def plotter(data,fn):
 
 
 
-def plotter_linear(data,fn):
+def plotter_linear(data,fn, palet):
     dlogT = np.diff(np.log10(data['temperature_bins']))[0]
     dlogn = np.diff(np.log10(data['number_density_bins']))[0]
     dlogP = np.diff(np.log10(data['pressure_bins']))[0]
@@ -1526,7 +1526,7 @@ def plotter_linear(data,fn):
     fig,ax = plt.subplots(1,1)
     plot=ax.pcolormesh(data['r_r200m_profile'], data['temperature_bins'], 
         (data['temperature_Volume']/np.sum(data['temperature_Volume'],axis=0)), 
-        norm=colors.LogNorm(vmin=1e-4,vmax=1), cmap=palettable.cubehelix.jim_special_16_r.mpl_colormap)
+        norm=colors.LogNorm(vmin=1e-4,vmax=1), cmap=palet)#palettable.cubehelix.jim_special_16_r.mpl_colormap)
 
     ax.plot(radii/(rvir*kpc), HSE_halo.T(radii), lw=2.5, label='HSE', color = '#cc3300', alpha=0.75)
     ax.plot(radii/(rvir*kpc), HSE_turb_halo.T(radii), lw=2.5, label=r'HSE w/ $\mathcal{M} = 0.5$', color = '#cc3300', alpha=0.75, ls='--')
@@ -1546,7 +1546,7 @@ def plotter_linear(data,fn):
     fig,ax = plt.subplots(1,1)
     plot=ax.pcolormesh(data['r_r200m_profile'], data['temperature_bins'], 
         (data['temperature_Mass']/np.sum(data['temperature_Mass'],axis=0)), 
-        norm=colors.LogNorm(vmin=1e-4, vmax=1), cmap=palettable.cubehelix.red_16_r.mpl_colormap)
+        norm=colors.LogNorm(vmin=1e-4, vmax=1), cmap=palet)#palettable.cubehelix.red_16_r.mpl_colormap)
 
     ax.plot(radii/(rvir*kpc), HSE_halo.T(radii), lw=2.5, label='HSE', color = '#0066ff', alpha=0.75)
     ax.plot(radii/(rvir*kpc), HSE_turb_halo.T(radii), lw=2.5, label=r'HSE w/ $\mathcal{M} = 0.5$', color = '#0066ff', alpha=0.75, ls='--')
@@ -1570,7 +1570,7 @@ def plotter_linear(data,fn):
     fig,ax = plt.subplots(1,1)
     plot=ax.pcolormesh(data['r_r200m_profile'], data['number_density_bins'], 
         (data['number_density_Volume']/np.sum(data['number_density_Volume'],axis=0)), 
-        norm=colors.LogNorm(vmin=1e-4,vmax=1), cmap=palettable.cubehelix.jim_special_16_r.mpl_colormap)
+        norm=colors.LogNorm(vmin=1e-4,vmax=1), cmap=palet)#palettable.cubehelix.jim_special_16_r.mpl_colormap)
 
     ax.plot(radii/(rvir*kpc), HSE_halo.n(radii), lw=2.5, label='HSE', color = '#cc3300', alpha=0.75)
     ax.plot(radii/(rvir*kpc), HSE_turb_halo.n(radii), lw=2.5, label=r'HSE w/ $\mathcal{M} = 0.5$', color = '#cc3300', alpha=0.75, ls='--')
@@ -1590,7 +1590,7 @@ def plotter_linear(data,fn):
     fig,ax = plt.subplots(1,1)
     plot=ax.pcolormesh(data['r_r200m_profile'], data['number_density_bins'], 
         (data['number_density_Mass']/np.sum(data['number_density_Mass'],axis=0)), 
-        norm=colors.LogNorm(vmin=1e-4, vmax=1), cmap=palettable.cubehelix.red_16_r.mpl_colormap)
+        norm=colors.LogNorm(vmin=1e-4, vmax=1), cmap=palet)#palettable.cubehelix.red_16_r.mpl_colormap)
 
     ax.plot(radii/(rvir*kpc), HSE_halo.n(radii), lw=2.5, label='HSE', color = '#0066ff', alpha=0.75)
     ax.plot(radii/(rvir*kpc), HSE_turb_halo.n(radii), lw=2.5, label=r'HSE w/ $\mathcal{M} = 0.5$', color = '#0066ff', alpha=0.75, ls='--')
@@ -1614,7 +1614,7 @@ def plotter_linear(data,fn):
     fig,ax = plt.subplots(1,1)
     plot=ax.pcolormesh(data['r_r200m_profile'], data['pressure_bins'], 
         (data['pressure_Volume']/np.sum(data['pressure_Volume'],axis=0)), 
-        norm=colors.LogNorm(vmin=1e-4,vmax=1), cmap=palettable.cubehelix.jim_special_16_r.mpl_colormap)
+        norm=colors.LogNorm(vmin=1e-4,vmax=1), cmap=palet)#palettable.cubehelix.jim_special_16_r.mpl_colormap)
 
     ax.plot(radii/(rvir*kpc), HSE_halo.P(radii), lw=2.5, label='HSE', color = '#cc3300', alpha=0.75)
     ax.plot(radii/(rvir*kpc), HSE_turb_halo.P(radii), lw=2.5, label=r'HSE w/ $\mathcal{M} = 0.5$', color = '#cc3300', alpha=0.75, ls='--')
@@ -1634,7 +1634,7 @@ def plotter_linear(data,fn):
     fig,ax = plt.subplots(1,1)
     plot=ax.pcolormesh(data['r_r200m_profile'], data['pressure_bins'], 
         (data['pressure_Mass']/np.sum(data['pressure_Mass'],axis=0)), 
-        norm=colors.LogNorm(vmin=1e-4, vmax=1), cmap=palettable.cubehelix.red_16_r.mpl_colormap)
+        norm=colors.LogNorm(vmin=1e-4, vmax=1), cmap=palet)#palettable.cubehelix.red_16_r.mpl_colormap)
 
     ax.plot(radii/(rvir*kpc), HSE_halo.P(radii), lw=2.5, label='HSE', color = '#0066ff', alpha=0.75)
     ax.plot(radii/(rvir*kpc), HSE_turb_halo.P(radii), lw=2.5, label=r'HSE w/ $\mathcal{M} = 0.5$', color = '#0066ff', alpha=0.75, ls='--')
@@ -1657,7 +1657,7 @@ def plotter_linear(data,fn):
     fig,ax = plt.subplots(1,1)
     plot=ax.pcolormesh(data['r_r200m_profile'], data['entropy_bins'], 
         (data['entropy_Volume']/np.sum(data['entropy_Volume'],axis=0)), 
-        norm=colors.LogNorm(vmin=1e-4,vmax=1), cmap=palettable.cubehelix.jim_special_16_r.mpl_colormap)
+        norm=colors.LogNorm(vmin=1e-4,vmax=1), cmap=palet)#palettable.cubehelix.jim_special_16_r.mpl_colormap)
 
     ax.plot(radii/(rvir*kpc), HSE_halo.K(radii), lw=2.5, label='HSE', color = '#cc3300', alpha=0.75)
     ax.plot(radii/(rvir*kpc), HSE_turb_halo.K(radii), lw=2.5, label=r'HSE w/ $\mathcal{M} = 0.5$', color = '#cc3300', alpha=0.75, ls='--')
@@ -1677,7 +1677,7 @@ def plotter_linear(data,fn):
     fig,ax = plt.subplots(1,1)
     plot=ax.pcolormesh(data['r_r200m_profile'], data['entropy_bins'], 
         (data['entropy_Mass']/np.sum(data['entropy_Mass'],axis=0)), 
-        norm=colors.LogNorm(vmin=1e-4, vmax=1), cmap=palettable.cubehelix.red_16_r.mpl_colormap)
+        norm=colors.LogNorm(vmin=1e-4, vmax=1), cmap=palet)#palettable.cubehelix.red_16_r.mpl_colormap)
 
     ax.plot(radii/(rvir*kpc), HSE_halo.K(radii), lw=2.5, label='HSE', color = '#0066ff', alpha=0.75)
     ax.plot(radii/(rvir*kpc), HSE_turb_halo.K(radii), lw=2.5, label=r'HSE w/ $\mathcal{M} = 0.5$', color = '#0066ff', alpha=0.75, ls='--')
@@ -1700,7 +1700,7 @@ def plotter_linear(data,fn):
     fig,ax = plt.subplots(1,1)
     plot=ax.pcolormesh(data['r_r200m_profile'], data['radial_velocity_bins'], 
         (data['radial_velocity_Volume']/np.sum(data['radial_velocity_Volume'],axis=0)), 
-        norm=colors.LogNorm(vmin=1e-4,vmax=1), cmap=palettable.cubehelix.jim_special_16_r.mpl_colormap)
+        norm=colors.LogNorm(vmin=1e-4,vmax=1), cmap=palet)#palettable.cubehelix.jim_special_16_r.mpl_colormap)
 
     ax.plot(radii/(rvir*kpc), cooling_flow_halo.vr(radii)/1e5, lw=2.5, label='cooling flow', color = '#cc3300', alpha=0.75)
     cb = fig.colorbar(plot)
@@ -1718,7 +1718,7 @@ def plotter_linear(data,fn):
     fig,ax = plt.subplots(1,1)
     plot=ax.pcolormesh(data['r_r200m_profile'], data['radial_velocity_bins'], 
         (data['radial_velocity_Mass']/np.sum(data['radial_velocity_Mass'],axis=0)), 
-        norm=colors.LogNorm(vmin=1e-4, vmax=1), cmap=palettable.cubehelix.red_16_r.mpl_colormap)
+        norm=colors.LogNorm(vmin=1e-4, vmax=1), cmap=palet)#palettable.cubehelix.red_16_r.mpl_colormap)
 
     ax.plot(radii/(rvir*kpc), cooling_flow_halo.vr(radii)/1e5, lw=2.5, label='cooling flow', color = '#0066ff', alpha=0.75)
     cb = fig.colorbar(plot)
@@ -1740,7 +1740,7 @@ def plotter_linear(data,fn):
     fig,ax = plt.subplots(1,1)
     plot=ax.pcolormesh(data['r_r200m_profile'], data['azimuthal_velocity_bins'], 
         (data['azimuthal_velocity_Volume']/np.sum(data['azimuthal_velocity_Volume'],axis=0)), 
-        norm=colors.LogNorm(vmin=1e-4,vmax=1), cmap=palettable.cubehelix.jim_special_16_r.mpl_colormap)
+        norm=colors.LogNorm(vmin=1e-4,vmax=1), cmap=palet)#palettable.cubehelix.jim_special_16_r.mpl_colormap)
 
     ax.plot(radii/(rvir*kpc), HSE_rot_halo.average_v_phi(radii)/1e5, lw=2.5, label='HSE w/ rot. '+r'$\lambda=0.05$', color = '#cc3300', alpha=0.75)
     cb = fig.colorbar(plot)
@@ -1758,7 +1758,7 @@ def plotter_linear(data,fn):
     fig,ax = plt.subplots(1,1)
     plot=ax.pcolormesh(data['r_r200m_profile'], data['azimuthal_velocity_bins'], 
         (data['azimuthal_velocity_Mass']/np.sum(data['azimuthal_velocity_Mass'],axis=0)), 
-        norm=colors.LogNorm(vmin=1e-4, vmax=1), cmap=palettable.cubehelix.red_16_r.mpl_colormap)
+        norm=colors.LogNorm(vmin=1e-4, vmax=1), cmap=palet)#palettable.cubehelix.red_16_r.mpl_colormap)
 
     ax.plot(radii/(rvir*kpc), HSE_rot_halo.average_v_phi(radii)/1e5, lw=2.5, label='HSE w/ rot. '+r'$\lambda=0.05$', color = '#0066ff', alpha=0.75)
     cb = fig.colorbar(plot)
@@ -1922,11 +1922,11 @@ def averager(files):
     return data
 
 
-
+drummond_M12_var_palet = palettable.cubehelix.Cubehelix.make(start=0.75, rotation=-0.25, reverse=True, max_light=1.0, min_light=0.1, n=64).mpl_colormap
 files = np.sort(glob.glob('./data/simulations/drummond/*drummond*var*npz'))
 data = averager(files)
-plotter(data, "drummond_M12_var_time_averaged")
-plotter_linear(data, "drummond_M12_var_time_averaged")
+plotter(data, "drummond_M12_var_time_averaged",drummond_M12_var_palet)
+plotter_linear(data, "drummond_M12_var_time_averaged",drummond_M12_var_palet)
 
 files = np.sort(glob.glob('./data/simulations/drummond/*drummond*ref*npz'))
 data = averager(files)
