@@ -22,6 +22,7 @@ from matplotlib import cm
 from matplotlib.colors import ListedColormap
 from matplotlib import gridspec
 import palettable
+from scipy.ndimage.filters import gaussian_filter
 
 gamma   = 5/3.
 kb      = 1.3806488e-16
@@ -276,9 +277,9 @@ vc_outer = np.sqrt(r_outer*grav_acc(r_outer))
 
 
 
-################################################################################################################################################################
-################################################################################################################################################################
-################################################################################################################################################################
+    ################################################################################################################################################################
+    ################################################################################################################################################################
+    ################################################################################################################################################################
 
 class HSE:
     def __init__(self, f_cs_HSE = 2.0, f_cgm=0.1):
@@ -320,9 +321,62 @@ class HSE:
         M_cgm = integrate.quad(m_shell,0.1*rvir*kpc,r)[0]
         return M_cgm
 
-################################################################################################################################################################
-################################################################################################################################################################
-################################################################################################################################################################
+
+    ################################################################################################################################################################
+    ################################################################################################################################################################
+    ################################################################################################################################################################
+
+class HSE_adiabat:
+    def __init__(self, f_Kvir = 1.0, f_cgm=0.1):
+        self.f_Kvir = f_Kvir
+        self.f_cgm = f_cgm
+
+        self.K0 = self.f_Kvir * 0.5*vc(rvir*kpc)**2 * ((fb * Mhalo / (4 * np.pi/3. * (rvir*kpc)**3))**(-2./3.))
+
+        def find_rho_ta_HSE_adiabat(Mass,r_inner, r_outer):
+            rho = lambda r, rho_0: (rho_0**(2/3.) + (gamma-1)/(gamma* self.K0) * scipy.integrate.quad(grav_acc, r, rvir*kpc)[0])**(3/2.)
+            m_shell = lambda r, rho_0: 4*np.pi*r**2 * rho(r, rho_0)
+            rho_0s = np.logspace(-33,-23)
+            M_cgms = np.zeros_like(rho_0s)
+            for i in range(len(rho_0s)):
+                M_cgms[i] = integrate.quad(m_shell,r_inner, r_outer, args=(rho_0s[i]))[0]
+
+            return np.interp(Mass, M_cgms, rho_0s)
+
+        self.rho_ta_HSE_adiabat = find_rho_ta_HSE_adiabat(self.f_cgm*Mhalo, 0.1*rvir*kpc, rvir*kpc)
+
+        self.rho = np.vectorize(self.rho_unvec)
+
+
+    def rho_unvec(self,r):
+        return (self.rho_ta_HSE_adiabat**(2/3.) + (gamma-1)/(gamma*self.K0) * scipy.integrate.quad(grav_acc, r, rvir*kpc)[0])**(3/2.)   
+
+    def n(self,r):
+        return self.rho(r)/mu/mp
+
+    def K(self,r):
+        return self.K0 * np.ones_like(r)/kb * (mu*mp)**(gamma)
+
+    def cs(self,r):
+        return np.sqrt(gamma * self.K0 * self.rho(r)**(gamma-1))
+
+    def T(self,r):
+        return mu*mp*self.cs(r)**2/kb/gamma
+
+    def P(self,r):
+        return self.n(r) * self.T(r)
+
+    def tcool_P(self,T, P, metallicity):
+        return 1.5 * (muH/mu)**2 * kb * T / ( P/T * Lambda((np.log10(P/T*(mu/muH)),np.log10(T), metallicity, redshift)))
+
+    def M_enc(self,r):
+        m_shell = lambda radius: 4*np.pi*radius**2 * self.rho(radius)
+        M_cgm = integrate.quad(m_shell,0.1*rvir*kpc,r)[0]
+        return M_cgm
+
+    ################################################################################################################################################################
+    ################################################################################################################################################################
+    ################################################################################################################################################################
 
 class HSE_turb:
     """
@@ -367,9 +421,9 @@ class HSE_turb:
         M_cgm = integrate.quad(m_shell,0.1*rvir*kpc,r)[0]
         return M_cgm
 
-################################################################################################################################################################
-################################################################################################################################################################
-################################################################################################################################################################
+    ################################################################################################################################################################
+    ################################################################################################################################################################
+    ################################################################################################################################################################
 
 class HSE_rot:
     def __init__(self, f_cs_HSE_rot = 2.0, f_cgm=0.1, lam=0.05):
@@ -503,9 +557,9 @@ class HSE_rot:
         return np.array([ np.mean(np.array([self.v_phi(R,THETA) for THETA in np.arccos(np.linspace(-0.99,0.99,100))]))for R in r ])
 
 
-################################################################################################################################################################
-################################################################################################################################################################
-################################################################################################################################################################
+    ################################################################################################################################################################
+    ################################################################################################################################################################
+    ################################################################################################################################################################
 """
 Cooling Flow
 """
@@ -558,9 +612,9 @@ class cooling_flow:
     def P(self,r):
         return self.T(r) * self.n(r)
 
-################################################################################################################################################################
-################################################################################################################################################################
-################################################################################################################################################################
+    ################################################################################################################################################################
+    ################################################################################################################################################################
+    ################################################################################################################################################################
 """
 Precipitation
 """
@@ -613,18 +667,19 @@ class precipitate:
         return self.T(r) * self.n(r)
 
 
-################################################################################################################################################################
-################################################################################################################################################################
-################################################################################################################################################################
+    ################################################################################################################################################################
+    ################################################################################################################################################################
+    ################################################################################################################################################################
 
 
 line_colors_VW = ['k', "#003366", "#003300", "#3333cc", "#339900", "#66a61e"]
 
-HSE_halo = HSE(2.0,0.05)                                              #    f_cs_HSE = 2.0, f_cgm=0.1):
-HSE_turb_halo = HSE_turb(2.0,0.05,0.5)                                #    f_cs_HSE_turb = 2.0, f_cgm=0.1, Mach=0.5):
-HSE_rot_halo = HSE_rot(2.0,0.05,0.05)                                 #    f_cs_HSE_rot = 2.0, f_cgm=0.1, lam=0.05):
-cooling_flow_halo = cooling_flow(1.5,-4.0*Msun/yr)                   #    f_cs_CF = 2.0, Mdot = -3.0 * Msun/yr):
-precipitate_halo = precipitate(10.0,0.05*mu*mp*vc(rvir*kpc)**2/kb)   #    tcooltff=10.0, T_outer=0.25*mu*mp*vc(rvir*kpc)**2/kb):
+HSE_halo            = HSE(2.0,0.05)                                     #    f_cs_HSE = 2.0, f_cgm=0.1):
+HSE_adiabat_halo    = HSE_adiabat(1.0,0.05)                             #    f_Kvir = 1.0, f_cgm=0.1):
+HSE_turb_halo       = HSE_turb(2.0,0.05,0.5)                            #    f_cs_HSE_turb = 2.0, f_cgm=0.1, Mach=0.5):
+HSE_rot_halo        = HSE_rot(2.0,0.05,0.05)                            #    f_cs_HSE_rot = 2.0, f_cgm=0.1, lam=0.05):
+cooling_flow_halo   = cooling_flow(1.5,-4.0*Msun/yr)                    #    f_cs_CF = 2.0, Mdot = -3.0 * Msun/yr):
+precipitate_halo    = precipitate(10.0,0.05*mu*mp*vc(rvir*kpc)**2/kb)   #    tcooltff=10.0, T_outer=0.25*mu*mp*vc(rvir*kpc)**2/kb):
 
 # palette_Volume = palettable.cubehelix.Cubehelix.make(start=1.5, rotation=2/3., reverse=True, max_light=1.0, min_light=0.1, n=64)
 # palette_Mass   = palettable.cubehelix.Cubehelix.make(start=2.5, rotation=-2/3., reverse=True, max_light=1.0, min_light=0.1, n=64)
@@ -639,7 +694,7 @@ def plotter(data,fn, palet):
     dvphi = np.diff(data['azimuthal_velocity_bins'])
 
 
-##############################################################################################################
+        ##############################################################################################################
 
     fig,ax = plt.subplots(1,1)
     plot=ax.pcolormesh(data['r_r200m_profile'], data['temperature_bins'], 
@@ -685,7 +740,7 @@ def plotter(data,fn, palet):
     plt.close('all')
 
 
-##############################################################################################################
+        ##############################################################################################################
 
     fig,ax = plt.subplots(1,1)
     plot=ax.pcolormesh(data['r_r200m_profile'], data['number_density_bins'], 
@@ -731,7 +786,7 @@ def plotter(data,fn, palet):
     plt.close('all')
 
 
-##############################################################################################################
+        ##############################################################################################################
 
     fig,ax = plt.subplots(1,1)
     plot=ax.pcolormesh(data['r_r200m_profile'], data['pressure_bins'], 
@@ -776,7 +831,7 @@ def plotter(data,fn, palet):
     plt.clf()
     plt.close('all')
 
-##############################################################################################################
+        ##############################################################################################################
 
     fig,ax = plt.subplots(1,1)
     plot=ax.pcolormesh(data['r_r200m_profile'], data['entropy_bins'], 
@@ -821,7 +876,7 @@ def plotter(data,fn, palet):
     plt.clf()
     plt.close('all')
 
-##############################################################################################################
+        ##############################################################################################################
 
     fig,ax = plt.subplots(1,1)
     plot=ax.pcolormesh(data['r_r200m_profile'], data['radial_velocity_bins'], 
@@ -836,7 +891,7 @@ def plotter(data,fn, palet):
     ax.set_xlim(5e-2, 1)
     ax.set_xscale('log')
     ax.set_xlabel(r'$r/r_{\rm vir}$')
-    ax.legend(loc='upper right', fontsize=8,ncol=1,columnspacing=-3, handlelength=3.0)
+    ax.legend(loc='upper left', fontsize=8,ncol=1,columnspacing=-3, handlelength=3.0)
     ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
     fig.set_size_inches(5,3)
     plt.savefig('./plots/radial_velocity_Volume_'+fn+'.png',bbox_inches='tight',dpi=200)
@@ -855,7 +910,7 @@ def plotter(data,fn, palet):
     ax.set_xlim(5e-2, 1)
     ax.set_xscale('log')
     ax.set_xlabel(r'$r/r_{\rm vir}$')
-    ax.legend(loc='upper right', fontsize=8,ncol=1,columnspacing=-3, handlelength=3.0)
+    ax.legend(loc='upper left', fontsize=8,ncol=1,columnspacing=-3, handlelength=3.0)
     ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
     fig.set_size_inches(5,3)
     plt.savefig('./plots/radial_velocity_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
@@ -863,7 +918,7 @@ def plotter(data,fn, palet):
     plt.close('all')
 
 
-##############################################################################################################
+        ##############################################################################################################
 
     fig,ax = plt.subplots(1,1)
     plot=ax.pcolormesh(data['r_r200m_profile'], data['azimuthal_velocity_bins'], 
@@ -878,7 +933,7 @@ def plotter(data,fn, palet):
     ax.set_xlim(5e-2, 1)
     ax.set_xscale('log')
     ax.set_xlabel(r'$r/r_{\rm vir}$')
-    ax.legend(loc='upper right', fontsize=8,ncol=1,columnspacing=-3, handlelength=3.0)
+    ax.legend(loc='upper left', fontsize=8,ncol=1,columnspacing=-3, handlelength=3.0)
     ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
     fig.set_size_inches(5,3)
     plt.savefig('./plots/azimuthal_velocity_Volume_'+fn+'.png',bbox_inches='tight',dpi=200)
@@ -897,7 +952,7 @@ def plotter(data,fn, palet):
     ax.set_xlim(5e-2, 1)
     ax.set_xscale('log')
     ax.set_xlabel(r'$r/r_{\rm vir}$')
-    ax.legend(loc='upper right', fontsize=8,ncol=1,columnspacing=-3, handlelength=3.0)
+    ax.legend(loc='upper left', fontsize=8,ncol=1,columnspacing=-3, handlelength=3.0)
     ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
     fig.set_size_inches(5,3)
     plt.savefig('./plots/azimuthal_velocity_Mass_'+fn+'.png',bbox_inches='tight',dpi=200)
@@ -905,9 +960,9 @@ def plotter(data,fn, palet):
     plt.close('all')
 
 
-############################################################################################################################################################################################################################
-############################################################################################################################################################################################################################
-############################################################################################################################################################################################################################
+        ############################################################################################################################################################################################################################
+        ############################################################################################################################################################################################################################
+        ############################################################################################################################################################################################################################
 
 
     fig= plt.figure(1)
@@ -949,7 +1004,7 @@ def plotter(data,fn, palet):
     plt.close('all')
     plt.clf()  
 
-##############################################################################################################
+        ##############################################################################################################
 
     fig= plt.figure(1)
     gs = gridspec.GridSpec(65, 80, wspace=0, hspace=0.0)
@@ -1027,9 +1082,9 @@ def plotter(data,fn, palet):
     plt.close('all')
     plt.clf()  
 
-############################################################################################################################################################################################################################
-############################################################################################################################################################################################################################
-############################################################################################################################################################################################################################
+        ############################################################################################################################################################################################################################
+        ############################################################################################################################################################################################################################
+        ############################################################################################################################################################################################################################
 
     fig= plt.figure(1)
     gs = gridspec.GridSpec(65, 80, wspace=0, hspace=0.0)
@@ -1070,7 +1125,7 @@ def plotter(data,fn, palet):
     plt.close('all')
     plt.clf()  
 
-##############################################################################################################
+    ##############################################################################################################
 
     fig= plt.figure(1)
     gs = gridspec.GridSpec(65, 80, wspace=0, hspace=0.0)
@@ -1148,14 +1203,14 @@ def plotter(data,fn, palet):
     plt.close('all')
     plt.clf()  
 
-############################################################################################################################################################################################################################
-############################################################################################################################################################################################################################
-############################################################################################################################################################################################################################
+        ############################################################################################################################################################################################################################
+        ############################################################################################################################################################################################################################
+        ############################################################################################################################################################################################################################
 
     fig,ax = plt.subplots(1,1)
     plot=ax.pcolormesh(data['azimuthal_velocity_bins'], data['entropy_bins'], 
         np.sum(data['azimuthal_velocity_entropy_Mass'][...,1:10],axis=-1)/np.sum(data['azimuthal_velocity_entropy_Mass'][...,1:10]),
-        norm=colors.LogNorm(vmin=1e-6, vmax=1e-1), cmap=palettable.cubehelix.red_16_r.mpl_colormap)
+        norm=colors.LogNorm(vmin=1e-6, vmax=1e-1), cmap=palet)#palettable.cubehelix.red_16_r.mpl_colormap)
     cb = fig.colorbar(plot)
     cb.set_label(r'$M(v_\phi,K)/M_{\rm tot}$',rotation=270,fontsize=12,labelpad=15)
 
@@ -1201,13 +1256,13 @@ def plotter(data,fn, palet):
     plt.savefig('./plots/azimuthal_velocity_entropy_Mass_all_r_'+fn+'.png',bbox_inches='tight',dpi=200)
     plt.clf()       
 
-##############################################################################################################
+    ##############################################################################################################
 
 
     fig,ax = plt.subplots(1,1)
     plot=ax.pcolormesh(data['azimuthal_velocity_bins'], data['temperature_bins'], 
         np.sum(data['azimuthal_velocity_temperature_Mass'][...,1:10],axis=-1)/np.sum(data['azimuthal_velocity_temperature_Mass'][...,1:10]),
-        norm=colors.LogNorm(vmin=1e-6, vmax=1e-1), cmap=palettable.cubehelix.jim_special_16_r.mpl_colormap)
+        norm=colors.LogNorm(vmin=1e-6, vmax=1e-1), cmap=palet)#palettable.cubehelix.jim_special_16_r.mpl_colormap)
     cb = fig.colorbar(plot)
     cb.set_label(r'$M(v_\phi,T)/M_{\rm tot}$',rotation=270,fontsize=12,labelpad=15)
 
@@ -1254,12 +1309,12 @@ def plotter(data,fn, palet):
     plt.clf()       
 
 
-##############################################################################################################
+    ##############################################################################################################
 
     fig,ax = plt.subplots(1,1)
     plot=ax.pcolormesh(data['radial_velocity_bins'], data['temperature_bins'], 
         np.sum(data['radial_velocity_temperature_Mass'][...,1:10],axis=-1)/np.sum(data['radial_velocity_temperature_Mass'][...,1:10]),
-        norm=colors.LogNorm(vmin=1e-6, vmax=1e-1), cmap=palettable.cubehelix.red_16_r.mpl_colormap)
+        norm=colors.LogNorm(vmin=1e-6, vmax=1e-1), cmap=palet)#palettable.cubehelix.red_16_r.mpl_colormap)
     cb = fig.colorbar(plot)
     cb.set_label(r'$M(v_r,T)/M_{\rm tot}$',rotation=270,fontsize=12,labelpad=15)
 
@@ -1306,12 +1361,12 @@ def plotter(data,fn, palet):
     plt.clf()       
 
 
-##############################################################################################################
+    ##############################################################################################################
 
     fig,ax = plt.subplots(1,1)
     plot=ax.pcolormesh(data['radial_velocity_bins'], data['entropy_bins'], 
         np.sum(data['radial_velocity_entropy_Mass'][...,1:10],axis=-1)/np.sum(data['radial_velocity_entropy_Mass'][...,1:10]),
-        norm=colors.LogNorm(vmin=1e-6, vmax=1e-1), cmap=palettable.cubehelix.red_16_r.mpl_colormap)
+        norm=colors.LogNorm(vmin=1e-6, vmax=1e-1), cmap=palet)#palettable.cubehelix.red_16_r.mpl_colormap)
     cb = fig.colorbar(plot)
     cb.set_label(r'$M(v_r,K)/M_{\rm tot}$',rotation=270,fontsize=12,labelpad=15)
 
@@ -1357,7 +1412,7 @@ def plotter(data,fn, palet):
     plt.savefig('./plots/radial_velocity_entropy_Mass_all_r_'+fn+'.png',bbox_inches='tight',dpi=200)
     plt.clf()       
 
-##############################################################################################################
+    ##############################################################################################################
 
     fig= plt.figure(1)
     gs = gridspec.GridSpec(80, 65, wspace=0, hspace=0.0)
@@ -1432,7 +1487,7 @@ def plotter(data,fn, palet):
     plt.close('all')
     plt.clf()  
 
-##############################################################################################################
+    ##############################################################################################################
 
     fig= plt.figure(1)
     gs = gridspec.GridSpec(80, 65, wspace=0, hspace=0.0)
@@ -1509,8 +1564,6 @@ def plotter(data,fn, palet):
 
     plt.close("all")
 
-
-
 def plotter_linear(data,fn, palet):
     dlogT = np.diff(np.log10(data['temperature_bins']))[0]
     dlogn = np.diff(np.log10(data['number_density_bins']))[0]
@@ -1521,7 +1574,7 @@ def plotter_linear(data,fn, palet):
     dvphi = np.diff(data['azimuthal_velocity_bins'])
 
 
-##############################################################################################################
+    ##############################################################################################################
 
     fig,ax = plt.subplots(1,1)
     plot=ax.pcolormesh(data['r_r200m_profile'], data['temperature_bins'], 
@@ -1565,7 +1618,7 @@ def plotter_linear(data,fn, palet):
     plt.close('all')
 
 
-##############################################################################################################
+    ##############################################################################################################
 
     fig,ax = plt.subplots(1,1)
     plot=ax.pcolormesh(data['r_r200m_profile'], data['number_density_bins'], 
@@ -1609,7 +1662,7 @@ def plotter_linear(data,fn, palet):
     plt.close('all')
 
 
-##############################################################################################################
+    ##############################################################################################################
 
     fig,ax = plt.subplots(1,1)
     plot=ax.pcolormesh(data['r_r200m_profile'], data['pressure_bins'], 
@@ -1652,7 +1705,7 @@ def plotter_linear(data,fn, palet):
     plt.clf()
     plt.close('all')
 
-##############################################################################################################
+    ##############################################################################################################
 
     fig,ax = plt.subplots(1,1)
     plot=ax.pcolormesh(data['r_r200m_profile'], data['entropy_bins'], 
@@ -1695,7 +1748,7 @@ def plotter_linear(data,fn, palet):
     plt.clf()
     plt.close('all')
 
-##############################################################################################################
+    ##############################################################################################################
 
     fig,ax = plt.subplots(1,1)
     plot=ax.pcolormesh(data['r_r200m_profile'], data['radial_velocity_bins'], 
@@ -1735,7 +1788,7 @@ def plotter_linear(data,fn, palet):
     plt.close('all')
 
 
-##############################################################################################################
+    ##############################################################################################################
 
     fig,ax = plt.subplots(1,1)
     plot=ax.pcolormesh(data['r_r200m_profile'], data['azimuthal_velocity_bins'], 
@@ -1773,7 +1826,6 @@ def plotter_linear(data,fn, palet):
     plt.savefig('./plots/azimuthal_velocity_Mass_'+fn+'_linear.png',bbox_inches='tight',dpi=200)
     plt.clf()
     plt.close('all')
-
 
 def averager(files):
     for i,fn in enumerate(files):
@@ -1922,52 +1974,1506 @@ def averager(files):
     return data
 
 
-drummond_M12_var_palet = palettable.cubehelix.Cubehelix.make(start=0.75, rotation=0., reverse=True, max_light=1.0, min_light=0.1, n=64).mpl_colormap
-files = np.sort(glob.glob('./data/simulations/drummond/*drummond*var*npz'))
-data = averager(files)
-plotter(data, "drummond_M12_var_time_averaged",drummond_M12_var_palet)
-plotter_linear(data, "drummond_M12_var_time_averaged",drummond_M12_var_palet)
-
-files = np.sort(glob.glob('./data/simulations/drummond/*drummond*ref*npz'))
-data = averager(files)
-plotter(data, "drummond_M12_ref_time_averaged")
-plotter_linear(data, "drummond_M12_ref_time_averaged")
-
-files = np.sort(glob.glob('./data/simulations/MLi/*MLi*_SFR10*npz'))
-data = averager(files)
-plotter(data, "MLi_SFR10_time_averaged")
-plotter_linear(data, "MLi_SFR10_time_averaged")
-
-files = np.sort(glob.glob('./data/simulations/MLi/*MLi*_SFR3*npz'))
-data = averager(files)
-plotter(data, "MLi_SFR3_time_averaged")
-plotter_linear(data, "MLi_SFR3_time_averaged")
-
-files = np.sort(glob.glob('./data/simulations/daniel_M12_TNG100_starforming/*npz'))
-data = averager(files)
-plotter(data, "daniel_M12_TNG100_starforming_averaged")
-plotter_linear(data, "daniel_M12_TNG100_starforming_averaged")
-
-files = np.sort(glob.glob('./data/simulations/daniel_M12_TNG100_quenched/*npz'))
-data = averager(files)
-plotter(data, "daniel_M12_TNG100_quenched_averaged")
-plotter_linear(data, "daniel_M12_TNG100_quenched_averaged")
-
-
-fn = './data/simulations/daniel_M12_TNG100_quenched/Subhalo536830_snap099_TNG100.npz'
-data = np.load(fn)
-plotter(data,fn.split('/')[-1][:-4])
-plotter_linear(data,fn.split('/')[-1][:-4])
-
-
-fn = './data/simulations/daniel_M12_TNG100_starforming/Subhalo518236_snap099_TNG100.npz'
-data = np.load(fn)
-plotter(data,fn.split('/')[-1][:-4])
-plotter_linear(data,fn.split('/')[-1][:-4])
 
 
 
-files = np.sort(glob.glob("./data/simulations/*/*npz"))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    #############################################################################################################################################################################################################
+    #############################################################################################################################################################################################################
+    #############################################################################################################################################################################################################
+    #############################################################################################################################################################################################################
+
+    #############################################################################################################################################################################################################
+    #############################################################################################################################################################################################################
+    #############################################################################################################################################################################################################
+    #############################################################################################################################################################################################################
+
+    #############################################################################################################################################################################################################
+    #############################################################################################################################################################################################################
+    #############################################################################################################################################################################################################
+    #############################################################################################################################################################################################################
+
+
+def new_plotter(data,fn, palet, sSFR_title=False):
+    dlogT = np.diff(np.log10(data['temperature_bins']))[0]
+    dlogn = np.diff(np.log10(data['number_density_bins']))[0]
+    dlogP = np.diff(np.log10(data['pressure_bins']))[0]
+    dlogK = np.diff(np.log10(data['entropy_bins']))[0]
+    dlogr = np.diff(np.log10(data['r_r200m_profile']))[0]
+    dvr = np.diff(data['radial_velocity_bins'])
+    dvphi = np.diff(data['azimuthal_velocity_bins'])
+
+
+    if len(data['r_r200m_profile']) > 200:
+        r_r200m_profile_centers = 10**(np.log10(data['r_r200m_profile'])[:-1] + 0.5*np.diff(np.log10(data['r_r200m_profile'])))
+    else :
+        r_r200m_profile_centers = data['r_r200m_profile']
+    temperature_bin_centers = 10**(np.log10(data['temperature_bins'])[:-1] + 0.5*np.diff(np.log10(data['temperature_bins'])))
+    number_density_bin_centers = 10**(np.log10(data['number_density_bins'])[:-1] + 0.5*np.diff(np.log10(data['number_density_bins'])))
+    entropy_bin_centers = 10**(np.log10(data['entropy_bins'])[:-1] + 0.5*np.diff(np.log10(data['entropy_bins'])))
+    pressure_bin_centers = 10**(np.log10(data['pressure_bins'])[:-1] + 0.5*np.diff(np.log10(data['pressure_bins'])))
+    radial_velocity_bin_centers = data['radial_velocity_bins'][:-1] + 0.5*np.diff(data['radial_velocity_bins'])
+    azimuthal_velocity_bin_centers = data['azimuthal_velocity_bins'][:-1] + 0.5*np.diff(data['azimuthal_velocity_bins'])
+
+
+    Nradii = len(r_r200m_profile_centers)
+    sigma = 0.75
+
+    temperature_profile_Volume = np.zeros(Nradii)*np.nan
+    temperature_profile_Mass = np.zeros(Nradii)*np.nan
+    for i in range(Nradii):
+        if np.sum(data['temperature_Volume'][:,i]) > 0:
+            temperature_profile_Volume[i] = 10**np.average(np.log10(temperature_bin_centers), weights=data['temperature_Volume'][:,i])
+        if np.sum(data['temperature_Mass'][:,i]) > 0:
+            temperature_profile_Mass[i] = 10**np.average(np.log10(temperature_bin_centers), weights=data['temperature_Mass'][:,i])
+
+    number_density_profile_Volume = np.zeros(Nradii)*np.nan
+    number_density_profile_Mass = np.zeros(Nradii)*np.nan
+    for i in range(Nradii):
+        if np.sum(data['number_density_Volume'][:,i]) > 0:
+            number_density_profile_Volume[i] = 10**np.average(np.log10(number_density_bin_centers), weights=data['number_density_Volume'][:,i])
+        if np.sum(data['number_density_Mass'][:,i]) > 0:
+            number_density_profile_Mass[i] = 10**np.average(np.log10(number_density_bin_centers), weights=data['number_density_Mass'][:,i])
+
+    entropy_profile_Volume = np.zeros(Nradii)*np.nan
+    entropy_profile_Mass = np.zeros(Nradii)*np.nan
+    for i in range(Nradii):
+        if np.sum(data['entropy_Volume'][:,i]) > 0:
+            entropy_profile_Volume[i] = 10**np.average(np.log10(entropy_bin_centers), weights=data['entropy_Volume'][:,i])
+        if np.sum(data['entropy_Mass'][:,i]) > 0:
+            entropy_profile_Mass[i] = 10**np.average(np.log10(entropy_bin_centers), weights=data['entropy_Mass'][:,i])
+    
+    pressure_profile_Volume = np.zeros(Nradii)*np.nan
+    pressure_profile_Mass = np.zeros(Nradii)*np.nan
+    for i in range(Nradii):
+        if np.sum(data['pressure_Volume'][:,i]) > 0:
+            pressure_profile_Volume[i] = 10**np.average(np.log10(pressure_bin_centers), weights=data['pressure_Volume'][:,i])
+        if np.sum(data['pressure_Mass'][:,i]) > 0:
+            pressure_profile_Mass[i] = 10**np.average(np.log10(pressure_bin_centers), weights=data['pressure_Mass'][:,i])
+
+    radial_velocity_profile_Volume = np.zeros(Nradii)*np.nan
+    radial_velocity_profile_Mass = np.zeros(Nradii)*np.nan
+    for i in range(Nradii):
+        if np.sum(data['radial_velocity_Volume'][:,i]) > 0:
+            radial_velocity_profile_Volume[i] = np.average(radial_velocity_bin_centers, weights=data['radial_velocity_Volume'][:,i])
+        if np.sum(data['radial_velocity_Mass'][:,i]) > 0:
+            radial_velocity_profile_Mass[i] = np.average(radial_velocity_bin_centers, weights=data['radial_velocity_Mass'][:,i])
+
+    azimuthal_velocity_profile_Volume = np.zeros(Nradii)*np.nan
+    azimuthal_velocity_profile_Mass = np.zeros(Nradii)*np.nan
+    for i in range(Nradii):
+        if np.sum(data['azimuthal_velocity_Volume'][:,i]) > 0:
+            azimuthal_velocity_profile_Volume[i] = np.average(azimuthal_velocity_bin_centers, weights=data['azimuthal_velocity_Volume'][:,i])
+        if np.sum(data['azimuthal_velocity_Mass'][:,i]) > 0:
+            azimuthal_velocity_profile_Mass[i] = np.average(azimuthal_velocity_bin_centers, weights=data['azimuthal_velocity_Mass'][:,i])
+
+
+
+    ##############################################################################################################
+
+    fig,ax = plt.subplots(1,1)
+    # plot=ax.pcolormesh(data['r_r200m_profile'], data['temperature_bins'], 
+    #     (data['temperature_Volume']/np.sum(data['temperature_Volume'],axis=0)),#(data['temperature_Volume']/np.sum(data['temperature_Volume'],axis=0)), 
+    #     norm=colors.LogNorm(vmin=1e-4,vmax=1), cmap=palet)#palettable.cubehelix.jim_special_16_r.mpl_colormap)
+    plot=ax.contourf(r_r200m_profile_centers, temperature_bin_centers, 
+        gaussian_filter((data['temperature_Volume']/np.sum(data['temperature_Volume'],axis=0)),sigma), 
+        levels=np.append(np.logspace(-4,-0.5,61),10000),
+        norm=colors.LogNorm(vmin=1e-4,vmax=10**-0.5), cmap=palet)#palettable.cubehelix.jim_special_16_r.mpl_colormap)
+
+    ax.plot(radii/(rvir*kpc), HSE_halo.T(radii)         , lw=2.25  , color = '1.0', alpha=0.5)
+    ax.plot(radii/(rvir*kpc), HSE_halo.T(radii)         , lw=1.5, label=r'HSeq. $T=T_{\rm vir}(r)$'   , color = '0.2', alpha=0.5)
+    
+    ax.plot(radii/(rvir*kpc), HSE_adiabat_halo.T(radii)         , lw=2.25  , color = '1.0', alpha=0.5)
+    ax.plot(radii/(rvir*kpc), HSE_adiabat_halo.T(radii)         , lw=1.5, label=r'HSeq. $K=K_{\rm vir}$'   , color = '0.2', alpha=0.5, dashes=[4,2])
+
+    ax.plot(r_r200m_profile_centers, temperature_profile_Volume, lw=3.25, color = 'white')
+    ax.plot(r_r200m_profile_centers, temperature_profile_Volume, lw=2.5, label=r'$\langle T \rangle$'   , color = 'k')
+
+    # ax.plot(radii/(rvir*kpc), HSE_halo_Kvir.T(radii)    , lw=2.5, label=r'HSE $K=K_{\rm vir}(r)$'   , color = '0.5', alpha=0.75, ls='--')
+    cb = fig.colorbar(plot, ticks=[1e-4,1e-3,1e-2,1e-1])
+    cb.set_label(r'${\rm Vol}(T,r)/{\rm Vol}(r)$',rotation=270,fontsize=12,labelpad=15)
+    ax.set_ylabel(r'$T\,[\mathrm{K}]$')
+    ax.set_ylim(3e3,4e7)
+    ax.set_xlim(5e-2, 1)
+    ax.set_yscale('log')
+    ax.set_xlabel(r'$r/r_{\rm vir}$')
+    ax.legend(loc='upper right', fontsize=8,ncol=1,columnspacing=-3, handlelength=3.0)
+    ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    fig.set_size_inches(5,3)
+    if sSFR_title:
+        ax.text(0.05,0.95, r"$\log {\rm \, sSFR} = %s$" % np.round(np.log10(data['sSFR']),2), ha="left", va="top",transform=ax.transAxes, fontsize=8, bbox={'facecolor':'grey', 'edgecolor':'None', 'boxstyle':'round','pad':0.1, 'alpha':0.75})
+    plt.savefig('./plots/temperature_Volume_'+fn+'_linear.png',bbox_inches='tight',dpi=400)
+    ax.set_xscale('log')
+    plt.savefig('./plots/temperature_Volume_'+fn+'.png',bbox_inches='tight',dpi=400)
+    plt.clf()
+
+
+    fig,ax = plt.subplots(1,1)
+    # plot=ax.pcolormesh(data['r_r200m_profile'], data['temperature_bins'], 
+    #     (data['temperature_Volume']/np.sum(data['temperature_Volume'],axis=0)),#(data['temperature_Volume']/np.sum(data['temperature_Volume'],axis=0)), 
+    #     norm=colors.LogNorm(vmin=1e-4,vmax=1), cmap=palet)#palettable.cubehelix.jim_special_16_r.mpl_colormap)
+    plot=ax.contourf(r_r200m_profile_centers, temperature_bin_centers, 
+        gaussian_filter((data['temperature_Mass']/np.sum(data['temperature_Mass'],axis=0)),sigma), 
+        levels=np.append(np.logspace(-4,-0.5,61),10000),
+        norm=colors.LogNorm(vmin=1e-4,vmax=10**-0.5), cmap=palet)#palettable.cubehelix.jim_special_16_r.mpl_colormap)
+
+    ax.plot(radii/(rvir*kpc), HSE_halo.T(radii)         , lw=2.25  , color = '1.0', alpha=0.5)
+    ax.plot(radii/(rvir*kpc), HSE_halo.T(radii)         , lw=1.5, label=r'HSeq. $T=T_{\rm vir}(r)$'   , color = '0.2', alpha=0.5)
+    
+    ax.plot(radii/(rvir*kpc), HSE_adiabat_halo.T(radii)         , lw=2.25  , color = '1.0', alpha=0.5)
+    ax.plot(radii/(rvir*kpc), HSE_adiabat_halo.T(radii)         , lw=1.5, label=r'HSeq. $K=K_{\rm vir}$'   , color = '0.2', alpha=0.5, dashes=[4,2])
+
+    ax.plot(r_r200m_profile_centers, temperature_profile_Mass, lw=3.25, color = 'white')
+    ax.plot(r_r200m_profile_centers, temperature_profile_Mass, lw=2.5, label=r'$\langle T \rangle$'   , color = 'k')
+
+    # ax.plot(radii/(rvir*kpc), HSE_halo_Kvir.T(radii)    , lw=2.5, label=r'HSE $K=K_{\rm vir}(r)$'   , color = '0.5', alpha=0.75, ls='--')
+    cb = fig.colorbar(plot, ticks=[1e-4,1e-3,1e-2,1e-1],extend="both")
+    cb.set_label(r'$M(T,r)/M(r)$',rotation=270,fontsize=12,labelpad=15)
+    ax.set_ylabel(r'$T\,[\mathrm{K}]$')
+    ax.set_ylim(3e3,4e7)
+    ax.set_xlim(5e-2, 1)
+    ax.set_yscale('log')
+    ax.set_xlabel(r'$r/r_{\rm vir}$')
+    ax.legend(loc='upper right', fontsize=8,ncol=1,columnspacing=-3, handlelength=3.0)
+    ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    fig.set_size_inches(5,3)
+    if sSFR_title:
+        ax.text(0.05,0.95, r"$\log {\rm \, sSFR} = %s$" % np.round(np.log10(data['sSFR']),2), ha="left", va="top",transform=ax.transAxes, fontsize=8, bbox={'facecolor':'grey', 'edgecolor':'None', 'boxstyle':'round','pad':0.1, 'alpha':0.75})
+    plt.savefig('./plots/temperature_Mass_'+fn+'_linear.png',bbox_inches='tight',dpi=400)
+    ax.set_xscale('log')
+    plt.savefig('./plots/temperature_Mass_'+fn+'.png',bbox_inches='tight',dpi=400)
+    plt.clf()
+
+
+    ##############################################################################################################
+
+    fig,ax = plt.subplots(1,1)
+    # plot=ax.pcolormesh(data['r_r200m_profile'], data['number_density_bins'], 
+    #     (data['number_density_Volume']/np.sum(data['number_density_Volume'],axis=0)),#(data['number_density_Volume']/np.sum(data['number_density_Volume'],axis=0)), 
+    #     norm=colors.LogNorm(vmin=1e-4,vmax=1), cmap=palet)#palettable.cubehelix.jim_special_16_r.mpl_colormap)
+    plot=ax.contourf(r_r200m_profile_centers, number_density_bin_centers, 
+        gaussian_filter((data['number_density_Volume']/np.sum(data['number_density_Volume'],axis=0)),sigma), 
+        levels=np.append(np.logspace(-4,-0.5,61),10000),
+        norm=colors.LogNorm(vmin=1e-4,vmax=10**-0.5), cmap=palet)#palettable.cubehelix.jim_special_16_r.mpl_colormap)
+
+    ax.plot(radii/(rvir*kpc), HSE_halo.n(radii)         , lw=2.25  , color = '1.0', alpha=0.5)
+    ax.plot(radii/(rvir*kpc), HSE_halo.n(radii)         , lw=1.5, label=r'HSeq. $T=T_{\rm vir}(r)$'   , color = '0.2', alpha=0.5)
+    
+    ax.plot(radii/(rvir*kpc), HSE_adiabat_halo.n(radii)         , lw=2.25  , color = '1.0', alpha=0.5)
+    ax.plot(radii/(rvir*kpc), HSE_adiabat_halo.n(radii)         , lw=1.5, label=r'HSeq. $K=K_{\rm vir}$'   , color = '0.2', alpha=0.5, dashes=[4,2])
+
+    ax.plot(r_r200m_profile_centers, number_density_profile_Volume, lw=3.25, color = 'white')
+    ax.plot(r_r200m_profile_centers, number_density_profile_Volume, lw=2.5, label=r'$\langle n \rangle$'   , color = 'k')
+
+    # ax.plot(radii/(rvir*kpc), HSE_halo_Kvir.T(radii)    , lw=2.5, label=r'HSE $K=K_{\rm vir}(r)$'   , color = '0.5', alpha=0.75, ls='--')
+    cb = fig.colorbar(plot, ticks=[1e-4,1e-3,1e-2,1e-1])
+    cb.set_label(r'${\rm Vol}(n,r)/{\rm Vol}(r)$',rotation=270,fontsize=12,labelpad=15)
+    ax.set_ylabel(r'$n\,[\mathrm{cm}^{-3}]$')
+    ax.set_ylim(5e-6,1e-1)
+    ax.set_xlim(5e-2, 1)
+    ax.set_yscale('log')
+    ax.set_xlabel(r'$r/r_{\rm vir}$')
+    ax.legend(loc='upper right', fontsize=8,ncol=1,columnspacing=-3, handlelength=3.0)
+    ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    fig.set_size_inches(5,3)
+    if sSFR_title:
+        ax.text(0.05,0.95, r"$\log {\rm \, sSFR} = %s$" % np.round(np.log10(data['sSFR']),2), ha="left", va="top",transform=ax.transAxes, fontsize=8, bbox={'facecolor':'grey', 'edgecolor':'None', 'boxstyle':'round','pad':0.1, 'alpha':0.75})
+    plt.savefig('./plots/number_density_Volume_'+fn+'_linear.png',bbox_inches='tight',dpi=400)
+    ax.set_xscale('log')
+    plt.savefig('./plots/number_density_Volume_'+fn+'.png',bbox_inches='tight',dpi=400)
+    plt.clf()
+
+
+    fig,ax = plt.subplots(1,1)
+    # plot=ax.pcolormesh(data['r_r200m_profile'], data['number_density_bins'], 
+    #     (data['number_density_Volume']/np.sum(data['number_density_Volume'],axis=0)),#(data['number_density_Volume']/np.sum(data['number_density_Volume'],axis=0)), 
+    #     norm=colors.LogNorm(vmin=1e-4,vmax=1), cmap=palet)#palettable.cubehelix.jim_special_16_r.mpl_colormap)
+    plot=ax.contourf(r_r200m_profile_centers, number_density_bin_centers, 
+        gaussian_filter((data['number_density_Mass']/np.sum(data['number_density_Mass'],axis=0)),sigma), 
+        levels=np.append(np.logspace(-4,-0.5,61),10000),
+        norm=colors.LogNorm(vmin=1e-4,vmax=10**-0.5), cmap=palet)#palettable.cubehelix.jim_special_16_r.mpl_colormap)
+
+    ax.plot(radii/(rvir*kpc), HSE_halo.n(radii)         , lw=2.25  , color = '1.0', alpha=0.5)
+    ax.plot(radii/(rvir*kpc), HSE_halo.n(radii)         , lw=1.5, label=r'HSeq. $T=T_{\rm vir}(r)$'   , color = '0.2', alpha=0.5)
+    
+    ax.plot(radii/(rvir*kpc), HSE_adiabat_halo.n(radii)         , lw=2.25  , color = '1.0', alpha=0.5)
+    ax.plot(radii/(rvir*kpc), HSE_adiabat_halo.n(radii)         , lw=1.5, label=r'HSeq. $K=K_{\rm vir}$'   , color = '0.2', alpha=0.5, dashes=[4,2])
+
+    ax.plot(r_r200m_profile_centers, number_density_profile_Mass, lw=3.25, color = 'white')
+    ax.plot(r_r200m_profile_centers, number_density_profile_Mass, lw=2.5, label=r'$\langle n \rangle$'   , color = 'k')
+
+    # ax.plot(radii/(rvir*kpc), HSE_halo_Kvir.T(radii)    , lw=2.5, label=r'HSE $K=K_{\rm vir}(r)$'   , color = '0.5', alpha=0.75, ls='--')
+    cb = fig.colorbar(plot, ticks=[1e-4,1e-3,1e-2,1e-1],extend="both")
+    cb.set_label(r'$M(n,r)/M(r)$',rotation=270,fontsize=12,labelpad=15)
+    ax.set_ylabel(r'$n\,[\mathrm{cm}^{-3}]$')
+    ax.set_ylim(5e-6,1e-1)
+    ax.set_xlim(5e-2, 1)
+    ax.set_yscale('log')
+    ax.set_xlabel(r'$r/r_{\rm vir}$')
+    ax.legend(loc='upper right', fontsize=8,ncol=1,columnspacing=-3, handlelength=3.0)
+    ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    fig.set_size_inches(5,3)
+    if sSFR_title:
+        ax.text(0.05,0.95, r"$\log {\rm \, sSFR} = %s$" % np.round(np.log10(data['sSFR']),2), ha="left", va="top",transform=ax.transAxes, fontsize=8, bbox={'facecolor':'grey', 'edgecolor':'None', 'boxstyle':'round','pad':0.1, 'alpha':0.75})
+    plt.savefig('./plots/number_density_Mass_'+fn+'_linear.png',bbox_inches='tight',dpi=400)
+    ax.set_xscale('log')
+    plt.savefig('./plots/number_density_Mass_'+fn+'.png',bbox_inches='tight',dpi=400)
+    plt.clf()
+
+
+
+    ##############################################################################################################
+
+    fig,ax = plt.subplots(1,1)
+    # plot=ax.pcolormesh(data['r_r200m_profile'], data['pressure_bins'], 
+    #     (data['pressure_Volume']/np.sum(data['pressure_Volume'],axis=0)),#(data['pressure_Volume']/np.sum(data['pressure_Volume'],axis=0)), 
+    #     norm=colors.LogNorm(vmin=1e-4,vmax=1), cmap=palet)#palettable.cubehelix.jim_special_16_r.mpl_colormap)
+    plot=ax.contourf(r_r200m_profile_centers, pressure_bin_centers, 
+        gaussian_filter((data['pressure_Volume']/np.sum(data['pressure_Volume'],axis=0)),sigma), 
+        levels=np.append(np.logspace(-4,-0.5,61),10000),
+        norm=colors.LogNorm(vmin=1e-4,vmax=10**-0.5), cmap=palet)#palettable.cubehelix.jim_special_16_r.mpl_colormap)
+
+    ax.plot(radii/(rvir*kpc), HSE_halo.P(radii)         , lw=2.25  , color = '1.0', alpha=0.5)
+    ax.plot(radii/(rvir*kpc), HSE_halo.P(radii)         , lw=1.5, label=r'HSeq. $T=T_{\rm vir}(r)$'   , color = '0.2', alpha=0.5)
+    
+    ax.plot(radii/(rvir*kpc), HSE_adiabat_halo.P(radii)         , lw=2.25  , color = '1.0', alpha=0.5)
+    ax.plot(radii/(rvir*kpc), HSE_adiabat_halo.P(radii)         , lw=1.5, label=r'HSeq. $K=K_{\rm vir}$'   , color = '0.2', alpha=0.5, dashes=[4,2])
+
+    ax.plot(r_r200m_profile_centers, pressure_profile_Volume, lw=3.25, color = 'white')
+    ax.plot(r_r200m_profile_centers, pressure_profile_Volume, lw=2.5, label=r'$\langle P \rangle$'   , color = 'k')
+
+    # ax.plot(radii/(rvir*kpc), HSE_halo_Kvir.T(radii)    , lw=2.5, label=r'HSE $K=K_{\rm vir}(r)$'   , color = '0.5', alpha=0.75, ls='--')
+    cb = fig.colorbar(plot, ticks=[1e-4,1e-3,1e-2,1e-1])
+    cb.set_label(r'${\rm Vol}(P,r)/{\rm Vol}(r)$',rotation=270,fontsize=12,labelpad=15)
+    ax.set_ylabel(r'$P\,[\mathrm{K\,cm}^{-3}]$')
+    ax.set_ylim(1e0,1e5)
+    ax.set_xlim(5e-2, 1)
+    ax.set_yscale('log')
+    ax.set_xlabel(r'$r/r_{\rm vir}$')
+    ax.legend(loc='upper right', fontsize=8,ncol=1,columnspacing=-3, handlelength=3.0)
+    ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    fig.set_size_inches(5,3)
+    if sSFR_title:
+        ax.text(0.05,0.95, r"$\log {\rm \, sSFR} = %s$" % np.round(np.log10(data['sSFR']),2), ha="left", va="top",transform=ax.transAxes, fontsize=8, bbox={'facecolor':'grey', 'edgecolor':'None', 'boxstyle':'round','pad':0.1, 'alpha':0.75})
+    plt.savefig('./plots/pressure_Volume_'+fn+'_linear.png',bbox_inches='tight',dpi=400)
+    ax.set_xscale('log')
+    plt.savefig('./plots/pressure_Volume_'+fn+'.png',bbox_inches='tight',dpi=400)
+    plt.clf()
+
+
+    fig,ax = plt.subplots(1,1)
+    # plot=ax.pcolormesh(data['r_r200m_profile'], data['pressure_bins'], 
+    #     (data['pressure_Volume']/np.sum(data['pressure_Volume'],axis=0)),#(data['pressure_Volume']/np.sum(data['pressure_Volume'],axis=0)), 
+    #     norm=colors.LogNorm(vmin=1e-4,vmax=1), cmap=palet)#palettable.cubehelix.jim_special_16_r.mpl_colormap)
+    plot=ax.contourf(r_r200m_profile_centers, pressure_bin_centers, 
+        gaussian_filter((data['pressure_Mass']/np.sum(data['pressure_Mass'],axis=0)),sigma), 
+        levels=np.append(np.logspace(-4,-0.5,61),10000),
+        norm=colors.LogNorm(vmin=1e-4,vmax=10**-0.5), cmap=palet)#palettable.cubehelix.jim_special_16_r.mpl_colormap)
+
+    ax.plot(radii/(rvir*kpc), HSE_halo.P(radii)         , lw=2.25  , color = '1.0', alpha=0.5)
+    ax.plot(radii/(rvir*kpc), HSE_halo.P(radii)         , lw=1.5, label=r'HSeq. $T=T_{\rm vir}(r)$'   , color = '0.2', alpha=0.5)
+    
+    ax.plot(radii/(rvir*kpc), HSE_adiabat_halo.P(radii)         , lw=2.25  , color = '1.0', alpha=0.5)
+    ax.plot(radii/(rvir*kpc), HSE_adiabat_halo.P(radii)         , lw=1.5, label=r'HSeq. $K=K_{\rm vir}$'   , color = '0.2', alpha=0.5, dashes=[4,2])
+
+    ax.plot(r_r200m_profile_centers, pressure_profile_Mass, lw=3.25, color = 'white')
+    ax.plot(r_r200m_profile_centers, pressure_profile_Mass, lw=2.5, label=r'$\langle P \rangle$'   , color = 'k')
+
+    # ax.plot(radii/(rvir*kpc), HSE_halo_Kvir.T(radii)    , lw=2.5, label=r'HSE $K=K_{\rm vir}(r)$'   , color = '0.5', alpha=0.75, ls='--')
+    cb = fig.colorbar(plot, ticks=[1e-4,1e-3,1e-2,1e-1],extend="both")
+    cb.set_label(r'$M(P,r)/M(r)$',rotation=270,fontsize=12,labelpad=15)
+    ax.set_ylabel(r'$P\,[\mathrm{K\,cm}^{-3}]$')
+    ax.set_ylim(1e0,1e5)
+    ax.set_xlim(5e-2, 1)
+    ax.set_yscale('log')
+    ax.set_xlabel(r'$r/r_{\rm vir}$')
+    ax.legend(loc='upper right', fontsize=8,ncol=1,columnspacing=-3, handlelength=3.0)
+    ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    fig.set_size_inches(5,3)
+    if sSFR_title:
+        ax.text(0.05,0.95, r"$\log {\rm \, sSFR} = %s$" % np.round(np.log10(data['sSFR']),2), ha="left", va="top",transform=ax.transAxes, fontsize=8, bbox={'facecolor':'grey', 'edgecolor':'None', 'boxstyle':'round','pad':0.1, 'alpha':0.75})
+    plt.savefig('./plots/pressure_Mass_'+fn+'_linear.png',bbox_inches='tight',dpi=400)
+    ax.set_xscale('log')
+    plt.savefig('./plots/pressure_Mass_'+fn+'.png',bbox_inches='tight',dpi=400)
+    plt.clf()
+
+
+
+    ##############################################################################################################
+
+    fig,ax = plt.subplots(1,1)
+    # plot=ax.pcolormesh(data['r_r200m_profile'], data['entropy_bins'], 
+    #     (data['entropy_Volume']/np.sum(data['entropy_Volume'],axis=0)),#(data['entropy_Volume']/np.sum(data['entropy_Volume'],axis=0)), 
+    #     norm=colors.LogNorm(vmin=1e-4,vmax=1), cmap=palet)#palettable.cubehelix.jim_special_16_r.mpl_colormap)
+    plot=ax.contourf(r_r200m_profile_centers, entropy_bin_centers, 
+        gaussian_filter((data['entropy_Volume']/np.sum(data['entropy_Volume'],axis=0)),sigma), 
+        levels=np.append(np.logspace(-4,-0.5,61),10000),
+        norm=colors.LogNorm(vmin=1e-4,vmax=10**-0.5), cmap=palet)#palettable.cubehelix.jim_special_16_r.mpl_colormap)
+
+    ax.plot(radii/(rvir*kpc), HSE_halo.K(radii)         , lw=2.25  , color = '1.0', alpha=0.5)
+    ax.plot(radii/(rvir*kpc), HSE_halo.K(radii)         , lw=1.5, label=r'HSeq. $T=T_{\rm vir}(r)$'   , color = '0.2', alpha=0.5)
+    
+    ax.plot(radii/(rvir*kpc), HSE_adiabat_halo.K(radii)         , lw=2.25  , color = '1.0', alpha=0.5)
+    ax.plot(radii/(rvir*kpc), HSE_adiabat_halo.K(radii)         , lw=1.5, label=r'HSeq. $K=K_{\rm vir}$'   , color = '0.2', alpha=0.5, dashes=[4,2])
+
+    ax.plot(r_r200m_profile_centers, entropy_profile_Volume, lw=3.25, color = 'white')
+    ax.plot(r_r200m_profile_centers, entropy_profile_Volume, lw=2.5, label=r'$\langle K \rangle$'   , color = 'k')
+
+    # ax.plot(radii/(rvir*kpc), HSE_halo_Kvir.T(radii)    , lw=2.5, label=r'HSE $K=K_{\rm vir}(r)$'   , color = '0.5', alpha=0.75, ls='--')
+    cb = fig.colorbar(plot, ticks=[1e-4,1e-3,1e-2,1e-1])
+    cb.set_label(r'${\rm Vol}(K,r)/{\rm Vol}(r)$',rotation=270,fontsize=12,labelpad=15)
+    ax.set_ylabel(r'$K\,[\mathrm{K\,cm}^{2}]$')
+    ax.set_ylim(1e5,3e10)
+    ax.set_xlim(5e-2, 1)
+    ax.set_yscale('log')
+    ax.set_xlabel(r'$r/r_{\rm vir}$')
+    ax.legend(loc='lower right', fontsize=8,ncol=1,columnspacing=-3, handlelength=3.0)
+    ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    fig.set_size_inches(5,3)
+    if sSFR_title:
+        ax.text(0.05,0.95, r"$\log {\rm \, sSFR} = %s$" % np.round(np.log10(data['sSFR']),2), ha="left", va="top",transform=ax.transAxes, fontsize=8, bbox={'facecolor':'grey', 'edgecolor':'None', 'boxstyle':'round','pad':0.1, 'alpha':0.75})
+    plt.savefig('./plots/entropy_Volume_'+fn+'_linear.png',bbox_inches='tight',dpi=400)
+    ax.set_xscale('log')
+    plt.savefig('./plots/entropy_Volume_'+fn+'.png',bbox_inches='tight',dpi=400)
+    plt.clf()
+
+
+    fig,ax = plt.subplots(1,1)
+    # plot=ax.pcolormesh(data['r_r200m_profile'], data['entropy_bins'], 
+    #     (data['entropy_Volume']/np.sum(data['entropy_Volume'],axis=0)),#(data['entropy_Volume']/np.sum(data['entropy_Volume'],axis=0)), 
+    #     norm=colors.LogNorm(vmin=1e-4,vmax=1), cmap=palet)#palettable.cubehelix.jim_special_16_r.mpl_colormap)
+    plot=ax.contourf(r_r200m_profile_centers, entropy_bin_centers, 
+        gaussian_filter((data['entropy_Mass']/np.sum(data['entropy_Mass'],axis=0)),sigma), 
+        levels=np.append(np.logspace(-4,-0.5,61),10000),
+        norm=colors.LogNorm(vmin=1e-4,vmax=10**-0.5), cmap=palet)#palettable.cubehelix.jim_special_16_r.mpl_colormap)
+
+    ax.plot(radii/(rvir*kpc), HSE_halo.K(radii)         , lw=2.25  , color = '1.0', alpha=0.5)
+    ax.plot(radii/(rvir*kpc), HSE_halo.K(radii)         , lw=1.5, label=r'HSeq. $T=T_{\rm vir}(r)$'   , color = '0.2', alpha=0.5)
+    
+    ax.plot(radii/(rvir*kpc), HSE_adiabat_halo.K(radii)         , lw=2.25  , color = '1.0', alpha=0.5)
+    ax.plot(radii/(rvir*kpc), HSE_adiabat_halo.K(radii)         , lw=1.5, label=r'HSeq. $K=K_{\rm vir}$'   , color = '0.2', alpha=0.5, dashes=[4,2])
+
+    ax.plot(r_r200m_profile_centers, entropy_profile_Mass, lw=3.25, color = 'white')
+    ax.plot(r_r200m_profile_centers, entropy_profile_Mass, lw=2.5, label=r'$\langle K \rangle$'   , color = 'k')
+
+    # ax.plot(radii/(rvir*kpc), HSE_halo_Kvir.T(radii)    , lw=2.5, label=r'HSE $K=K_{\rm vir}(r)$'   , color = '0.5', alpha=0.75, ls='--')
+    cb = fig.colorbar(plot, ticks=[1e-4,1e-3,1e-2,1e-1],extend="both")
+    cb.set_label(r'$M(K,r)/M(r)$',rotation=270,fontsize=12,labelpad=15)
+    ax.set_ylabel(r'$K\,[\mathrm{K\,cm}^{2}]$')
+    ax.set_ylim(1e5,3e10)
+    ax.set_xlim(5e-2, 1)
+    ax.set_yscale('log')
+    ax.set_xlabel(r'$r/r_{\rm vir}$')
+    ax.legend(loc='lower right', fontsize=8,ncol=1,columnspacing=-3, handlelength=3.0)
+    ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    fig.set_size_inches(5,3)
+    if sSFR_title:
+        ax.text(0.05,0.95, r"$\log {\rm \, sSFR} = %s$" % np.round(np.log10(data['sSFR']),2), ha="left", va="top",transform=ax.transAxes, fontsize=8, bbox={'facecolor':'grey', 'edgecolor':'None', 'boxstyle':'round','pad':0.1, 'alpha':0.75})
+    plt.savefig('./plots/entropy_Mass_'+fn+'_linear.png',bbox_inches='tight',dpi=400)
+    ax.set_xscale('log')
+    plt.savefig('./plots/entropy_Mass_'+fn+'.png',bbox_inches='tight',dpi=400)
+    plt.clf()
+
+
+    ##############################################################################################################
+
+    fig,ax = plt.subplots(1,1)
+    # plot=ax.pcolormesh(data['r_r200m_profile'], data['radial_velocity_bins'], 
+    #     (data['radial_velocity_Volume']/np.sum(data['radial_velocity_Volume'],axis=0)),#(data['radial_velocity_Volume']/np.sum(data['radial_velocity_Volume'],axis=0)), 
+    #     norm=colors.LogNorm(vmin=1e-4,vmax=1), cmap=palet)#palettable.cubehelix.jim_special_16_r.mpl_colormap)
+    plot=ax.contourf(r_r200m_profile_centers, radial_velocity_bin_centers, 
+        gaussian_filter((data['radial_velocity_Volume']/np.sum(data['radial_velocity_Volume'],axis=0)),sigma), 
+        levels=np.append(np.logspace(-4,-0.5,61),10000),
+        norm=colors.LogNorm(vmin=1e-4,vmax=10**-0.5), cmap=palet)#palettable.cubehelix.jim_special_16_r.mpl_colormap)
+
+    # ax.plot(radii/(rvir*kpc), cooling_flow_halo.vr(radii)/1e5         , lw=2.25  , color = '1.0', alpha=0.5)
+    # ax.plot(radii/(rvir*kpc), cooling_flow_halo.vr(radii)/1e5         , lw=1.5, label=r'HSeq. $T=T_{\rm vir}(r)$'   , color = '0.2', alpha=0.5)
+    
+    # ax.plot(radii/(rvir*kpc), cooling_flow_haladiabat_o.vr(radii)/1e5         , lw=2.25  , color = '1.0', alpha=0.5)
+    # ax.plot(radii/(rvir*kpc), cooling_flow_haladiabat_o.vr(radii)/1e5         , lw=1.5, label=r'HSeq. $K=K_{\rm vir}$'   , color = '0.2', alpha=0.5, dashes=[4,2])
+
+    ax.plot(r_r200m_profile_centers, radial_velocity_profile_Volume, lw=3.25, color = 'white')
+    ax.plot(r_r200m_profile_centers, radial_velocity_profile_Volume, lw=2.5, label=r'$\langle v_r \rangle$'   , color = 'k')
+
+    # ax.plot(radii/(rvir*kpc), HSE_halo_Kvir.T(radii)    , lw=2.5, label=r'HSE $K=K_{\rm vir}(r)$'   , color = '0.5', alpha=0.75, ls='--')
+    cb = fig.colorbar(plot, ticks=[1e-4,1e-3,1e-2,1e-1])
+    cb.set_label(r'${\rm Vol}(v_r,r)/{\rm Vol}(r)$',rotation=270,fontsize=12,labelpad=15)
+    ax.set_ylabel(r'$v_r\,[\mathrm{km/s}]$')
+    # ax.set_ylim(1e5,3e10)
+    ax.set_xlim(5e-2, 1)
+    ax.set_xlabel(r'$r/r_{\rm vir}$')
+    ax.legend(loc='upper right', fontsize=8,ncol=1,columnspacing=-3, handlelength=3.0)
+    ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    fig.set_size_inches(5,3)
+    if sSFR_title:
+        ax.text(0.05,0.95, r"$\log {\rm \, sSFR} = %s$" % np.round(np.log10(data['sSFR']),2), ha="left", va="top",transform=ax.transAxes, fontsize=8, bbox={'facecolor':'grey', 'edgecolor':'None', 'boxstyle':'round','pad':0.1, 'alpha':0.75})
+    plt.savefig('./plots/radial_velocity_Volume_'+fn+'_linear.png',bbox_inches='tight',dpi=400)
+    ax.set_xscale('log')
+    plt.savefig('./plots/radial_velocity_Volume_'+fn+'.png',bbox_inches='tight',dpi=400)
+    plt.clf()
+
+
+    fig,ax = plt.subplots(1,1)
+    # plot=ax.pcolormesh(data['r_r200m_profile'], data['radial_velocity_bins'], 
+    #     (data['radial_velocity_Volume']/np.sum(data['radial_velocity_Volume'],axis=0)),#(data['radial_velocity_Volume']/np.sum(data['radial_velocity_Volume'],axis=0)), 
+    #     norm=colors.LogNorm(vmin=1e-4,vmax=1), cmap=palet)#palettable.cubehelix.jim_special_16_r.mpl_colormap)
+    plot=ax.contourf(r_r200m_profile_centers, radial_velocity_bin_centers, 
+        gaussian_filter((data['radial_velocity_Mass']/np.sum(data['radial_velocity_Mass'],axis=0)),sigma), 
+        levels=np.append(np.logspace(-4,-0.5,61),10000),
+        norm=colors.LogNorm(vmin=1e-4,vmax=10**-0.5), cmap=palet)#palettable.cubehelix.jim_special_16_r.mpl_colormap)
+
+    # ax.plot(radii/(rvir*kpc), cooling_flow_halo.vr(radii)/1e5         , lw=2.25  , color = '1.0', alpha=0.5)
+    # ax.plot(radii/(rvir*kpc), cooling_flow_halo.vr(radii)/1e5         , lw=1.5, label=r'HSeq. $T=T_{\rm vir}(r)$'   , color = '0.2', alpha=0.5)
+    
+    # ax.plot(radii/(rvir*kpc), cooling_flow_haladiabat_o.vr(radii)/1e5         , lw=2.25  , color = '1.0', alpha=0.5)
+    # ax.plot(radii/(rvir*kpc), cooling_flow_haladiabat_o.vr(radii)/1e5         , lw=1.5, label=r'HSeq. $K=K_{\rm vir}$'   , color = '0.2', alpha=0.5, dashes=[4,2])
+
+    ax.plot(r_r200m_profile_centers, radial_velocity_profile_Mass, lw=3.25, color = 'white')
+    ax.plot(r_r200m_profile_centers, radial_velocity_profile_Mass, lw=2.5, label=r'$\langle v_r \rangle$'   , color = 'k')
+
+    # ax.plot(radii/(rvir*kpc), HSE_halo_Kvir.T(radii)    , lw=2.5, label=r'HSE $K=K_{\rm vir}(r)$'   , color = '0.5', alpha=0.75, ls='--')
+    cb = fig.colorbar(plot, ticks=[1e-4,1e-3,1e-2,1e-1],extend="both")
+    cb.set_label(r'$M(v_r,r)/M(r)$',rotation=270,fontsize=12,labelpad=15)
+    ax.set_ylabel(r'$v_r\,[\mathrm{km/s}]$')
+    # ax.set_ylim(1e5,3e10)
+    ax.set_xlim(5e-2, 1)
+    ax.set_xlabel(r'$r/r_{\rm vir}$')
+    ax.legend(loc='upper right', fontsize=8,ncol=1,columnspacing=-3, handlelength=3.0)
+    ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    fig.set_size_inches(5,3)
+    if sSFR_title:
+        ax.text(0.05,0.95, r"$\log {\rm \, sSFR} = %s$" % np.round(np.log10(data['sSFR']),2), ha="left", va="top",transform=ax.transAxes, fontsize=8, bbox={'facecolor':'grey', 'edgecolor':'None', 'boxstyle':'round','pad':0.1, 'alpha':0.75})
+    plt.savefig('./plots/radial_velocity_Mass_'+fn+'_linear.png',bbox_inches='tight',dpi=400)
+    ax.set_xscale('log')
+    plt.savefig('./plots/radial_velocity_Mass_'+fn+'.png',bbox_inches='tight',dpi=400)
+    plt.clf()
+
+
+    ##############################################################################################################
+
+    fig,ax = plt.subplots(1,1)
+    # plot=ax.pcolormesh(data['r_r200m_profile'], data['azimuthal_velocity_bins'], 
+    #     (data['azimuthal_velocity_Volume']/np.sum(data['azimuthal_velocity_Volume'],axis=0)),#(data['azimuthal_velocity_Volume']/np.sum(data['azimuthal_velocity_Volume'],axis=0)), 
+    #     norm=colors.LogNorm(vmin=1e-4,vmax=1), cmap=palet)#palettable.cubehelix.jim_special_16_r.mpl_colormap)
+    plot=ax.contourf(r_r200m_profile_centers, azimuthal_velocity_bin_centers, 
+        gaussian_filter((data['azimuthal_velocity_Volume']/np.sum(data['azimuthal_velocity_Volume'],axis=0)),sigma), 
+        levels=np.append(np.logspace(-4,-0.5,61),10000),
+        norm=colors.LogNorm(vmin=1e-4,vmax=10**-0.5), cmap=palet)#palettable.cubehelix.jim_special_16_r.mpl_colormap)
+
+    # ax.plot(radii/(rvir*kpc), cooling_flow_halo.vr(radii)/1e5         , lw=2.25  , color = '1.0', alpha=0.5)
+    # ax.plot(radii/(rvir*kpc), cooling_flow_halo.vr(radii)/1e5         , lw=1.5, label=r'HSeq. $T=T_{\rm vir}(r)$'   , color = '0.2', alpha=0.5)
+    
+    # ax.plot(radii/(rvir*kpc), cooling_flow_haladiabat_o.vr(radii)/1e5         , lw=2.25  , color = '1.0', alpha=0.5)
+    # ax.plot(radii/(rvir*kpc), cooling_flow_haladiabat_o.vr(radii)/1e5         , lw=1.5, label=r'HSeq. $K=K_{\rm vir}$'   , color = '0.2', alpha=0.5, dashes=[4,2])
+
+    ax.plot(r_r200m_profile_centers, azimuthal_velocity_profile_Volume, lw=3.25, color = 'white')
+    ax.plot(r_r200m_profile_centers, azimuthal_velocity_profile_Volume, lw=2.5, label=r'$\langle v_\phi \rangle$'   , color = 'k')
+
+    # ax.plot(radii/(rvir*kpc), HSE_halo_Kvir.T(radii)    , lw=2.5, label=r'HSE $K=K_{\rm vir}(r)$'   , color = '0.5', alpha=0.75, ls='--')
+    cb = fig.colorbar(plot, ticks=[1e-4,1e-3,1e-2,1e-1])
+    cb.set_label(r'${\rm Vol}(v_\phi,r)/{\rm Vol}(r)$',rotation=270,fontsize=12,labelpad=15)
+    ax.set_ylabel(r'$v_\phi\,[\mathrm{km/s}]$')
+    # ax.set_ylim(1e5,3e10)
+    ax.set_xlim(5e-2, 1)
+    ax.set_xlabel(r'$r/r_{\rm vir}$')
+    ax.legend(loc='upper right', fontsize=8,ncol=1,columnspacing=-3, handlelength=3.0)
+    ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    fig.set_size_inches(5,3)
+    if sSFR_title:
+        ax.text(0.05,0.95, r"$\log {\rm \, sSFR} = %s$" % np.round(np.log10(data['sSFR']),2), ha="left", va="top",transform=ax.transAxes, fontsize=8, bbox={'facecolor':'grey', 'edgecolor':'None', 'boxstyle':'round','pad':0.1, 'alpha':0.75})
+    plt.savefig('./plots/azimuthal_velocity_Volume_'+fn+'_linear.png',bbox_inches='tight',dpi=400)
+    ax.set_xscale('log')
+    plt.savefig('./plots/azimuthal_velocity_Volume_'+fn+'.png',bbox_inches='tight',dpi=400)
+    plt.clf()
+
+
+    fig,ax = plt.subplots(1,1)
+    # plot=ax.pcolormesh(data['r_r200m_profile'], data['azimuthal_velocity_bins'], 
+    #     (data['azimuthal_velocity_Volume']/np.sum(data['azimuthal_velocity_Volume'],axis=0)),#(data['azimuthal_velocity_Volume']/np.sum(data['azimuthal_velocity_Volume'],axis=0)), 
+    #     norm=colors.LogNorm(vmin=1e-4,vmax=1), cmap=palet)#palettable.cubehelix.jim_special_16_r.mpl_colormap)
+    plot=ax.contourf(r_r200m_profile_centers, azimuthal_velocity_bin_centers, 
+        gaussian_filter((data['azimuthal_velocity_Mass']/np.sum(data['azimuthal_velocity_Mass'],axis=0)),sigma), 
+        levels=np.append(np.logspace(-4,-0.5,61),10000),
+        norm=colors.LogNorm(vmin=1e-4,vmax=10**-0.5), cmap=palet)#palettable.cubehelix.jim_special_16_r.mpl_colormap)
+
+    # ax.plot(radii/(rvir*kpc), cooling_flow_halo.vr(radii)/1e5         , lw=2.25  , color = '1.0', alpha=0.5)
+    # ax.plot(radii/(rvir*kpc), cooling_flow_halo.vr(radii)/1e5         , lw=1.5, label=r'HSeq. $T=T_{\rm vir}(r)$'   , color = '0.2', alpha=0.5)
+    
+    # ax.plot(radii/(rvir*kpc), cooling_flow_haladiabat_o.vr(radii)/1e5         , lw=2.25  , color = '1.0', alpha=0.5)
+    # ax.plot(radii/(rvir*kpc), cooling_flow_haladiabat_o.vr(radii)/1e5         , lw=1.5, label=r'HSeq. $K=K_{\rm vir}$'   , color = '0.2', alpha=0.5, dashes=[4,2])
+
+    ax.plot(r_r200m_profile_centers, azimuthal_velocity_profile_Mass, lw=3.25, color = 'white')
+    ax.plot(r_r200m_profile_centers, azimuthal_velocity_profile_Mass, lw=2.5, label=r'$\langle v_\phi \rangle$'   , color = 'k')
+
+    # ax.plot(radii/(rvir*kpc), HSE_halo_Kvir.T(radii)    , lw=2.5, label=r'HSE $K=K_{\rm vir}(r)$'   , color = '0.5', alpha=0.75, ls='--')
+    cb = fig.colorbar(plot, ticks=[1e-4,1e-3,1e-2,1e-1],extend="both")
+    cb.set_label(r'$M(v_\phi,r)/M(r)$',rotation=270,fontsize=12,labelpad=15)
+    ax.set_ylabel(r'$v_\phi\,[\mathrm{km/s}]$')
+    # ax.set_ylim(1e5,3e10)
+    ax.set_xlim(5e-2, 1)
+    ax.set_xlabel(r'$r/r_{\rm vir}$')
+    ax.legend(loc='upper right', fontsize=8,ncol=1,columnspacing=-3, handlelength=3.0)
+    ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    fig.set_size_inches(5,3)
+    if sSFR_title:
+        ax.text(0.05,0.95, r"$\log {\rm \, sSFR} = %s$" % np.round(np.log10(data['sSFR']),2), ha="left", va="top",transform=ax.transAxes, fontsize=8, bbox={'facecolor':'grey', 'edgecolor':'None', 'boxstyle':'round','pad':0.1, 'alpha':0.75})
+    plt.savefig('./plots/azimuthal_velocity_Mass_'+fn+'_linear.png',bbox_inches='tight',dpi=400)
+    ax.set_xscale('log')
+    plt.savefig('./plots/azimuthal_velocity_Mass_'+fn+'.png',bbox_inches='tight',dpi=400)
+    plt.clf()
+
+
+        ############################################################################################################################################################################################################################
+        ############################################################################################################################################################################################################################
+        ############################################################################################################################################################################################################################
+
+
+    fig= plt.figure(1)
+    gs = gridspec.GridSpec(65, 80, wspace=0, hspace=0.0)
+    ax = plt.subplot( gs[5:80, :60])
+    axR= plt.subplot(gs[5:80, 63:])
+    cax = plt.subplot(gs[0:3, :60])
+
+    plot = ax.pcolormesh(data['pressure_bins'], data['entropy_bins'], 
+        gaussian_filter(np.sum(data['pressure_entropy_Mass'][...,2:4],axis=-1)/np.sum(data['pressure_entropy_Mass'][...,2:4]),sigma),
+        cmap=palet,#cmap=palettable.cubehelix.red_16_r.mpl_colormap, 
+        norm=colors.LogNorm(vmin=1e-6,vmax=1e-1),rasterized=True)
+    cb = fig.colorbar(plot, orientation='horizontal', cax=cax)
+    cb.ax.set_title(r'$M(P,K,0.2\leq r/r_{\rm vir} \leq 0.4) / M(0.2\leq r/r_{\rm vir} \leq 0.4)$', fontsize=10, loc='left')
+    # cb.ax.minorticks_off()
+    cax.xaxis.set_ticks_position("top")
+    cax.xaxis.set_label_position("top")
+    cb.ax.tick_params(labelsize=10) 
+    ax.set_yscale('log')
+    ax.set_xscale('log')
+
+    ax.set_ylabel(r'$K\,[\mathrm{K\,cm}^{2}]$')
+    ax.set_xlabel(r'$P\,[\mathrm{K\,cm}^{-3}]$')
+    ax.set_ylim((1e4,1e10))
+    ax.set_xlim((7e-1,2e4))
+
+    axR.plot(gaussian_filter(np.sum(data['pressure_entropy_Mass'][...,2:4],axis=(1,2))/np.sum(data['pressure_entropy_Mass'][...,2:4]),sigma)/dlogK,data['entropy_bins'][:-1], color='k', lw=2.)
+    axR.set_yscale('log')
+    axR.set_xscale('log')
+    axR.set_ylim((1e4,1e10))
+    axR.set_yticklabels([])
+    # axR.set_xticks([])
+
+    axR.set_xlim((1e-4,10))
+
+    axR.set_xlabel(r'$\frac{d \log M}{ d \log K}$', fontsize=14)
+    ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    if sSFR_title:
+        ax.text(0.05,0.95, r"$\log {\rm \, sSFR} = %s$" % np.round(np.log10(data['sSFR']),2), ha="left", va="top",transform=ax.transAxes, fontsize=8, bbox={'facecolor':'grey', 'edgecolor':'None', 'boxstyle':'round','pad':0.1, 'alpha':0.75})
+    fig.set_size_inches(5,4)
+    plt.savefig('./plots/pressure_entropy_Mass_02r04_'+fn+'_with_dMdlogK.png', bbox_inches='tight',dpi=200)
+    plt.close('all')
+    plt.clf()  
+
+    ############################################################################################################################################################################################################################
+
+    fig= plt.figure(1)
+    gs = gridspec.GridSpec(65, 80, wspace=0, hspace=0.0)
+    ax = plt.subplot( gs[5:80, :60])
+    axR= plt.subplot(gs[5:80, 63:])
+    cax = plt.subplot(gs[0:3, :60])
+
+    plot = ax.pcolormesh(data['pressure_bins'], data['entropy_bins'], 
+        gaussian_filter(np.sum(data['pressure_entropy_Mass'][...,6:8],axis=-1)/np.sum(data['pressure_entropy_Mass'][...,6:8]),sigma),
+        cmap=palet,#cmap=palettable.cubehelix.red_16_r.mpl_colormap, 
+        norm=colors.LogNorm(vmin=1e-6,vmax=1e-1),rasterized=True)
+    cb = fig.colorbar(plot, orientation='horizontal', cax=cax)
+    cb.ax.set_title(r'$M(P,K,0.6\leq r/r_{\rm vir} \leq 0.8) / M(0.6\leq r/r_{\rm vir} \leq 0.8)$', fontsize=10, loc='left')
+    # cb.ax.minorticks_off()
+    cax.xaxis.set_ticks_position("top")
+    cax.xaxis.set_label_position("top")
+    cb.ax.tick_params(labelsize=10) 
+    ax.set_yscale('log')
+    ax.set_xscale('log')
+
+    ax.set_ylabel(r'$K\,[\mathrm{K\,cm}^{2}]$')
+    ax.set_xlabel(r'$P\,[\mathrm{K\,cm}^{-3}]$')
+    ax.set_ylim((1e4,1e10))
+    ax.set_xlim((7e-1,2e4))
+
+    axR.plot(gaussian_filter(np.sum(data['pressure_entropy_Mass'][...,6:8],axis=(1,2))/np.sum(data['pressure_entropy_Mass'][...,6:8]),sigma)/dlogK,data['entropy_bins'][:-1], color='k', lw=2.)
+    axR.set_yscale('log')
+    axR.set_xscale('log')
+    axR.set_ylim((1e4,1e10))
+    axR.set_yticklabels([])
+    # axR.set_xticks([])
+
+    axR.set_xlim((1e-4,10))
+
+    axR.set_xlabel(r'$\frac{d \log M}{ d \log K}$', fontsize=14)
+    ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    fig.set_size_inches(5,4)
+    if sSFR_title:
+        ax.text(0.05,0.95, r"$\log {\rm \, sSFR} = %s$" % np.round(np.log10(data['sSFR']),2), ha="left", va="top",transform=ax.transAxes, fontsize=8, bbox={'facecolor':'grey', 'edgecolor':'None', 'boxstyle':'round','pad':0.1, 'alpha':0.75})
+    plt.savefig('./plots/pressure_entropy_Mass_06r08_'+fn+'_with_dMdlogK.png', bbox_inches='tight',dpi=200)
+    plt.close('all')
+    plt.clf()  
+
+    ##############################################################################################################
+
+    fig= plt.figure(1)
+    gs = gridspec.GridSpec(65, 80, wspace=0, hspace=0.0)
+    ax = plt.subplot( gs[5:80, :60])
+    axR= plt.subplot(gs[5:80, 63:])
+    cax = plt.subplot(gs[0:3, :60])
+
+    plot = ax.pcolormesh(data['pressure_bins'], data['entropy_bins'], 
+        gaussian_filter(np.sum(data['pressure_entropy_Mass'][...,1:10],axis=-1)/np.sum(data['pressure_entropy_Mass'][...,1:10]),sigma),
+        cmap=palet,#cmap=palettable.cubehelix.red_16_r.mpl_colormap, 
+        norm=colors.LogNorm(vmin=1e-6,vmax=1e-1),rasterized=True)
+    cb = fig.colorbar(plot, orientation='horizontal', cax=cax)
+    cb.ax.set_title(r'$M(P,K,0.1\leq r/r_{\rm vir} \leq 1) / M(0.1\leq r/r_{\rm vir} \leq 1)$', fontsize=10, loc='left')
+    # cb.ax.minorticks_off()
+    cax.xaxis.set_ticks_position("top")
+    cax.xaxis.set_label_position("top")
+    cb.ax.tick_params(labelsize=10) 
+    ax.set_yscale('log')
+    ax.set_xscale('log')
+    ax.set_ylabel(r'$K\,[\mathrm{K\,cm}^{2}]$')
+    ax.set_xlabel(r'$P\,[\mathrm{K\,cm}^{-3}]$')
+    ax.set_ylim((1e4,1e10))
+    ax.set_xlim((7e-1,2e4))
+
+    ir = 1
+    plot=ax.contour(data['pressure_bins'][:-1], data['entropy_bins'][:-1], 
+        gaussian_filter((data['pressure_entropy_Mass'][...,ir]/np.sum(data['pressure_entropy_Mass'][...,ir])),sigma),
+        [3e-3], colors='0.0',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color='0.0', label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+    axR.plot(gaussian_filter(np.sum(data['pressure_entropy_Mass'][...,ir],axis=(1))/np.sum(data['pressure_entropy_Mass'][...,ir]),sigma)/dlogK,data['entropy_bins'][:-1], color='0.0', lw=2.)
+
+    ir = 2
+    plot=ax.contour(data['pressure_bins'][:-1], data['entropy_bins'][:-1], 
+        gaussian_filter((data['pressure_entropy_Mass'][...,ir]/np.sum(data['pressure_entropy_Mass'][...,ir])),sigma),
+        [3e-3], colors='0.2',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color='0.2', label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+    axR.plot(gaussian_filter(np.sum(data['pressure_entropy_Mass'][...,ir],axis=(1))/np.sum(data['pressure_entropy_Mass'][...,ir]),sigma)/dlogK,data['entropy_bins'][:-1], color='0.2', lw=2.)
+
+    ir = 3
+    plot=ax.contour(data['pressure_bins'][:-1], data['entropy_bins'][:-1], 
+        gaussian_filter((data['pressure_entropy_Mass'][...,ir]/np.sum(data['pressure_entropy_Mass'][...,ir])),sigma),
+        [3e-3], colors='0.4',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color='0.4', label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+    axR.plot(gaussian_filter(np.sum(data['pressure_entropy_Mass'][...,ir],axis=(1))/np.sum(data['pressure_entropy_Mass'][...,ir]),sigma)/dlogK,data['entropy_bins'][:-1], color='0.4', lw=2.)
+
+    ir = 5
+    plot=ax.contour(data['pressure_bins'][:-1], data['entropy_bins'][:-1], 
+        gaussian_filter((data['pressure_entropy_Mass'][...,ir]/np.sum(data['pressure_entropy_Mass'][...,ir])),sigma),
+        [3e-3], colors='0.6',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color='0.6', label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+    axR.plot(gaussian_filter(np.sum(data['pressure_entropy_Mass'][...,ir],axis=(1))/np.sum(data['pressure_entropy_Mass'][...,ir]),sigma)/dlogK,data['entropy_bins'][:-1], color='0.6', lw=2.)
+
+    ir = 7
+    plot=ax.contour(data['pressure_bins'][:-1], data['entropy_bins'][:-1], 
+        gaussian_filter((data['pressure_entropy_Mass'][...,ir]/np.sum(data['pressure_entropy_Mass'][...,ir])),sigma),
+        [3e-3], colors='0.8',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color='0.8', label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+    axR.plot(gaussian_filter(np.sum(data['pressure_entropy_Mass'][...,ir],axis=(1))/np.sum(data['pressure_entropy_Mass'][...,ir]),sigma)/dlogK,data['entropy_bins'][:-1], color='0.8', lw=2.)
+
+    ax.legend(loc='lower left', fontsize=6, ncol=1)
+
+
+    axR.set_yscale('log')
+    axR.set_xscale('log')
+    axR.set_ylim((1e4,1e10))
+    axR.set_yticklabels([])
+    # axR.set_xticks([])
+
+    axR.set_xlim((1e-4,10))
+
+    axR.set_xlabel(r'$\frac{d \log M}{ d \log K}$', fontsize=14)
+    ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    fig.set_size_inches(5,4)
+    if sSFR_title:
+        ax.text(0.05,0.95, r"$\log {\rm \, sSFR} = %s$" % np.round(np.log10(data['sSFR']),2), ha="left", va="top",transform=ax.transAxes, fontsize=8, bbox={'facecolor':'grey', 'edgecolor':'None', 'boxstyle':'round','pad':0.1, 'alpha':0.75})
+    plt.savefig('./plots/pressure_entropy_Mass_all_r_'+fn+'_with_dMdlogK.png', bbox_inches='tight',dpi=200)
+    plt.close('all')
+    plt.clf()  
+
+        ############################################################################################################################################################################################################################
+        ############################################################################################################################################################################################################################
+        ############################################################################################################################################################################################################################
+
+    fig= plt.figure(1)
+    gs = gridspec.GridSpec(65, 80, wspace=0, hspace=0.0)
+    ax = plt.subplot( gs[5:80, :60])
+    axR= plt.subplot(gs[5:80, 63:])
+    cax = plt.subplot(gs[0:3, :60])
+
+    plot = ax.pcolormesh(data['number_density_bins'], data['temperature_bins'], 
+        gaussian_filter(np.sum(data['density_temperature_Mass'][...,2:4],axis=-1)/np.sum(data['density_temperature_Mass'][...,2:4]),sigma),
+        cmap=palet,#cmap=palettable.cubehelix.red_16_r.mpl_colormap, 
+        norm=colors.LogNorm(vmin=1e-6,vmax=1e-1),rasterized=True)
+    cb = fig.colorbar(plot, orientation='horizontal', cax=cax)
+    cb.ax.set_title(r'$M(n,T,0.2\leq r/r_{\rm vir} \leq 0.4) / M(0.2\leq r/r_{\rm vir} \leq 0.4)$', fontsize=10, loc='left')
+    # cb.ax.minorticks_off()
+    cax.xaxis.set_ticks_position("top")
+    cax.xaxis.set_label_position("top")
+    cb.ax.tick_params(labelsize=10) 
+    ax.set_yscale('log')
+    ax.set_xscale('log')
+    ax.set_ylabel(r'$T\,[\mathrm{K}]$')
+    ax.set_xlabel(r'$n\,[\mathrm{cm}^{-3}]$')
+    ax.set_ylim((3e3,1e7))
+    ax.set_xlim((3e-6,0.8e-1))
+
+    axR.plot(gaussian_filter(np.sum(data['density_temperature_Mass'][...,2:4],axis=(1,2))/np.sum(data['density_temperature_Mass'][...,2:4]),sigma)/dlogT,data['temperature_bins'][:-1], color='k', lw=2.)
+    axR.set_yscale('log')
+    axR.set_xscale('log')
+    axR.set_ylim((3e3,1e7))
+    axR.set_yticklabels([])
+    # axR.set_xticks([])
+
+    axR.set_xlim((1e-4,10))
+
+    axR.set_xlabel(r'$\frac{d \log M}{ d \log T}$', fontsize=14)
+    ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    fig.set_size_inches(5,4)
+    if sSFR_title:
+        ax.text(0.05,0.95, r"$\log {\rm \, sSFR} = %s$" % np.round(np.log10(data['sSFR']),2), ha="left", va="top",transform=ax.transAxes, fontsize=8, bbox={'facecolor':'grey', 'edgecolor':'None', 'boxstyle':'round','pad':0.1, 'alpha':0.75})
+    plt.savefig('./plots/density_temperature_Mass_02r04_'+fn+'_with_dMdlogT.png', bbox_inches='tight',dpi=200)
+    plt.close('all')
+    plt.clf()  
+
+    ##############################################################################################################
+    fig= plt.figure(1)
+    gs = gridspec.GridSpec(65, 80, wspace=0, hspace=0.0)
+    ax = plt.subplot( gs[5:80, :60])
+    axR= plt.subplot(gs[5:80, 63:])
+    cax = plt.subplot(gs[0:3, :60])
+
+    plot = ax.pcolormesh(data['number_density_bins'], data['temperature_bins'], 
+        gaussian_filter(np.sum(data['density_temperature_Mass'][...,6:8],axis=-1)/np.sum(data['density_temperature_Mass'][...,6:8]),sigma),
+        cmap=palet,#cmap=palettable.cubehelix.red_16_r.mpl_colormap, 
+        norm=colors.LogNorm(vmin=1e-6,vmax=1e-1),rasterized=True)
+    cb = fig.colorbar(plot, orientation='horizontal', cax=cax)
+    cb.ax.set_title(r'$M(n,T,0.6\leq r/r_{\rm vir} \leq 0.8) / M(0.6\leq r/r_{\rm vir} \leq 0.8)$', fontsize=10, loc='left')
+    # cb.ax.minorticks_off()
+    cax.xaxis.set_ticks_position("top")
+    cax.xaxis.set_label_position("top")
+    cb.ax.tick_params(labelsize=10) 
+    ax.set_yscale('log')
+    ax.set_xscale('log')
+    ax.set_ylabel(r'$T\,[\mathrm{K}]$')
+    ax.set_xlabel(r'$n\,[\mathrm{cm}^{-3}]$')
+    ax.set_ylim((3e3,1e7))
+    ax.set_xlim((3e-6,0.8e-1))
+
+    axR.plot(gaussian_filter(np.sum(data['density_temperature_Mass'][...,6:8],axis=(1,2))/np.sum(data['density_temperature_Mass'][...,6:8]),sigma)/dlogT,data['temperature_bins'][:-1], color='k', lw=2.)
+    axR.set_yscale('log')
+    axR.set_xscale('log')
+    axR.set_ylim((3e3,1e7))
+    axR.set_yticklabels([])
+    # axR.set_xticks([])
+
+    axR.set_xlim((1e-4,10))
+
+    axR.set_xlabel(r'$\frac{d \log M}{ d \log T}$', fontsize=14)
+    ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    fig.set_size_inches(5,4)
+    if sSFR_title:
+        ax.text(0.05,0.95, r"$\log {\rm \, sSFR} = %s$" % np.round(np.log10(data['sSFR']),2), ha="left", va="top",transform=ax.transAxes, fontsize=8, bbox={'facecolor':'grey', 'edgecolor':'None', 'boxstyle':'round','pad':0.1, 'alpha':0.75})
+    plt.savefig('./plots/density_temperature_Mass_06r08_'+fn+'_with_dMdlogT.png', bbox_inches='tight',dpi=200)
+    plt.close('all')
+    plt.clf()  
+
+    ##############################################################################################################
+
+    fig= plt.figure(1)
+    gs = gridspec.GridSpec(65, 80, wspace=0, hspace=0.0)
+    ax = plt.subplot( gs[5:80, :60])
+    axR= plt.subplot(gs[5:80, 63:])
+    cax = plt.subplot(gs[0:3, :60])
+
+    plot = ax.pcolormesh(data['number_density_bins'], data['temperature_bins'], 
+        gaussian_filter(np.sum(data['density_temperature_Mass'][...,1:10],axis=-1)/np.sum(data['density_temperature_Mass'][...,1:10]),sigma),
+        cmap=palet,#cmap=palettable.cubehelix.red_16_r.mpl_colormap, 
+        norm=colors.LogNorm(vmin=1e-6,vmax=1e-1),rasterized=True)
+    cb = fig.colorbar(plot, orientation='horizontal', cax=cax)
+    cb.ax.set_title(r'$M(n,T,0.1\leq r/r_{\rm vir} \leq 1) / M(0.1\leq r/r_{\rm vir} \leq 1)$', fontsize=10, loc='left')
+    # cb.ax.minorticks_off()
+    cax.xaxis.set_ticks_position("top")
+    cax.xaxis.set_label_position("top")
+    cb.ax.tick_params(labelsize=10) 
+    ax.set_yscale('log')
+    ax.set_xscale('log')
+    ax.set_ylabel(r'$T\,[\mathrm{K}]$')
+    ax.set_xlabel(r'$n\,[\mathrm{cm}^{-3}]$')
+    ax.set_ylim((3e3,1e7))
+    ax.set_xlim((3e-6,0.8e-1))
+
+    ir = 1
+    plot=ax.contour(data['number_density_bins'][:-1], data['temperature_bins'][:-1], 
+        gaussian_filter((data['density_temperature_Mass'][...,ir]/np.sum(data['density_temperature_Mass'][...,ir])),sigma),
+        [3e-3], colors='0.0',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color='0.0', label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+    axR.plot(gaussian_filter(np.sum(data['density_temperature_Mass'][...,ir],axis=(1))/np.sum(data['density_temperature_Mass'][...,ir]),sigma)/dlogT,data['temperature_bins'][:-1], color='0.0', lw=2.)
+
+    ir = 2
+    plot=ax.contour(data['number_density_bins'][:-1], data['temperature_bins'][:-1], 
+        gaussian_filter((data['density_temperature_Mass'][...,ir]/np.sum(data['density_temperature_Mass'][...,ir])),sigma),
+        [3e-3], colors='0.2',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color='0.2', label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+    axR.plot(gaussian_filter(np.sum(data['density_temperature_Mass'][...,ir],axis=(1))/np.sum(data['density_temperature_Mass'][...,ir]),sigma)/dlogT,data['temperature_bins'][:-1], color='0.2', lw=2.)
+
+    ir = 3
+    plot=ax.contour(data['number_density_bins'][:-1], data['temperature_bins'][:-1], 
+        gaussian_filter((data['density_temperature_Mass'][...,ir]/np.sum(data['density_temperature_Mass'][...,ir])),sigma),
+        [3e-3], colors='0.4',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color='0.4', label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+    axR.plot(gaussian_filter(np.sum(data['density_temperature_Mass'][...,ir],axis=(1))/np.sum(data['density_temperature_Mass'][...,ir]),sigma)/dlogT,data['temperature_bins'][:-1], color='0.4', lw=2.)
+
+    ir = 5
+    plot=ax.contour(data['number_density_bins'][:-1], data['temperature_bins'][:-1], 
+        gaussian_filter((data['density_temperature_Mass'][...,ir]/np.sum(data['density_temperature_Mass'][...,ir])),sigma),
+        [3e-3], colors='0.6',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color='0.6', label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+    axR.plot(gaussian_filter(np.sum(data['density_temperature_Mass'][...,ir],axis=(1))/np.sum(data['density_temperature_Mass'][...,ir]),sigma)/dlogT,data['temperature_bins'][:-1], color='0.6', lw=2.)
+
+    ir = 7
+    plot=ax.contour(data['number_density_bins'][:-1], data['temperature_bins'][:-1], 
+        gaussian_filter((data['density_temperature_Mass'][...,ir]/np.sum(data['density_temperature_Mass'][...,ir])),sigma),
+        [3e-3], colors='0.8',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color='0.8', label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+    axR.plot(gaussian_filter(np.sum(data['density_temperature_Mass'][...,ir],axis=(1))/np.sum(data['density_temperature_Mass'][...,ir]),sigma)/dlogT,data['temperature_bins'][:-1], color='0.8', lw=2.)
+
+    ax.legend(loc='lower left', fontsize=6, ncol=1)
+
+
+    axR.set_yscale('log')
+    axR.set_xscale('log')
+    axR.set_ylim((3e3,1e7))
+    axR.set_yticklabels([])
+    # axR.set_xticks([])
+
+    axR.set_xlim((1e-4,10))
+
+    axR.set_xlabel(r'$\frac{d \log M}{ d \log T}$', fontsize=14)
+    ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    fig.set_size_inches(5,4)
+    if sSFR_title:
+        ax.text(0.05,0.95, r"$\log {\rm \, sSFR} = %s$" % np.round(np.log10(data['sSFR']),2), ha="left", va="top",transform=ax.transAxes, fontsize=8, bbox={'facecolor':'grey', 'edgecolor':'None', 'boxstyle':'round','pad':0.1, 'alpha':0.75})
+    plt.savefig('./plots/density_temperature_Mass_all_r_'+fn+'_with_dMdlogT.png', bbox_inches='tight',dpi=200)
+    plt.close('all')
+    plt.clf()  
+
+        ############################################################################################################################################################################################################################
+        ############################################################################################################################################################################################################################
+        ############################################################################################################################################################################################################################
+
+    fig,ax = plt.subplots(1,1)
+    plot=ax.pcolormesh(data['azimuthal_velocity_bins'], data['entropy_bins'], 
+        gaussian_filter(np.sum(data['azimuthal_velocity_entropy_Mass'][...,1:10],axis=-1)/np.sum(data['azimuthal_velocity_entropy_Mass'][...,1:10]),sigma),
+        norm=colors.LogNorm(vmin=1e-6, vmax=1e-1), cmap=palet)#palettable.cubehelix.red_16_r.mpl_colormap)
+    cb = fig.colorbar(plot)
+    cb.set_label(r'$M(v_\phi,K)/M_{\rm tot}$',rotation=270,fontsize=12,labelpad=15)
+
+    ir = 1
+    plot=ax.contour(data['azimuthal_velocity_bins'][:-1], data['entropy_bins'][:-1], 
+        gaussian_filter((data['azimuthal_velocity_entropy_Mass'][...,ir]/np.sum(data['azimuthal_velocity_entropy_Mass'][...,ir])),sigma),
+        [3e-3], colors='0.0',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color="0.0", label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+
+    ir = 2
+    plot=ax.contour(data['azimuthal_velocity_bins'][:-1], data['entropy_bins'][:-1], 
+        gaussian_filter((data['azimuthal_velocity_entropy_Mass'][...,ir]/np.sum(data['azimuthal_velocity_entropy_Mass'][...,ir])),sigma),
+        [3e-3], colors='0.2',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color="0.2", label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+
+    ir = 3
+    plot=ax.contour(data['azimuthal_velocity_bins'][:-1], data['entropy_bins'][:-1], 
+        gaussian_filter((data['azimuthal_velocity_entropy_Mass'][...,ir]/np.sum(data['azimuthal_velocity_entropy_Mass'][...,ir])),sigma),
+        [3e-3], colors='0.4',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color="0.4", label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+
+    ir = 5
+    plot=ax.contour(data['azimuthal_velocity_bins'][:-1], data['entropy_bins'][:-1], 
+        gaussian_filter((data['azimuthal_velocity_entropy_Mass'][...,ir]/np.sum(data['azimuthal_velocity_entropy_Mass'][...,ir])),sigma),
+        [3e-3], colors='0.6',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color="0.6", label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+
+    ir = 7
+    plot=ax.contour(data['azimuthal_velocity_bins'][:-1], data['entropy_bins'][:-1], 
+        gaussian_filter((data['azimuthal_velocity_entropy_Mass'][...,ir]/np.sum(data['azimuthal_velocity_entropy_Mass'][...,ir])),sigma),
+        [3e-3], colors='0.8',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color="0.8", label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+
+    ax.legend(loc='lower left', fontsize=6, ncol=1)
+    ax.set_yscale('log')
+    # ax.set_xscale('log')
+    ax.set_ylim((1e4,1e10))
+    # ax.set_xlim((7e-1,2e4))
+    ax.set_ylabel(r'$K\,[\mathrm{K\,cm}^{2}]$')
+    ax.set_xlabel(r'$v_\phi\,[\mathrm{km/s}]$')
+    ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    fig.set_size_inches(5,3)
+    if sSFR_title:
+        ax.text(0.05,0.95, r"$\log {\rm \, sSFR} = %s$" % np.round(np.log10(data['sSFR']),2), ha="left", va="top",transform=ax.transAxes, fontsize=8, bbox={'facecolor':'grey', 'edgecolor':'None', 'boxstyle':'round','pad':0.1, 'alpha':0.75})
+    plt.savefig('./plots/azimuthal_velocity_entropy_Mass_all_r_'+fn+'.png',bbox_inches='tight',dpi=200)
+    plt.clf()       
+
+    ##############################################################################################################
+
+
+    fig,ax = plt.subplots(1,1)
+    plot=ax.pcolormesh(data['azimuthal_velocity_bins'], data['temperature_bins'], 
+        gaussian_filter(np.sum(data['azimuthal_velocity_temperature_Mass'][...,1:10],axis=-1)/np.sum(data['azimuthal_velocity_temperature_Mass'][...,1:10]),sigma),
+        norm=colors.LogNorm(vmin=1e-6, vmax=1e-1), cmap=palet)#palettable.cubehelix.jim_special_16_r.mpl_colormap)
+    cb = fig.colorbar(plot)
+    cb.set_label(r'$M(v_\phi,T)/M_{\rm tot}$',rotation=270,fontsize=12,labelpad=15)
+
+    ir = 1
+    plot=ax.contour(data['azimuthal_velocity_bins'][:-1], data['temperature_bins'][:-1], 
+        gaussian_filter((data['azimuthal_velocity_temperature_Mass'][...,ir]/np.sum(data['azimuthal_velocity_temperature_Mass'][...,ir])),sigma),
+        [3e-3], colors='#6600cc',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color="#6600cc", label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+
+    ir = 2
+    plot=ax.contour(data['azimuthal_velocity_bins'][:-1], data['temperature_bins'][:-1], 
+        gaussian_filter((data['azimuthal_velocity_temperature_Mass'][...,ir]/np.sum(data['azimuthal_velocity_temperature_Mass'][...,ir])),sigma),
+        [3e-3], colors='#0066ff',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color="#0066ff", label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+
+    ir = 3
+    plot=ax.contour(data['azimuthal_velocity_bins'][:-1], data['temperature_bins'][:-1], 
+        gaussian_filter((data['azimuthal_velocity_temperature_Mass'][...,ir]/np.sum(data['azimuthal_velocity_temperature_Mass'][...,ir])),sigma),
+        [3e-3], colors='#66cc00',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color="#66cc00", label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+
+    ir = 5
+    plot=ax.contour(data['azimuthal_velocity_bins'][:-1], data['temperature_bins'][:-1], 
+        gaussian_filter((data['azimuthal_velocity_temperature_Mass'][...,ir]/np.sum(data['azimuthal_velocity_temperature_Mass'][...,ir])),sigma),
+        [3e-3], colors='#ff9900',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color="#ff9900", label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+
+    ir = 7
+    plot=ax.contour(data['azimuthal_velocity_bins'][:-1], data['temperature_bins'][:-1], 
+        gaussian_filter((data['azimuthal_velocity_temperature_Mass'][...,ir]/np.sum(data['azimuthal_velocity_temperature_Mass'][...,ir])),sigma),
+        [3e-3], colors='#cc3300',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color="#cc3300", label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+
+    ax.legend(loc='lower left', fontsize=6, ncol=1)
+    ax.set_yscale('log')
+    # ax.set_xscale('log')
+    ax.set_ylim((1e3,3e7))
+    # ax.set_xlim((7e-1,2e4))
+    ax.set_ylabel(r'$T\,[\mathrm{K}]$')
+    ax.set_xlabel(r'$v_\phi\,[\mathrm{km/s}]$')
+    ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    fig.set_size_inches(5,3)
+    if sSFR_title:
+        ax.text(0.05,0.95, r"$\log {\rm \, sSFR} = %s$" % np.round(np.log10(data['sSFR']),2), ha="left", va="top",transform=ax.transAxes, fontsize=8, bbox={'facecolor':'grey', 'edgecolor':'None', 'boxstyle':'round','pad':0.1, 'alpha':0.75})
+    plt.savefig('./plots/azimuthal_velocity_temperature_Mass_all_r_'+fn+'.png',bbox_inches='tight',dpi=200)
+    plt.clf()       
+
+
+    ##############################################################################################################
+
+    fig,ax = plt.subplots(1,1)
+    plot=ax.pcolormesh(data['radial_velocity_bins'], data['temperature_bins'], 
+        gaussian_filter(np.sum(data['radial_velocity_temperature_Mass'][...,1:10],axis=-1)/np.sum(data['radial_velocity_temperature_Mass'][...,1:10]),sigma),
+        norm=colors.LogNorm(vmin=1e-6, vmax=1e-1), cmap=palet)#palettable.cubehelix.red_16_r.mpl_colormap)
+    cb = fig.colorbar(plot)
+    cb.set_label(r'$M(v_r,T)/M_{\rm tot}$',rotation=270,fontsize=12,labelpad=15)
+
+    ir = 1
+    plot=ax.contour(data['radial_velocity_bins'][:-1], data['temperature_bins'][:-1], 
+        gaussian_filter((data['radial_velocity_temperature_Mass'][...,ir]/np.sum(data['radial_velocity_temperature_Mass'][...,ir])),sigma),
+        [3e-3], colors='0.0',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color='0.0', label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+
+    ir = 2
+    plot=ax.contour(data['radial_velocity_bins'][:-1], data['temperature_bins'][:-1], 
+        gaussian_filter((data['radial_velocity_temperature_Mass'][...,ir]/np.sum(data['radial_velocity_temperature_Mass'][...,ir])),sigma),
+        [3e-3], colors='0.2',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color='0.2', label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+
+    ir = 3
+    plot=ax.contour(data['radial_velocity_bins'][:-1], data['temperature_bins'][:-1], 
+        gaussian_filter((data['radial_velocity_temperature_Mass'][...,ir]/np.sum(data['radial_velocity_temperature_Mass'][...,ir])),sigma),
+        [3e-3], colors='0.4',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color='0.4', label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+
+    ir = 5
+    plot=ax.contour(data['radial_velocity_bins'][:-1], data['temperature_bins'][:-1], 
+        gaussian_filter((data['radial_velocity_temperature_Mass'][...,ir]/np.sum(data['radial_velocity_temperature_Mass'][...,ir])),sigma),
+        [3e-3], colors='0.6',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color='0.6', label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+
+    ir = 7
+    plot=ax.contour(data['radial_velocity_bins'][:-1], data['temperature_bins'][:-1], 
+        gaussian_filter((data['radial_velocity_temperature_Mass'][...,ir]/np.sum(data['radial_velocity_temperature_Mass'][...,ir])),sigma),
+        [3e-3], colors='0.8',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color='0.8', label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+
+    ax.legend(loc='lower right', fontsize=6, ncol=1)
+    ax.set_yscale('log')
+    # ax.set_xscale('log')
+    ax.set_ylim((1e3,3e7))
+    # ax.set_xlim((7e-1,2e4))
+    ax.set_ylabel(r'$T\,[\mathrm{K}]$')
+    ax.set_xlabel(r'$v_r\,[\mathrm{km/s}]$')
+    ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    fig.set_size_inches(5,3)
+    if sSFR_title:
+        ax.text(0.05,0.95, r"$\log {\rm \, sSFR} = %s$" % np.round(np.log10(data['sSFR']),2), ha="left", va="top",transform=ax.transAxes, fontsize=8, bbox={'facecolor':'grey', 'edgecolor':'None', 'boxstyle':'round','pad':0.1, 'alpha':0.75})
+    plt.savefig('./plots/radial_velocity_temperature_Mass_all_r_'+fn+'.png',bbox_inches='tight',dpi=200)
+    plt.clf()       
+
+
+    ##############################################################################################################
+
+    fig,ax = plt.subplots(1,1)
+    plot=ax.pcolormesh(data['radial_velocity_bins'], data['entropy_bins'], 
+        gaussian_filter(np.sum(data['radial_velocity_entropy_Mass'][...,1:10],axis=-1)/np.sum(data['radial_velocity_entropy_Mass'][...,1:10]),sigma),
+        norm=colors.LogNorm(vmin=1e-6, vmax=1e-1), cmap=palet)#palettable.cubehelix.red_16_r.mpl_colormap)
+    cb = fig.colorbar(plot)
+    cb.set_label(r'$M(v_r,K)/M_{\rm tot}$',rotation=270,fontsize=12,labelpad=15)
+
+    ir = 1
+    plot=ax.contour(data['radial_velocity_bins'][:-1], data['entropy_bins'][:-1], 
+        gaussian_filter((data['radial_velocity_entropy_Mass'][...,ir]/np.sum(data['radial_velocity_entropy_Mass'][...,ir])),sigma),
+        [3e-3], colors='0.0',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color='0.0', label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+
+    ir = 2
+    plot=ax.contour(data['radial_velocity_bins'][:-1], data['entropy_bins'][:-1], 
+        gaussian_filter((data['radial_velocity_entropy_Mass'][...,ir]/np.sum(data['radial_velocity_entropy_Mass'][...,ir])),sigma),
+        [3e-3], colors='0.2',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color='0.2', label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+
+    ir = 3
+    plot=ax.contour(data['radial_velocity_bins'][:-1], data['entropy_bins'][:-1], 
+        gaussian_filter((data['radial_velocity_entropy_Mass'][...,ir]/np.sum(data['radial_velocity_entropy_Mass'][...,ir])),sigma),
+        [3e-3], colors='0.4',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color='0.4', label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+
+    ir = 5
+    plot=ax.contour(data['radial_velocity_bins'][:-1], data['entropy_bins'][:-1], 
+        gaussian_filter((data['radial_velocity_entropy_Mass'][...,ir]/np.sum(data['radial_velocity_entropy_Mass'][...,ir])),sigma),
+        [3e-3], colors='0.6',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color='0.6', label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+
+    ir = 7
+    plot=ax.contour(data['radial_velocity_bins'][:-1], data['entropy_bins'][:-1], 
+        gaussian_filter((data['radial_velocity_entropy_Mass'][...,ir]/np.sum(data['radial_velocity_entropy_Mass'][...,ir])),sigma),
+        [3e-3], colors='0.8',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color='0.8', label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+
+    ax.legend(loc='lower right', fontsize=6, ncol=1)
+    ax.set_yscale('log')
+    # ax.set_xscale('log')
+    ax.set_ylim((1e4,3e10))
+    # ax.set_xlim((7e-1,2e4))
+    ax.set_ylabel(r'$K\,[\mathrm{K\,cm}^{2}]$')
+    ax.set_xlabel(r'$v_r\,[\mathrm{km/s}]$')
+    ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    fig.set_size_inches(5,3)
+    if sSFR_title:
+        ax.text(0.05,0.95, r"$\log {\rm \, sSFR} = %s$" % np.round(np.log10(data['sSFR']),2), ha="left", va="top",transform=ax.transAxes, fontsize=8, bbox={'facecolor':'grey', 'edgecolor':'None', 'boxstyle':'round','pad':0.1, 'alpha':0.75})
+    plt.savefig('./plots/radial_velocity_entropy_Mass_all_r_'+fn+'.png',bbox_inches='tight',dpi=200)
+    plt.clf()       
+
+    ##############################################################################################################
+
+    fig= plt.figure(1)
+    gs = gridspec.GridSpec(80, 65, wspace=0, hspace=0.0)
+    ax = plt.subplot( gs[20:80, :60])
+    axT= plt.subplot( gs[0:20, :60])
+    cax = plt.subplot(gs[20:80, 63:])
+
+    plot = ax.pcolormesh(data['radial_velocity_bins'], data['entropy_bins'], 
+        gaussian_filter(np.sum(data['radial_velocity_entropy_Mass'][...,1:10],axis=-1)/np.sum(data['radial_velocity_entropy_Mass'][...,1:10]),sigma),
+        cmap=palet,#cmap=palettable.cubehelix.red_16_r.mpl_colormap, 
+        norm=colors.LogNorm(vmin=1e-6,vmax=1e-1),rasterized=True)
+    cb = fig.colorbar(plot, orientation='vertical', cax=cax)
+    cb.set_label(r'$M(K,v_r,0.1\leq r/r_{\rm vir} \leq 1) / M(0.1\leq r/r_{\rm vir} \leq 1)$', fontsize=10, rotation=270, labelpad=15)
+    # cb.ax.minorticks_off()
+    cax.yaxis.set_ticks_position("right")
+    cax.yaxis.set_label_position("right")
+    cb.ax.tick_params(labelsize=10) 
+    ax.set_yscale('log')
+    ax.set_ylabel(r'$K\,[\mathrm{K\,cm}^{2}]$')
+    ax.set_xlabel(r'$v_r\,[\mathrm{km/s}]$')
+    ax.set_ylim((1e4,3e10))
+    ax.set_xlim((-300,600))
+
+    ir = 1
+    plot=ax.contour(data['radial_velocity_bins'][:-1], data['entropy_bins'][:-1], 
+        gaussian_filter((data['radial_velocity_entropy_Mass'][...,ir]/np.sum(data['radial_velocity_entropy_Mass'][...,ir])),sigma),
+        [3e-3], colors='0.0',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color='0.0', label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+    axT.plot(data['radial_velocity_bins'][:-1],gaussian_filter(np.sum(data['radial_velocity_entropy_Mass'][...,ir],axis=(0))/np.sum(data['radial_velocity_entropy_Mass'][...,ir]),sigma)/np.diff(data['radial_velocity_bins']), color='0.0', lw=2.)
+
+    ir = 2
+    plot=ax.contour(data['radial_velocity_bins'][:-1], data['entropy_bins'][:-1], 
+        gaussian_filter((data['radial_velocity_entropy_Mass'][...,ir]/np.sum(data['radial_velocity_entropy_Mass'][...,ir])),sigma),
+        [3e-3], colors='0.2',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color='0.2', label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+    axT.plot(data['radial_velocity_bins'][:-1],gaussian_filter(np.sum(data['radial_velocity_entropy_Mass'][...,ir],axis=(0))/np.sum(data['radial_velocity_entropy_Mass'][...,ir]),sigma)/np.diff(data['radial_velocity_bins']), color='0.2', lw=2.)
+
+    ir = 3
+    plot=ax.contour(data['radial_velocity_bins'][:-1], data['entropy_bins'][:-1], 
+        gaussian_filter((data['radial_velocity_entropy_Mass'][...,ir]/np.sum(data['radial_velocity_entropy_Mass'][...,ir])),sigma),
+        [3e-3], colors='0.4',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color='0.4', label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+    axT.plot(data['radial_velocity_bins'][:-1],gaussian_filter(np.sum(data['radial_velocity_entropy_Mass'][...,ir],axis=(0))/np.sum(data['radial_velocity_entropy_Mass'][...,ir]),sigma)/np.diff(data['radial_velocity_bins']), color='0.4', lw=2.)
+
+    ir = 5
+    plot=ax.contour(data['radial_velocity_bins'][:-1], data['entropy_bins'][:-1], 
+        gaussian_filter((data['radial_velocity_entropy_Mass'][...,ir]/np.sum(data['radial_velocity_entropy_Mass'][...,ir])),sigma),
+        [3e-3], colors='0.6',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color='0.6', label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+    axT.plot(data['radial_velocity_bins'][:-1],gaussian_filter(np.sum(data['radial_velocity_entropy_Mass'][...,ir],axis=(0))/np.sum(data['radial_velocity_entropy_Mass'][...,ir]),sigma)/np.diff(data['radial_velocity_bins']), color='0.6', lw=2.)
+
+    ir = 7
+    plot=ax.contour(data['radial_velocity_bins'][:-1], data['entropy_bins'][:-1], 
+        gaussian_filter((data['radial_velocity_entropy_Mass'][...,ir]/np.sum(data['radial_velocity_entropy_Mass'][...,ir])),sigma),
+        [3e-3], colors='0.8',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color='0.8', label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+    axT.plot(data['radial_velocity_bins'][:-1],gaussian_filter(np.sum(data['radial_velocity_entropy_Mass'][...,ir],axis=(0))/np.sum(data['radial_velocity_entropy_Mass'][...,ir]),sigma)/np.diff(data['radial_velocity_bins']), color='0.8', lw=2.)
+
+    ax.legend(loc='lower right', fontsize=6, ncol=1)
+
+
+    axT.set_yscale('log')
+    axT.set_xticklabels([])
+
+    axT.set_ylim((1e-5,1e-1))
+    axT.set_xlim((-300,600))
+    axT.yaxis.set_label_position("right")
+    axT.set_ylabel(r'$\frac{d \log M}{ d v_r}$', fontsize=14, rotation=270, labelpad=30)
+    ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    fig.set_size_inches(4,5)
+    if sSFR_title:
+        ax.text(0.05,0.95, r"$\log {\rm \, sSFR} = %s$" % np.round(np.log10(data['sSFR']),2), ha="left", va="top",transform=ax.transAxes, fontsize=8, bbox={'facecolor':'grey', 'edgecolor':'None', 'boxstyle':'round','pad':0.1, 'alpha':0.75})
+    plt.savefig('./plots/radial_velocity_entropy_Mass_all_r_'+fn+'_with_dMdvr.png', bbox_inches='tight',dpi=200)
+    plt.close('all')
+    plt.clf()  
+
+    ############################################################################################################################################################################################################################
+
+    fig= plt.figure(1)
+    gs = gridspec.GridSpec(65, 80, wspace=0, hspace=0.0)
+    ax = plt.subplot( gs[5:80, :60])
+    axR= plt.subplot(gs[5:80, 63:])
+    cax = plt.subplot(gs[0:3, :60])
+
+    plot = ax.pcolormesh(data['radial_velocity_bins'], data['entropy_bins'], 
+        gaussian_filter(np.sum(data['radial_velocity_entropy_Mass'][...,2:4],axis=-1)/np.sum(data['radial_velocity_entropy_Mass'][...,2:4]),sigma),
+        cmap=palet,#cmap=palettable.cubehelix.red_16_r.mpl_colormap, 
+        norm=colors.LogNorm(vmin=1e-6,vmax=1e-1),rasterized=True)
+    cb = fig.colorbar(plot, orientation='horizontal', cax=cax)
+    cb.ax.set_title(r'$M(v_r,K,0.2\leq r/r_{\rm vir} \leq 0.4) / M(0.2\leq r/r_{\rm vir} \leq 0.4)$', fontsize=10, loc='left')
+    # cb.ax.minorticks_off()
+    cax.xaxis.set_ticks_position("top")
+    cax.xaxis.set_label_position("top")
+    cb.ax.tick_params(labelsize=10) 
+    ax.set_yscale('log')
+
+    ax.set_ylabel(r'$K\,[\mathrm{K\,cm}^{2}]$')
+    ax.set_xlabel(r'$v_r\,[\mathrm{km/s}]$')
+    ax.set_ylim((1e4,1e10))
+    ax.set_xlim(right=700)
+
+    axR.plot(gaussian_filter(np.sum(data['radial_velocity_entropy_Mass'][...,2:4],axis=(1,2))/np.sum(data['radial_velocity_entropy_Mass'][...,2:4]),sigma)/dlogK,data['entropy_bins'][:-1], color='k', lw=2.)
+    axR.set_yscale('log')
+    axR.set_xscale('log')
+    axR.set_ylim((1e4,1e10))
+    axR.set_yticklabels([])
+    # axR.set_xticks([])
+
+    axR.set_xlim((1e-4,10))
+
+    axR.set_xlabel(r'$\frac{d \log M}{ d \log K}$', fontsize=14)
+    ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    fig.set_size_inches(5,4)
+    if sSFR_title:
+        ax.text(0.05,0.95, r"$\log {\rm \, sSFR} = %s$" % np.round(np.log10(data['sSFR']),2), ha="left", va="top",transform=ax.transAxes, fontsize=8, bbox={'facecolor':'grey', 'edgecolor':'None', 'boxstyle':'round','pad':0.1, 'alpha':0.75})
+    plt.savefig('./plots/radial_velocity_entropy_Mass_02r04_'+fn+'_with_dMdlogK.png', bbox_inches='tight',dpi=200)
+    plt.close('all')
+    plt.clf()  
+
+    ############################################################################################################################################################################################################################
+
+    fig= plt.figure(1)
+    gs = gridspec.GridSpec(65, 80, wspace=0, hspace=0.0)
+    ax = plt.subplot( gs[5:80, :60])
+    axR= plt.subplot(gs[5:80, 63:])
+    cax = plt.subplot(gs[0:3, :60])
+
+    plot = ax.pcolormesh(data['radial_velocity_bins'], data['entropy_bins'], 
+        gaussian_filter(np.sum(data['radial_velocity_entropy_Mass'][...,6:8],axis=-1)/np.sum(data['radial_velocity_entropy_Mass'][...,6:8]),sigma),
+        cmap=palet,#cmap=palettable.cubehelix.red_16_r.mpl_colormap, 
+        norm=colors.LogNorm(vmin=1e-6,vmax=1e-1),rasterized=True)
+    cb = fig.colorbar(plot, orientation='horizontal', cax=cax)
+    cb.ax.set_title(r'$M(v_r,K,0.6\leq r/r_{\rm vir} \leq 0.8) / M(0.6\leq r/r_{\rm vir} \leq 0.8)$', fontsize=10, loc='left')
+    # cb.ax.minorticks_off()
+    cax.xaxis.set_ticks_position("top")
+    cax.xaxis.set_label_position("top")
+    cb.ax.tick_params(labelsize=10) 
+    ax.set_yscale('log')
+
+    ax.set_ylabel(r'$K\,[\mathrm{K\,cm}^{2}]$')
+    ax.set_xlabel(r'$v_r\,[\mathrm{km/s}]$')
+    ax.set_ylim((1e4,1e10))
+    ax.set_xlim(right=700)
+
+    axR.plot(gaussian_filter(np.sum(data['radial_velocity_entropy_Mass'][...,6:8],axis=(1,2))/np.sum(data['radial_velocity_entropy_Mass'][...,6:8]),sigma)/dlogK,data['entropy_bins'][:-1], color='k', lw=2.)
+    axR.set_yscale('log')
+    axR.set_xscale('log')
+    axR.set_ylim((1e4,1e10))
+    axR.set_yticklabels([])
+    # axR.set_xticks([])
+
+    axR.set_xlim((1e-4,10))
+
+    axR.set_xlabel(r'$\frac{d \log M}{ d \log K}$', fontsize=14)
+    ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    fig.set_size_inches(5,4)
+    if sSFR_title:
+        ax.text(0.05,0.95, r"$\log {\rm \, sSFR} = %s$" % np.round(np.log10(data['sSFR']),2), ha="left", va="top",transform=ax.transAxes, fontsize=8, bbox={'facecolor':'grey', 'edgecolor':'None', 'boxstyle':'round','pad':0.1, 'alpha':0.75})
+    plt.savefig('./plots/radial_velocity_entropy_Mass_06r08_'+fn+'_with_dMdlogK.png', bbox_inches='tight',dpi=200)
+    plt.close('all')
+    plt.clf()  
+
+    ##############################################################################################################
+
+    fig= plt.figure(1)
+    gs = gridspec.GridSpec(80, 65, wspace=0, hspace=0.0)
+    ax = plt.subplot( gs[20:80, :60])
+    axT= plt.subplot( gs[0:20, :60])
+    cax = plt.subplot(gs[20:80, 63:])
+
+    plot = ax.pcolormesh(data['azimuthal_velocity_bins'], data['entropy_bins'], 
+        gaussian_filter(np.sum(data['azimuthal_velocity_entropy_Mass'][...,1:10],axis=-1)/np.sum(data['azimuthal_velocity_entropy_Mass'][...,1:10]),sigma),
+        cmap=palet,#cmap=palettable.cubehelix.red_16_r.mpl_colormap, 
+        norm=colors.LogNorm(vmin=1e-6,vmax=1e-1),rasterized=True)
+    cb = fig.colorbar(plot, orientation='vertical', cax=cax)
+    cb.set_label(r'$M(K,v_\phi,0.1\leq r/r_{\rm vir} \leq 1) / M(0.1\leq r/r_{\rm vir} \leq 1)$', fontsize=10, rotation=270, labelpad=15)
+    # cb.ax.minorticks_off()
+    cax.yaxis.set_ticks_position("right")
+    cax.yaxis.set_label_position("right")
+    cb.ax.tick_params(labelsize=10) 
+    ax.set_yscale('log')
+    ax.set_ylabel(r'$K\,[\mathrm{K\,cm}^{2}]$')
+    ax.set_xlabel(r'$v_\phi\,[\mathrm{km/s}]$')
+    ax.set_ylim((1e4,3e10))
+    ax.set_xlim((-300,300))
+
+    ir = 1
+    plot=ax.contour(data['azimuthal_velocity_bins'][:-1], data['entropy_bins'][:-1],
+        gaussian_filter((data['azimuthal_velocity_entropy_Mass'][...,ir]/np.sum(data['azimuthal_velocity_entropy_Mass'][...,ir])),sigma),
+        [3e-3], colors='0.0',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color='0.0', label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+    axT.plot(data['azimuthal_velocity_bins'][:-1],gaussian_filter(np.sum(data['azimuthal_velocity_entropy_Mass'][...,ir],axis=(0)),sigma)/np.sum(data['azimuthal_velocity_entropy_Mass'][...,ir])/np.diff(data['azimuthal_velocity_bins']), color='0.0', lw=2.)
+
+    ir = 2
+    plot=ax.contour(data['azimuthal_velocity_bins'][:-1], data['entropy_bins'][:-1], 
+        gaussian_filter((data['azimuthal_velocity_entropy_Mass'][...,ir]/np.sum(data['azimuthal_velocity_entropy_Mass'][...,ir])),sigma),
+        [3e-3], colors='0.2',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color='0.2', label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+    axT.plot(data['azimuthal_velocity_bins'][:-1],gaussian_filter(np.sum(data['azimuthal_velocity_entropy_Mass'][...,ir],axis=(0)),sigma)/np.sum(data['azimuthal_velocity_entropy_Mass'][...,ir])/np.diff(data['azimuthal_velocity_bins']), color='0.2', lw=2.)
+
+    ir = 3
+    plot=ax.contour(data['azimuthal_velocity_bins'][:-1], data['entropy_bins'][:-1], 
+        gaussian_filter((data['azimuthal_velocity_entropy_Mass'][...,ir]/np.sum(data['azimuthal_velocity_entropy_Mass'][...,ir])),sigma),
+        [3e-3], colors='0.4',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color='0.4', label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+    axT.plot(data['azimuthal_velocity_bins'][:-1],gaussian_filter(np.sum(data['azimuthal_velocity_entropy_Mass'][...,ir],axis=(0)),sigma)/np.sum(data['azimuthal_velocity_entropy_Mass'][...,ir])/np.diff(data['azimuthal_velocity_bins']), color='0.4', lw=2.)
+
+    ir = 5
+    plot=ax.contour(data['azimuthal_velocity_bins'][:-1], data['entropy_bins'][:-1], 
+        gaussian_filter((data['azimuthal_velocity_entropy_Mass'][...,ir]/np.sum(data['azimuthal_velocity_entropy_Mass'][...,ir])),sigma),
+        [3e-3], colors='0.6',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color='0.6', label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+    axT.plot(data['azimuthal_velocity_bins'][:-1],gaussian_filter(np.sum(data['azimuthal_velocity_entropy_Mass'][...,ir],axis=(0)),sigma)/np.sum(data['azimuthal_velocity_entropy_Mass'][...,ir])/np.diff(data['azimuthal_velocity_bins']), color='0.6', lw=2.)
+
+    ir = 7
+    plot=ax.contour(data['azimuthal_velocity_bins'][:-1], data['entropy_bins'][:-1], 
+        gaussian_filter((data['azimuthal_velocity_entropy_Mass'][...,ir]/np.sum(data['azimuthal_velocity_entropy_Mass'][...,ir])),sigma),
+        [3e-3], colors='0.8',norm=colors.LogNorm(),antialiased=True)
+    ax.plot([1e-2,1e-2], [1e11,1e11], color='0.8', label=r'$'+str( np.round((data['r_r200m_phase']-np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'\leq r/r_{\rm vir}\leq'+str( np.round( (data['r_r200m_phase']+np.diff(data['r_r200m_phase'])[0]/2.)[ir],1) )+r'$')
+    axT.plot(data['azimuthal_velocity_bins'][:-1],gaussian_filter(np.sum(data['azimuthal_velocity_entropy_Mass'][...,ir],axis=(0)),sigma)/np.sum(data['azimuthal_velocity_entropy_Mass'][...,ir])/np.diff(data['azimuthal_velocity_bins']), color='0.8', lw=2.)
+
+    ax.legend(loc='lower right', fontsize=6, ncol=1)
+
+
+    axT.set_yscale('log')
+    axT.set_xticklabels([])
+
+    axT.set_ylim((1e-5,1e-1))
+    axT.set_xlim((-300,300))
+    axT.yaxis.set_label_position("right")
+    axT.set_ylabel(r'$\frac{d \log M}{ d v_\phi}$', fontsize=14, rotation=270, labelpad=30)
+    ax.grid(color='grey',linestyle=':', alpha=0.5, linewidth=1.0)
+    fig.set_size_inches(4,5)
+    if sSFR_title:
+        ax.text(0.05,0.95, r"$\log {\rm \, sSFR} = %s$" % np.round(np.log10(data['sSFR']),2), ha="left", va="top",transform=ax.transAxes, fontsize=8, bbox={'facecolor':'grey', 'edgecolor':'None', 'boxstyle':'round','pad':0.1, 'alpha':0.75})
+    plt.savefig('./plots/azimuthal_velocity_entropy_Mass_all_r_'+fn+'_with_dMdvphi.png', bbox_inches='tight',dpi=200)
+    plt.close('all')
+    plt.clf()  
+
+    plt.close("all")
+
+
+
+
+
+
+
+
+
+
+
+
+
+    #############################################################################################################################################################################################################
+    #############################################################################################################################################################################################################
+    #############################################################################################################################################################################################################
+    #############################################################################################################################################################################################################
+
+    #############################################################################################################################################################################################################
+    #############################################################################################################################################################################################################
+    #############################################################################################################################################################################################################
+    #############################################################################################################################################################################################################
+
+    #############################################################################################################################################################################################################
+    #############################################################################################################################################################################################################
+    #############################################################################################################################################################################################################
+    #############################################################################################################################################################################################################
+
+
+
+
+
+
+
+
+
+
+
+files = np.sort(glob.glob("./data/simulations/ksu*/*npz"))
 for fn in files:
     data = np.load(fn)
-    plotter(data,fn.split('/')[-1][:-4])
+    new_plotter(data,fn.split('/')[-1][:-4],palettable.cubehelix.jim_special_16_r.mpl_colormap)
+
+
+
+TNG100_quenched_palet = palettable.cubehelix.Cubehelix.make(                             start=0.75, rotation=0.15, reverse=True, max_light=1.0, min_light=0.1, n=64).mpl_colormap
+files = np.sort(glob.glob('./data/simulations/daniel_M12_TNG100_quenched/*npz'))
+data = averager(files)
+new_plotter(data, "daniel_M12_TNG100_quenched_averaged",TNG100_quenched_palet)
+
+Single_TNG100_Q_palet = palettable.cubehelix.Cubehelix.make(                             start=0.75+(1/6.), rotation=0.15, reverse=True, max_light=1.0, min_light=0.1, n=64).mpl_colormap
+fn = './data/simulations/daniel_M12_TNG100_quenched/Subhalo536830_snap099_TNG100.npz'
+data = np.load(fn)
+new_plotter(data,"Subhalo536830_snap099_TNG100_Quenched",Single_TNG100_Q_palet)
+
+drummond_M12_var_palet = palettable.cubehelix.Cubehelix.make(                            start=0.75+(2/6.), rotation=0.15, reverse=True, max_light=1.0, min_light=0.1, n=64).mpl_colormap
+files = np.sort(glob.glob('./data/simulations/drummond/*drummond*var*npz'))
+data = averager(files)
+new_plotter(data, "drummond_M12_var_time_averaged",drummond_M12_var_palet)
+
+MLi_SFR3_palet = palettable.cubehelix.Cubehelix.make(                                    start=0.75+(3/6.), rotation=0.15, reverse=True, max_light=1.0, min_light=0.1, n=64).mpl_colormap
+files = np.sort(glob.glob('./data/simulations/MLi/*MLi*_SFR3*npz'))
+data = averager(files)
+new_plotter(data, "MLi_SFR3_time_averaged",MLi_SFR3_palet)
+
+
+
+TNG100_starforming_palet = palettable.cubehelix.Cubehelix.make(                          start=2.75, rotation=0.15, reverse=True, max_light=1.0, min_light=0.1, n=64).mpl_colormap
+files = np.sort(glob.glob('./data/simulations/daniel_M12_TNG100_starforming/*npz'))
+data = averager(files)
+new_plotter(data, "daniel_M12_TNG100_starforming_averaged",TNG100_starforming_palet)
+
+Single_TNG100_SF_palet = palettable.cubehelix.Cubehelix.make(                            start=2.75+(1/6.), rotation=0.15, reverse=True, max_light=1.0, min_light=0.1, n=64).mpl_colormap
+fn = './data/simulations/daniel_M12_TNG100_starforming/Subhalo518236_snap099_TNG100.npz'
+data = np.load(fn)
+new_plotter(data,"Subhalo518236_snap099_TNG100_StarForming",Single_TNG100_SF_palet)
+
+drummond_M12_ref_palet = palettable.cubehelix.Cubehelix.make(                            start=2.75+(2/6.)-3.0, rotation=0.15, reverse=True, max_light=1.0, min_light=0.1, n=64).mpl_colormap
+files = np.sort(glob.glob('./data/simulations/drummond/*drummond*ref*npz'))
+data = averager(files)
+new_plotter(data, "drummond_M12_ref_time_averaged",drummond_M12_ref_palet)
+
+MLi_SFR10_palet = palettable.cubehelix.Cubehelix.make(                                   start=2.75+(3/6.)-3.0, rotation=0., reverse=True, max_light=1.0, min_light=0.1, n=64).mpl_colormap
+files = np.sort(glob.glob('./data/simulations/MLi/*MLi*_SFR10*npz'))
+data = averager(files)
+new_plotter(data, "MLi_SFR10_time_averaged",MLi_SFR10_palet)
+
+
+
+files = np.sort(glob.glob("./data/simulations/daniel_M12_TNG100_starforming/*npz"))
+for fn in files:
+    data = np.load(fn)
+    new_plotter(data,fn.split('/')[-1][:-4]+"_starforming",palettable.cubehelix.jim_special_16_r.mpl_colormap, sSFR_title=True)
+
+
+files = np.sort(glob.glob("./data/simulations/daniel_M12_TNG100_quenched/*npz"))
+for fn in files:
+    data = np.load(fn)
+    new_plotter(data,fn.split('/')[-1][:-4]+"_quenched",palettable.cubehelix.red_16_r.mpl_colormap, sSFR_title=True)
