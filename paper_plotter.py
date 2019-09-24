@@ -3412,7 +3412,43 @@ def new_plotter(data,fn, palet, sSFR_title=False):
 
 
 
+files = np.sort(glob.glob('./data/simulations/daniel_M12_TNG100_quenched/*npz'))
+sSFR_quenched = []
+for i,fn in enumerate(files):
+    fn = fn[19:-4]
+    data = np.load('./data/simulations/'+fn+'.npz')
+    sSFR_quenched.append(data['sSFR'])
 
+files = np.sort(glob.glob('./data/simulations/daniel_M12_TNG100_starforming/*npz'))
+sSFR_starforming = []
+for i,fn in enumerate(files):
+    fn = fn[19:-4]
+    data = np.load('./data/simulations/'+fn+'.npz')
+    sSFR_starforming.append(data['sSFR'])
+    
+sSFR_quenched = np.array(sSFR_quenched)
+sSFR_quenched[sSFR_quenched==0] = 1e-14
+sSFR_starforming = np.array(sSFR_starforming)
+
+logsSFR_bins = np.arange(-15,-9.5,0.1)
+
+fig,ax = plt.subplots(1,1)
+ax.hist(np.log10(sSFR_starforming), logsSFR_bins, label=r"Star Forming")
+ax.hist(np.log10(sSFR_quenched), logsSFR_bins, label=r"Quenched")
+ax.set_yscale('symlog',linthreshy=10)
+ax.set_ylabel(r'$N_{\rm gal}$')
+ax.set_xlabel(r'$\log {\rm sSFR}$')
+ax.set_yticks(np.append(np.arange(0,11,1),40))
+labels = ["0","","2","","4","","6","","8","","10","40"]
+ax.set_yticklabels(labels)
+ax.set_xlim(left=-14.5)
+labels = ["", 'no SF', "-13", "-12", "-11", "-10"]
+ax.set_xticklabels(labels)
+fig.set_size_inches(4,2.5)
+plt.legend(loc='best')
+plt.savefig('./plots/TNG100_sSFR_distribution.png', bbox_inches='tight',dpi=200)
+plt.close('all')
+plt.clf()  
 
 
 
