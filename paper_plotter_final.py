@@ -749,12 +749,628 @@ MLi_SFR10_time_averaged_medians = get_medians(data, "MLi_SFR10_time_averaged")
 
 
 
+#####################################################################################################################
+#####################################################################################################################
+#####################################################################################################################
+#####################################################################################################################
+#####################################################################################################################
+
+
+#####################################################################################################################
+#####################################################################################################################
+#####################################################################################################################
+#####################################################################################################################
+#####################################################################################################################
+
+
+
+
+
+fig,((ax1,ax2),(ax3,ax4),(ax5,ax6)) = plt.subplots(3,2, sharex=True)
+sigma_profiles=3.0
+line_styles=['-','--',':']
+
+
+
+ax1.plot(drummond_M12_var_time_averaged_medians['r_r200m_profile_centers'],
+            drummond_M12_var_time_averaged_medians['temperature_profile_Mass']/drummond_M12_var_time_averaged_medians['Tvir'],
+            label = r"DF low eta",
+            color = '0.0', lw=2, alpha=1.0)
+ax1.plot(drummond_M12_ref_time_averaged_medians['r_r200m_profile_centers'],
+            drummond_M12_ref_time_averaged_medians['temperature_profile_Mass']/drummond_M12_ref_time_averaged_medians['Tvir'],
+            label = r"DF high eta",
+            color = '0.0',ls='--', lw=2, alpha=1.0)
+ax1.plot(np.nan,np.nan,label = r' ',color='none')
+
+
+ax1.plot(MLi_SFR3_time_averaged_medians['r_r200m_profile_centers'],
+            MLi_SFR3_time_averaged_medians['temperature_profile_Mass']/MLi_SFR3_time_averaged_medians['Tvir'],
+            label = r"MLi SFR3",
+            color = '0.66', lw=2, alpha=1.0)
+ax1.plot(MLi_SFR10_time_averaged_medians['r_r200m_profile_centers'],
+            MLi_SFR10_time_averaged_medians['temperature_profile_Mass']/MLi_SFR10_time_averaged_medians['Tvir'],
+            label = r"MLi SFR10",
+            color = '0.66',ls='--', lw=2, alpha=1.0)
+ax1.plot(np.nan,np.nan,label = r' ',color='none')
+
+for i,key in enumerate(ksu_medians.keys()):
+    ax1.plot(ksu_medians[key]['r_r200m_profile_centers'],
+                ksu_medians[key]['temperature_profile_Mass']/ksu_medians[key]['Tvir'],
+                label = r"ksu "+key,
+                color = '0.33',ls=line_styles[i], lw=2, alpha=1.0)
+        
+
+
+temperature_profile_M12_TNG100_starforming_unshifted = np.zeros((len(M12_TNG100_starforming.keys()), len(M12_TNG100_starforming['478037']['r_r200m_profile_centers'])))
+N_M12_TNG100_starforming = 0
+
+for II,i in enumerate(M12_TNG100_starforming.keys()):
+    # if np.isnan(    np.max(M12_TNG100_starforming[i]['temperature_profile_Mass']/M12_TNG100_starforming[i]['Tvir'])):
+    #     continue
+    r_T = np.ma.masked_where(np.isnan(M12_TNG100_starforming[i]['temperature_profile_Mass']), M12_TNG100_starforming[i]['r_r200m_profile_centers'])
+    T_Tvir = np.ma.masked_where(np.isnan(M12_TNG100_starforming[i]['temperature_profile_Mass']),M12_TNG100_starforming[i]['temperature_profile_Mass']) / M12_TNG100_starforming[i]['Tvir']
+    ax1.plot(r_T ,gaussian_filter(T_Tvir, sigma_profiles),
+        color = palettable.cartocolors.qualitative.Bold_10.hex_colors[2], lw=0.25, alpha=0.25)
+    for j in range(len(r_T)):
+        if not T_Tvir.mask[j]:
+            temperature_profile_M12_TNG100_starforming_unshifted[II,j] +=  T_Tvir[j]
+    N_M12_TNG100_starforming += 1
+
+temperature_profile_M12_TNG100_starforming_unshifted_median = np.zeros(len(M12_TNG100_starforming['478037']['r_r200m_profile_centers']))
+for k in range(len(M12_TNG100_starforming['478037']['r_r200m_profile_centers'])):
+    temperature_profile_M12_TNG100_starforming_unshifted_median[k] = np.median(temperature_profile_M12_TNG100_starforming_unshifted[:,k][temperature_profile_M12_TNG100_starforming_unshifted[:,k]!=0.])
+
+ax1.plot(M12_TNG100_starforming[i]['r_r200m_profile_centers'],
+    gaussian_filter(temperature_profile_M12_TNG100_starforming_unshifted_median, sigma_profiles),
+    label = r'TNG SF average',
+    color = palettable.cartocolors.qualitative.Bold_10.hex_colors[2], lw=2, alpha=1.0)
+
+
+temperature_profile_M12_TNG100_quenched_unshifted = np.zeros((len(M12_TNG100_quenched.keys()), len(M12_TNG100_quenched["482814"]['r_r200m_profile_centers'])))
+N_M12_TNG100_quenched = 0
+
+for II,i in enumerate(M12_TNG100_quenched.keys()):
+    # if np.isnan(    np.max(M12_TNG100_quenched[i]['temperature_profile_Mass']/M12_TNG100_quenched[i]['Tvir'])):
+    #     continue
+    r_T = np.ma.masked_where(np.isnan(M12_TNG100_quenched[i]['temperature_profile_Mass']), M12_TNG100_quenched[i]['r_r200m_profile_centers'])
+    T_Tvir = np.ma.masked_where(np.isnan(M12_TNG100_quenched[i]['temperature_profile_Mass']),M12_TNG100_quenched[i]['temperature_profile_Mass']) / M12_TNG100_quenched[i]['Tvir']
+    ax1.plot(r_T ,gaussian_filter(T_Tvir, sigma_profiles),
+        color = palettable.cartocolors.qualitative.Bold_10.hex_colors[4], lw=0.25, alpha=0.25)
+    for j in range(len(r_T)):
+        if not T_Tvir.mask[j]:
+            temperature_profile_M12_TNG100_quenched_unshifted[II,j] +=  T_Tvir[j]
+    N_M12_TNG100_quenched += 1
+
+temperature_profile_M12_TNG100_quenched_unshifted_median = np.zeros(len(M12_TNG100_quenched["482814"]['r_r200m_profile_centers']))
+for k in range(len(M12_TNG100_quenched["482814"]['r_r200m_profile_centers'])):
+    temperature_profile_M12_TNG100_quenched_unshifted_median[k] = np.median(temperature_profile_M12_TNG100_quenched_unshifted[:,k][temperature_profile_M12_TNG100_quenched_unshifted[:,k]!=0.])
+
+ax1.plot(M12_TNG100_quenched[i]['r_r200m_profile_centers'],
+    gaussian_filter(temperature_profile_M12_TNG100_quenched_unshifted_median, sigma_profiles),
+    label = r'TNG Q average',
+    color = palettable.cartocolors.qualitative.Bold_10.hex_colors[4], lw=2, alpha=1.0)
+
+
+
+ax1.plot(np.nan,np.nan,label = r' ',color='none')
+
+
+ax2.plot(drummond_M12_var_time_averaged_medians['r_r200m_profile_centers'],
+            drummond_M12_var_time_averaged_medians['number_density_profile_Mass']/(drummond_M12_var_time_averaged_medians['nvir']*fb),
+            label = r"DF low eta",
+            color = '0.0', lw=2, alpha=1.0)
+ax2.plot(drummond_M12_ref_time_averaged_medians['r_r200m_profile_centers'],
+            drummond_M12_ref_time_averaged_medians['number_density_profile_Mass']/(drummond_M12_ref_time_averaged_medians['nvir']*fb),
+            label = r"DF high eta",
+            color = '0.0',ls='--', lw=2, alpha=1.0)
+ax2.plot(MLi_SFR3_time_averaged_medians['r_r200m_profile_centers'],
+            MLi_SFR3_time_averaged_medians['number_density_profile_Mass']/(MLi_SFR3_time_averaged_medians['nvir']*fb),
+            label = r"MLi SFR3",
+            color = '0.66', lw=2, alpha=1.0)
+ax2.plot(MLi_SFR10_time_averaged_medians['r_r200m_profile_centers'],
+            MLi_SFR10_time_averaged_medians['number_density_profile_Mass']/(MLi_SFR10_time_averaged_medians['nvir']*fb),
+            label = r"MLi SFR10",
+            color = '0.66',ls='--', lw=2, alpha=1.0)
+
+for i,key in enumerate(ksu_medians.keys()):
+    ax2.plot(ksu_medians[key]['r_r200m_profile_centers'],
+                ksu_medians[key]['number_density_profile_Mass']/(ksu_medians[key]['nvir']*fb),
+                label = r"ksu "+key,
+                color = '0.33',ls=line_styles[i], lw=2, alpha=1.0)
+        
+
+
+
+number_density_profile_M12_TNG100_starforming_unshifted = np.zeros((len(M12_TNG100_starforming.keys()), len(M12_TNG100_starforming['478037']['r_r200m_profile_centers'])))
+N_M12_TNG100_starforming = 0
+
+for II,i in enumerate(M12_TNG100_starforming.keys()):
+    # if np.isnan(    np.max(M12_TNG100_starforming[i]['number_density_profile_Mass']/M12_TNG100_starforming)):
+    #     continue
+    r_T = np.ma.masked_where(np.isnan(M12_TNG100_starforming[i]['number_density_profile_Mass']), M12_TNG100_starforming[i]['r_r200m_profile_centers'])
+    T_Tvir = np.ma.masked_where(np.isnan(M12_TNG100_starforming[i]['number_density_profile_Mass']),M12_TNG100_starforming[i]['number_density_profile_Mass']/(M12_TNG100_starforming[i]['nvir']*fb) )
+    ax2.plot(r_T ,gaussian_filter(T_Tvir, sigma_profiles),
+        color = palettable.cartocolors.qualitative.Bold_10.hex_colors[2], lw=0.25, alpha=0.25)
+    if hasattr(T_Tvir.mask, '__len__'):
+        for j in range(len(r_T)):
+            if not T_Tvir.mask[j]:
+                number_density_profile_M12_TNG100_starforming_unshifted[II,j] +=  T_Tvir[j]
+    else:
+        number_density_profile_M12_TNG100_starforming_unshifted[II] +=  T_Tvir
+    N_M12_TNG100_starforming += 1
+
+number_density_profile_M12_TNG100_starforming_unshifted_median = np.zeros(len(M12_TNG100_starforming['478037']['r_r200m_profile_centers']))
+for k in range(len(M12_TNG100_starforming['478037']['r_r200m_profile_centers'])):
+    number_density_profile_M12_TNG100_starforming_unshifted_median[k] = np.median(number_density_profile_M12_TNG100_starforming_unshifted[:,k][number_density_profile_M12_TNG100_starforming_unshifted[:,k]!=0.])
+
+ax2.plot(M12_TNG100_starforming[i]['r_r200m_profile_centers'],
+    gaussian_filter(number_density_profile_M12_TNG100_starforming_unshifted_median, sigma_profiles),
+    label = r'TNG SF average',
+    color = palettable.cartocolors.qualitative.Bold_10.hex_colors[2], lw=2, alpha=1.0)
+
+
+
+
+number_density_profile_M12_TNG100_quenched_unshifted = np.zeros((len(M12_TNG100_quenched.keys()), len(M12_TNG100_quenched["482814"]['r_r200m_profile_centers'])))
+N_M12_TNG100_quenched = 0
+
+for II,i in enumerate(M12_TNG100_quenched.keys()):
+    # if np.isnan(    np.max(M12_TNG100_quenched[i]['number_density_profile_Mass']/M12_TNG100_quenched)):
+    #     continue
+    r_T = np.ma.masked_where(np.isnan(M12_TNG100_quenched[i]['number_density_profile_Mass']), M12_TNG100_quenched[i]['r_r200m_profile_centers'])
+    T_Tvir = np.ma.masked_where(np.isnan(M12_TNG100_quenched[i]['number_density_profile_Mass']),M12_TNG100_quenched[i]['number_density_profile_Mass']/(M12_TNG100_quenched[i]['nvir']*fb))
+    ax2.plot(r_T ,gaussian_filter(T_Tvir, sigma_profiles),
+        color = palettable.cartocolors.qualitative.Bold_10.hex_colors[4], lw=0.25, alpha=0.25)
+    for j in range(len(r_T)):
+        if not T_Tvir.mask[j]:
+            number_density_profile_M12_TNG100_quenched_unshifted[II,j] +=  T_Tvir[j]
+    N_M12_TNG100_quenched += 1
+
+number_density_profile_M12_TNG100_quenched_unshifted_median = np.zeros(len(M12_TNG100_quenched["482814"]['r_r200m_profile_centers']))
+for k in range(len(M12_TNG100_quenched["482814"]['r_r200m_profile_centers'])):
+    number_density_profile_M12_TNG100_quenched_unshifted_median[k] = np.median(number_density_profile_M12_TNG100_quenched_unshifted[:,k][number_density_profile_M12_TNG100_quenched_unshifted[:,k]!=0.])
+
+ax2.plot(M12_TNG100_quenched[i]['r_r200m_profile_centers'],
+    gaussian_filter(number_density_profile_M12_TNG100_quenched_unshifted_median, sigma_profiles),
+    label = r'TNG Q average',
+    color = palettable.cartocolors.qualitative.Bold_10.hex_colors[4], lw=2, alpha=1.0)
+
+
+
+
+
+ax3.plot(drummond_M12_var_time_averaged_medians['r_r200m_profile_centers'],
+            drummond_M12_var_time_averaged_medians['pressure_profile_Mass']/drummond_M12_var_time_averaged_medians['Pvir'],
+            label = r"DF low eta",
+            color = '0.0', lw=2, alpha=1.0)
+ax3.plot(drummond_M12_ref_time_averaged_medians['r_r200m_profile_centers'],
+            drummond_M12_ref_time_averaged_medians['pressure_profile_Mass']/drummond_M12_ref_time_averaged_medians['Pvir'],
+            label = r"DF high eta",
+            color = '0.0',ls='--', lw=2, alpha=1.0)
+ax3.plot(MLi_SFR3_time_averaged_medians['r_r200m_profile_centers'],
+            MLi_SFR3_time_averaged_medians['pressure_profile_Mass']/MLi_SFR3_time_averaged_medians['Pvir'],
+            label = r"MLi SFR3",
+            color = '0.66', lw=2, alpha=1.0)
+ax3.plot(MLi_SFR10_time_averaged_medians['r_r200m_profile_centers'],
+            MLi_SFR10_time_averaged_medians['pressure_profile_Mass']/MLi_SFR10_time_averaged_medians['Pvir'],
+            label = r"MLi SFR10",
+            color = '0.66',ls='--', lw=2, alpha=1.0)
+
+for i,key in enumerate(ksu_medians.keys()):
+    ax3.plot(ksu_medians[key]['r_r200m_profile_centers'],
+                ksu_medians[key]['pressure_profile_Mass']/ksu_medians[key]['Pvir'],
+                label = r"ksu "+key,
+                color = '0.33',ls=line_styles[i], lw=2, alpha=1.0)
+        
+
+pressure_profile_M12_TNG100_starforming_unshifted = np.zeros((len(M12_TNG100_starforming.keys()), len(M12_TNG100_starforming['478037']['r_r200m_profile_centers'])))
+N_M12_TNG100_starforming = 0
+
+for II,i in enumerate(M12_TNG100_starforming.keys()):
+    # if np.isnan(    np.max(M12_TNG100_starforming[i]['pressure_profile_Mass']/M12_TNG100_starforming)):
+    #     continue
+    r_T = np.ma.masked_where(np.isnan(M12_TNG100_starforming[i]['pressure_profile_Mass']), M12_TNG100_starforming[i]['r_r200m_profile_centers'])
+    T_Tvir = np.ma.masked_where(np.isnan(M12_TNG100_starforming[i]['pressure_profile_Mass']),M12_TNG100_starforming[i]['pressure_profile_Mass']) /M12_TNG100_starforming[i]['Pvir']
+    ax3.plot(r_T ,gaussian_filter(T_Tvir, sigma_profiles),
+        color = palettable.cartocolors.qualitative.Bold_10.hex_colors[2], lw=0.25, alpha=0.25)
+    if hasattr(T_Tvir.mask, '__len__'):
+        for j in range(len(r_T)):
+            if not T_Tvir.mask[j]:
+                pressure_profile_M12_TNG100_starforming_unshifted[II,j] +=  T_Tvir[j]
+    else:
+        pressure_profile_M12_TNG100_starforming_unshifted[II] +=  T_Tvir
+    N_M12_TNG100_starforming += 1
+
+pressure_profile_M12_TNG100_starforming_unshifted_median = np.zeros(len(M12_TNG100_starforming['478037']['r_r200m_profile_centers']))
+for k in range(len(M12_TNG100_starforming['478037']['r_r200m_profile_centers'])):
+    pressure_profile_M12_TNG100_starforming_unshifted_median[k] = np.median(pressure_profile_M12_TNG100_starforming_unshifted[:,k][pressure_profile_M12_TNG100_starforming_unshifted[:,k]!=0.])
+
+ax3.plot(M12_TNG100_starforming[i]['r_r200m_profile_centers'],
+    gaussian_filter(pressure_profile_M12_TNG100_starforming_unshifted_median, sigma_profiles),
+    label = r'TNG SF average',
+    color = palettable.cartocolors.qualitative.Bold_10.hex_colors[2], lw=2, alpha=1.0)
+
+
+
+
+pressure_profile_M12_TNG100_quenched_unshifted = np.zeros((len(M12_TNG100_quenched.keys()), len(M12_TNG100_quenched["482814"]['r_r200m_profile_centers'])))
+N_M12_TNG100_quenched = 0
+
+for II,i in enumerate(M12_TNG100_quenched.keys()):
+    # if np.isnan(    np.max(M12_TNG100_quenched[i]['pressure_profile_Mass']/M12_TNG100_quenched)):
+    #     continue
+    r_T = np.ma.masked_where(np.isnan(M12_TNG100_quenched[i]['pressure_profile_Mass']), M12_TNG100_quenched[i]['r_r200m_profile_centers'])
+    T_Tvir = np.ma.masked_where(np.isnan(M12_TNG100_quenched[i]['pressure_profile_Mass']),M12_TNG100_quenched[i]['pressure_profile_Mass'])/M12_TNG100_quenched[i]['Pvir']
+    ax3.plot(r_T ,gaussian_filter(T_Tvir, sigma_profiles),
+        color = palettable.cartocolors.qualitative.Bold_10.hex_colors[4], lw=0.25, alpha=0.25)
+    for j in range(len(r_T)):
+        if not T_Tvir.mask[j]:
+            pressure_profile_M12_TNG100_quenched_unshifted[II,j] +=  T_Tvir[j]
+    N_M12_TNG100_quenched += 1
+
+pressure_profile_M12_TNG100_quenched_unshifted_median = np.zeros(len(M12_TNG100_quenched["482814"]['r_r200m_profile_centers']))
+for k in range(len(M12_TNG100_quenched["482814"]['r_r200m_profile_centers'])):
+    pressure_profile_M12_TNG100_quenched_unshifted_median[k] = np.median(pressure_profile_M12_TNG100_quenched_unshifted[:,k][pressure_profile_M12_TNG100_quenched_unshifted[:,k]!=0.])
+
+ax3.plot(M12_TNG100_quenched[i]['r_r200m_profile_centers'],
+    gaussian_filter(pressure_profile_M12_TNG100_quenched_unshifted_median, sigma_profiles),
+    label = r'TNG Q average',
+    color = palettable.cartocolors.qualitative.Bold_10.hex_colors[4], lw=2, alpha=1.0)
+
+
+
+
+
+ax4.plot(drummond_M12_var_time_averaged_medians['r_r200m_profile_centers'],
+            drummond_M12_var_time_averaged_medians['entropy_profile_Mass']/drummond_M12_var_time_averaged_medians['Kvir'],
+            label = r"DF low eta",
+            color = '0.0', lw=2, alpha=1.0)
+ax4.plot(drummond_M12_ref_time_averaged_medians['r_r200m_profile_centers'],
+            drummond_M12_ref_time_averaged_medians['entropy_profile_Mass']/drummond_M12_ref_time_averaged_medians['Kvir'],
+            label = r"DF high eta",
+            color = '0.0',ls='--', lw=2, alpha=1.0)
+ax4.plot(MLi_SFR3_time_averaged_medians['r_r200m_profile_centers'],
+            MLi_SFR3_time_averaged_medians['entropy_profile_Mass']/MLi_SFR3_time_averaged_medians['Kvir'],
+            label = r"MLi SFR3",
+            color = '0.66', lw=2, alpha=1.0)
+ax4.plot(MLi_SFR10_time_averaged_medians['r_r200m_profile_centers'],
+            MLi_SFR10_time_averaged_medians['entropy_profile_Mass']/MLi_SFR10_time_averaged_medians['Kvir'],
+            label = r"MLi SFR10",
+            color = '0.66',ls='--', lw=2, alpha=1.0)
+
+for i,key in enumerate(ksu_medians.keys()):
+    ax4.plot(ksu_medians[key]['r_r200m_profile_centers'],
+                ksu_medians[key]['entropy_profile_Mass']/ksu_medians[key]['Kvir'],
+                label = r"ksu "+key,
+                color = '0.33',ls=line_styles[i], lw=2, alpha=1.0)
+        
+
+
+entropy_profile_M12_TNG100_starforming_unshifted = np.zeros((len(M12_TNG100_starforming.keys()), len(M12_TNG100_starforming['478037']['r_r200m_profile_centers'])))
+N_M12_TNG100_starforming = 0
+
+for II,i in enumerate(M12_TNG100_starforming.keys()):
+    # if np.isnan(    np.max(M12_TNG100_starforming[i]['entropy_profile_Mass']/M12_TNG100_starforming)):
+    #     continue
+    r_T = np.ma.masked_where(np.isnan(M12_TNG100_starforming[i]['entropy_profile_Mass']), M12_TNG100_starforming[i]['r_r200m_profile_centers'])
+    T_Tvir = np.ma.masked_where(np.isnan(M12_TNG100_starforming[i]['entropy_profile_Mass']),M12_TNG100_starforming[i]['entropy_profile_Mass']) /M12_TNG100_starforming[i]['Kvir']
+    ax4.plot(r_T ,gaussian_filter(T_Tvir, sigma_profiles),
+        color = palettable.cartocolors.qualitative.Bold_10.hex_colors[2], lw=0.25, alpha=0.25)
+    if hasattr(T_Tvir.mask, '__len__'):
+        for j in range(len(r_T)):
+            if not T_Tvir.mask[j]:
+                entropy_profile_M12_TNG100_starforming_unshifted[II,j] +=  T_Tvir[j]
+    else:
+        entropy_profile_M12_TNG100_starforming_unshifted[II] +=  T_Tvir
+    N_M12_TNG100_starforming += 1
+
+entropy_profile_M12_TNG100_starforming_unshifted_median = np.zeros(len(M12_TNG100_starforming['478037']['r_r200m_profile_centers']))
+for k in range(len(M12_TNG100_starforming['478037']['r_r200m_profile_centers'])):
+    entropy_profile_M12_TNG100_starforming_unshifted_median[k] = np.median(entropy_profile_M12_TNG100_starforming_unshifted[:,k][entropy_profile_M12_TNG100_starforming_unshifted[:,k]!=0.])
+
+ax4.plot(M12_TNG100_starforming[i]['r_r200m_profile_centers'],
+    gaussian_filter(entropy_profile_M12_TNG100_starforming_unshifted_median, sigma_profiles),
+    label = r'TNG SF average',
+    color = palettable.cartocolors.qualitative.Bold_10.hex_colors[2], lw=2, alpha=1.0)
+
+
+
+
+entropy_profile_M12_TNG100_quenched_unshifted = np.zeros((len(M12_TNG100_quenched.keys()), len(M12_TNG100_quenched["482814"]['r_r200m_profile_centers'])))
+N_M12_TNG100_quenched = 0
+
+for II,i in enumerate(M12_TNG100_quenched.keys()):
+    # if np.isnan(    np.max(M12_TNG100_quenched[i]['entropy_profile_Mass']/M12_TNG100_quenched)):
+    #     continue
+    r_T = np.ma.masked_where(np.isnan(M12_TNG100_quenched[i]['entropy_profile_Mass']), M12_TNG100_quenched[i]['r_r200m_profile_centers'])
+    T_Tvir = np.ma.masked_where(np.isnan(M12_TNG100_quenched[i]['entropy_profile_Mass']),M12_TNG100_quenched[i]['entropy_profile_Mass'])/M12_TNG100_quenched[i]['Kvir']
+    ax4.plot(r_T ,gaussian_filter(T_Tvir, sigma_profiles),
+        color = palettable.cartocolors.qualitative.Bold_10.hex_colors[4], lw=0.25, alpha=0.25)
+    for j in range(len(r_T)):
+        if not T_Tvir.mask[j]:
+            entropy_profile_M12_TNG100_quenched_unshifted[II,j] +=  T_Tvir[j]
+    N_M12_TNG100_quenched += 1
+
+entropy_profile_M12_TNG100_quenched_unshifted_median = np.zeros(len(M12_TNG100_quenched["482814"]['r_r200m_profile_centers']))
+for k in range(len(M12_TNG100_quenched["482814"]['r_r200m_profile_centers'])):
+    entropy_profile_M12_TNG100_quenched_unshifted_median[k] = np.median(entropy_profile_M12_TNG100_quenched_unshifted[:,k][entropy_profile_M12_TNG100_quenched_unshifted[:,k]!=0.])
+
+ax4.plot(M12_TNG100_quenched[i]['r_r200m_profile_centers'],
+    gaussian_filter(entropy_profile_M12_TNG100_quenched_unshifted_median, sigma_profiles),
+    label = r'TNG Q average',
+    color = palettable.cartocolors.qualitative.Bold_10.hex_colors[4], lw=2, alpha=1.0)
+
+
+
+
+
+ax5.plot(drummond_M12_var_time_averaged_medians['r_r200m_profile_centers'],
+            drummond_M12_var_time_averaged_medians['radial_velocity_profile_Mass']/(np.sqrt(G*drummond_M12_var_time_averaged_medians['halo_mass']*Msun/(drummond_M12_var_time_averaged_medians['r200m']*kpc))/1e5),
+            label = r"DF low eta",
+            color = '0.0', lw=2, alpha=1.0)
+ax5.plot(drummond_M12_ref_time_averaged_medians['r_r200m_profile_centers'],
+            drummond_M12_ref_time_averaged_medians['radial_velocity_profile_Mass']/(np.sqrt(G*drummond_M12_ref_time_averaged_medians['halo_mass']*Msun/(drummond_M12_ref_time_averaged_medians['r200m']*kpc))/1e5),
+            label = r"DF high eta",
+            color = '0.0',ls='--', lw=2, alpha=1.0)
+ax5.plot(MLi_SFR3_time_averaged_medians['r_r200m_profile_centers'],
+            MLi_SFR3_time_averaged_medians['radial_velocity_profile_Mass']/(np.sqrt(G*MLi_SFR3_time_averaged_medians['halo_mass']*Msun/(MLi_SFR3_time_averaged_medians['r200m']*kpc))/1e5),
+            label = r"MLi SFR3",
+            color = '0.66', lw=2, alpha=1.0)
+ax5.plot(MLi_SFR10_time_averaged_medians['r_r200m_profile_centers'],
+            MLi_SFR10_time_averaged_medians['radial_velocity_profile_Mass']/(np.sqrt(G*MLi_SFR10_time_averaged_medians['halo_mass']*Msun/(MLi_SFR10_time_averaged_medians['r200m']*kpc))/1e5),
+            label = r"MLi SFR10",
+            color = '0.66',ls='--', lw=2, alpha=1.0)
+
+for i,key in enumerate(ksu_medians.keys()):
+    ax5.plot(ksu_medians[key]['r_r200m_profile_centers'],
+                ksu_medians[key]['radial_velocity_profile_Mass']/(np.sqrt(G*ksu_medians[key]['halo_mass']*Msun/(ksu_medians[key]['r200m']*kpc))/1e5),
+                label = r"ksu "+key,
+                color = '0.33',ls=line_styles[i], lw=2, alpha=1.0)
+        
+radial_velocity_profile_M12_TNG100_starforming_unshifted = np.zeros((len(M12_TNG100_starforming.keys()), len(M12_TNG100_starforming['478037']['r_r200m_profile_centers'])))
+N_M12_TNG100_starforming = 0
+
+for II,i in enumerate(M12_TNG100_starforming.keys()):
+    # if np.isnan(    np.max(M12_TNG100_starforming[i]['radial_velocity_profile_Mass']/M12_TNG100_starforming)):
+    #     continue
+    r_T = np.ma.masked_where(np.isnan(M12_TNG100_starforming[i]['radial_velocity_profile_Mass']), M12_TNG100_starforming[i]['r_r200m_profile_centers'])
+    T_Tvir = np.ma.masked_where(np.isnan(M12_TNG100_starforming[i]['radial_velocity_profile_Mass']),M12_TNG100_starforming[i]['radial_velocity_profile_Mass']/(np.sqrt(G*M12_TNG100_starforming[i]['halo_mass']*Msun/(M12_TNG100_starforming[i]['r200m']*kpc))/1e5) ) 
+    ax5.plot(r_T ,gaussian_filter(T_Tvir, sigma_profiles),
+        color = palettable.cartocolors.qualitative.Bold_10.hex_colors[2], lw=0.25, alpha=0.25)
+    if hasattr(T_Tvir.mask, '__len__'):
+        for j in range(len(r_T)):
+            if not T_Tvir.mask[j]:
+                radial_velocity_profile_M12_TNG100_starforming_unshifted[II,j] +=  T_Tvir[j]
+    else:
+        radial_velocity_profile_M12_TNG100_starforming_unshifted[II] +=  T_Tvir
+    N_M12_TNG100_starforming += 1
+
+radial_velocity_profile_M12_TNG100_starforming_unshifted_median = np.zeros(len(M12_TNG100_starforming['478037']['r_r200m_profile_centers']))
+for k in range(len(M12_TNG100_starforming['478037']['r_r200m_profile_centers'])):
+    radial_velocity_profile_M12_TNG100_starforming_unshifted_median[k] = np.median(radial_velocity_profile_M12_TNG100_starforming_unshifted[:,k][radial_velocity_profile_M12_TNG100_starforming_unshifted[:,k]!=0.])
+
+ax5.plot(M12_TNG100_starforming[i]['r_r200m_profile_centers'],
+    gaussian_filter(radial_velocity_profile_M12_TNG100_starforming_unshifted_median, sigma_profiles),
+    label = r'TNG SF average',
+    color = palettable.cartocolors.qualitative.Bold_10.hex_colors[2], lw=2, alpha=1.0)
+
+
+
+
+radial_velocity_profile_M12_TNG100_quenched_unshifted = np.zeros((len(M12_TNG100_quenched.keys()), len(M12_TNG100_quenched["482814"]['r_r200m_profile_centers'])))
+N_M12_TNG100_quenched = 0
+
+for II,i in enumerate(M12_TNG100_quenched.keys()):
+    # if np.isnan(    np.max(M12_TNG100_quenched[i]['radial_velocity_profile_Mass']/M12_TNG100_quenched)):
+    #     continue
+    r_T = np.ma.masked_where(np.isnan(M12_TNG100_quenched[i]['radial_velocity_profile_Mass']), M12_TNG100_quenched[i]['r_r200m_profile_centers'])
+    T_Tvir = np.ma.masked_where(np.isnan(M12_TNG100_quenched[i]['radial_velocity_profile_Mass']),M12_TNG100_quenched[i]['radial_velocity_profile_Mass']/(np.sqrt(G*M12_TNG100_quenched[i]['halo_mass']*Msun/(M12_TNG100_quenched[i]['r200m']*kpc))/1e5)
+)
+    ax5.plot(r_T ,gaussian_filter(T_Tvir, sigma_profiles),
+        color = palettable.cartocolors.qualitative.Bold_10.hex_colors[4], lw=0.25, alpha=0.25)
+    for j in range(len(r_T)):
+        if not T_Tvir.mask[j]:
+            radial_velocity_profile_M12_TNG100_quenched_unshifted[II,j] +=  T_Tvir[j]
+    N_M12_TNG100_quenched += 1
+
+radial_velocity_profile_M12_TNG100_quenched_unshifted_median = np.zeros(len(M12_TNG100_quenched["482814"]['r_r200m_profile_centers']))
+for k in range(len(M12_TNG100_quenched["482814"]['r_r200m_profile_centers'])):
+    radial_velocity_profile_M12_TNG100_quenched_unshifted_median[k] = np.median(radial_velocity_profile_M12_TNG100_quenched_unshifted[:,k][radial_velocity_profile_M12_TNG100_quenched_unshifted[:,k]!=0.])
+
+ax5.plot(M12_TNG100_quenched[i]['r_r200m_profile_centers'],
+    gaussian_filter(radial_velocity_profile_M12_TNG100_quenched_unshifted_median, sigma_profiles),
+    label = r'TNG Q average',
+    color = palettable.cartocolors.qualitative.Bold_10.hex_colors[4], lw=2, alpha=1.0)
 
 
 
 
 
 
+ax6.plot(drummond_M12_var_time_averaged_medians['r_r200m_profile_centers'],
+            drummond_M12_var_time_averaged_medians['velocity_std_MW']/(np.sqrt(G*drummond_M12_var_time_averaged_medians['halo_mass']*Msun/(drummond_M12_var_time_averaged_medians['r200m']*kpc))/1e5),
+            label = r"DF low eta",
+            color = '0.0', lw=2, alpha=1.0)
+ax6.plot(drummond_M12_ref_time_averaged_medians['r_r200m_profile_centers'],
+            drummond_M12_ref_time_averaged_medians['velocity_std_MW']/(np.sqrt(G*drummond_M12_ref_time_averaged_medians['halo_mass']*Msun/(drummond_M12_ref_time_averaged_medians['r200m']*kpc))/1e5),
+            label = r"DF high eta",
+            color = '0.0',ls='--', lw=2, alpha=1.0)
+ax6.plot(MLi_SFR3_time_averaged_medians['r_r200m_profile_centers'],
+            MLi_SFR3_time_averaged_medians['velocity_std_MW']/(np.sqrt(G*MLi_SFR3_time_averaged_medians['halo_mass']*Msun/(MLi_SFR3_time_averaged_medians['r200m']*kpc))/1e5),
+            label = r"MLi SFR3",
+            color = '0.66', lw=2, alpha=1.0)
+ax6.plot(MLi_SFR10_time_averaged_medians['r_r200m_profile_centers'],
+            MLi_SFR10_time_averaged_medians['velocity_std_MW']/(np.sqrt(G*MLi_SFR10_time_averaged_medians['halo_mass']*Msun/(MLi_SFR10_time_averaged_medians['r200m']*kpc))/1e5),
+            label = r"MLi SFR10",
+            color = '0.66',ls='--', lw=2, alpha=1.0)
+
+for i,key in enumerate(ksu_medians.keys()):
+    ax6.plot(ksu_medians[key]['r_r200m_profile_centers'],
+                ksu_medians[key]['velocity_std_MW']/(np.sqrt(G*ksu_medians[key]['halo_mass']*Msun/(ksu_medians[key]['r200m']*kpc))/1e5),
+                label = r"ksu "+key,
+                color = '0.33',ls=line_styles[i], lw=2, alpha=1.0)
+        
+
+velocity_std_MW_profile_M12_TNG100_starforming_unshifted = np.zeros((len(M12_TNG100_starforming.keys()), len(M12_TNG100_starforming['478037']['r_r200m_profile_centers'])))
+N_M12_TNG100_starforming = 0
+
+for II,i in enumerate(M12_TNG100_starforming.keys()):
+    r_T = np.ma.masked_where(np.isnan(M12_TNG100_starforming[i]['velocity_std_MW']), M12_TNG100_starforming[i]['r_r200m_profile_centers'])
+    T_Tvir = np.ma.masked_where(np.isnan(M12_TNG100_starforming[i]['velocity_std_MW']),M12_TNG100_starforming[i]['velocity_std_MW']/(np.sqrt(G*M12_TNG100_starforming[i]['halo_mass']*Msun/(M12_TNG100_starforming[i]['r200m']*kpc))/1e5) ) 
+    ax6.plot(r_T ,gaussian_filter(T_Tvir, sigma_profiles),
+        color = palettable.cartocolors.qualitative.Bold_10.hex_colors[2], lw=0.25, alpha=0.25)
+    if hasattr(T_Tvir.mask, '__len__'):
+        for j in range(len(r_T)):
+            if not T_Tvir.mask[j]:
+                velocity_std_MW_profile_M12_TNG100_starforming_unshifted[II,j] +=  T_Tvir[j]
+    else:
+        velocity_std_MW_profile_M12_TNG100_starforming_unshifted[II] +=  T_Tvir
+    N_M12_TNG100_starforming += 1
+
+velocity_std_MW_profile_M12_TNG100_starforming_unshifted_median = np.zeros(len(M12_TNG100_starforming['478037']['r_r200m_profile_centers']))
+for k in range(len(M12_TNG100_starforming['478037']['r_r200m_profile_centers'])):
+    velocity_std_MW_profile_M12_TNG100_starforming_unshifted_median[k] = np.median(velocity_std_MW_profile_M12_TNG100_starforming_unshifted[:,k][velocity_std_MW_profile_M12_TNG100_starforming_unshifted[:,k]!=0.])
+
+ax6.plot(M12_TNG100_starforming[i]['r_r200m_profile_centers'],
+    gaussian_filter(velocity_std_MW_profile_M12_TNG100_starforming_unshifted_median, sigma_profiles),
+    label = r'TNG SF average',
+    color = palettable.cartocolors.qualitative.Bold_10.hex_colors[2], lw=2, alpha=1.0)
+
+
+
+
+velocity_std_MW_profile_M12_TNG100_quenched_unshifted = np.zeros((len(M12_TNG100_quenched.keys()), len(M12_TNG100_quenched["482814"]['r_r200m_profile_centers'])))
+N_M12_TNG100_quenched = 0
+
+for II,i in enumerate(M12_TNG100_quenched.keys()):
+    r_T = np.ma.masked_where(np.isnan(M12_TNG100_quenched[i]['velocity_std_MW']), M12_TNG100_quenched[i]['r_r200m_profile_centers'])
+    T_Tvir = np.ma.masked_where(np.isnan(M12_TNG100_quenched[i]['velocity_std_MW']),M12_TNG100_quenched[i]['velocity_std_MW']/(np.sqrt(G*M12_TNG100_quenched[i]['halo_mass']*Msun/(M12_TNG100_quenched[i]['r200m']*kpc))/1e5))
+    ax6.plot(r_T ,gaussian_filter(T_Tvir, sigma_profiles),
+        color = palettable.cartocolors.qualitative.Bold_10.hex_colors[4], lw=0.25, alpha=0.25)
+    for j in range(len(r_T)):
+        if not T_Tvir.mask[j]:
+            velocity_std_MW_profile_M12_TNG100_quenched_unshifted[II,j] +=  T_Tvir[j]
+    N_M12_TNG100_quenched += 1
+
+velocity_std_MW_profile_M12_TNG100_quenched_unshifted_median = np.zeros(len(M12_TNG100_quenched["482814"]['r_r200m_profile_centers']))
+for k in range(len(M12_TNG100_quenched["482814"]['r_r200m_profile_centers'])):
+    velocity_std_MW_profile_M12_TNG100_quenched_unshifted_median[k] = np.median(velocity_std_MW_profile_M12_TNG100_quenched_unshifted[:,k][velocity_std_MW_profile_M12_TNG100_quenched_unshifted[:,k]!=0.])
+
+ax6.plot(M12_TNG100_quenched[i]['r_r200m_profile_centers'],
+    gaussian_filter(velocity_std_MW_profile_M12_TNG100_quenched_unshifted_median, sigma_profiles),
+    label = r'TNG Q average',
+    color = palettable.cartocolors.qualitative.Bold_10.hex_colors[4], lw=2, alpha=1.0)
+
+
+
+
+
+ax1.set_yscale('log')
+ax2.set_yscale('log')
+ax3.set_yscale('log')
+ax4.set_yscale('log')
+# ax5.set_yscale('log')
+# ax6.set_yscale('log')
+
+ax1.set_xlim((0.095,1.05))
+
+
+ax1.set_ylabel(r'$T/T_{\rm vir}$')
+ax1.set_ylim(5e-3,3)
+
+ax2.set_ylabel(r'$n/n_{\rm vir}$')
+ax2.set_ylim((3e-2,1e3))
+
+ax3.set_ylabel(r'$P / P_{\rm vir}$')
+ax3.set_ylim((3e-3,1e1))
+
+ax4.set_ylabel(r'$K / K_{\rm vir}$')
+ax4.set_ylim((3e-4,3e1))
+ax4.set_yticks([1e-3,1e-2,1e-1,1e0,1e1])
+
+ax5.set_xlabel(r'$r/r_{200 m}$')
+ax5.set_ylabel(r'$v_r/v_{\rm vir}$')
+ax5.set_ylim((-1.02,0.52))
+
+ax6.set_ylabel(r'$v_{\rm rms}/v_{\rm vir}$')
+ax6.set_xlabel(r'$r/r_{200 m}$')
+ax6.set_ylim((-0.02,1.52))
+
+
+
+handles, labels = ax1.get_legend_handles_labels()
+handles=np.roll(handles,3)
+labels=np.roll(labels,3)
+l4 = ax1.legend(handles,labels,bbox_to_anchor=(0,1.02,1,0.2), loc="lower left",
+                 borderaxespad=0, ncol=4, fontsize=8, frameon=False)
+
+
+
+ax2.yaxis.set_label_position("right")
+ax4.yaxis.set_label_position("right")
+ax6.yaxis.set_label_position("right")
+
+ax2.yaxis.tick_right()
+ax4.yaxis.tick_right()
+ax6.yaxis.tick_right()
+
+ax2.yaxis.set_ticks_position('both')
+ax4.yaxis.set_ticks_position('both')
+ax6.yaxis.set_ticks_position('both')
+
+
+ax1.annotate('', xy=(0.2, 1e-2), xytext=(0.3, 1e-2), 
+            arrowprops=dict(facecolor='black', shrink=0.,width=0.75,headwidth=2, headlength=3))
+
+ax1.annotate('', xy=(0.4, 1e-2), xytext=(0.3, 1e-2), 
+            arrowprops=dict(facecolor='black', shrink=0.,width=0.75,headwidth=2, headlength=3))
+
+ax1.annotate('', xy=(0.6, 1e-2), xytext=(0.7, 1e-2), 
+            arrowprops=dict(facecolor='black', shrink=0.,width=0.75,headwidth=2, headlength=3))
+
+ax1.annotate('', xy=(0.8, 1e-2), xytext=(0.7, 1e-2), 
+            arrowprops=dict(facecolor='black', shrink=0.,width=0.75,headwidth=2, headlength=3))
+
+fig.set_size_inches(6.5,6.5)
+
+plt.subplots_adjust(hspace=0.1,wspace=0.1)
+
+plt.savefig('./plots/all_profs_MW.pdf',dpi=300,bbox_inches='tight')
+
+ax1.set_xscale('log')
+ax2.set_xscale('log')
+ax3.set_xscale('log')
+ax4.set_xscale('log')
+ax5.set_xscale('log')
+ax6.set_xscale('log')
+plt.savefig('./plots/all_profs_MW_log.pdf',dpi=300,bbox_inches='tight')
+plt.clf()
+
+
+
+
+#####################################################################################################################
+#####################################################################################################################
+#####################################################################################################################
+#####################################################################################################################
+#####################################################################################################################
+
+
+#####################################################################################################################
+#####################################################################################################################
+#####################################################################################################################
+#####################################################################################################################
+#####################################################################################################################
+
+
+
+
+
+
+
+
+
+ 
 
 
 
@@ -778,6 +1394,8 @@ ax1.plot(drummond_M12_ref_time_averaged_medians['radial_velocity_bin_centers'],
             drummond_M12_ref_time_averaged_medians['dMdvr_02r04'],
             label = r"DF high eta",
             color = '0.0',ls='--', lw=2, alpha=1.0)
+ax1.plot(np.nan,np.nan,label = r' ',color='none')
+
 ax1.plot(MLi_SFR3_time_averaged_medians['radial_velocity_bin_centers'],
             MLi_SFR3_time_averaged_medians['dMdvr_02r04'],
             label = r"MLi SFR3",
@@ -786,6 +1404,8 @@ ax1.plot(MLi_SFR10_time_averaged_medians['radial_velocity_bin_centers'],
             MLi_SFR10_time_averaged_medians['dMdvr_02r04'],
             label = r"MLi SFR10",
             color = '0.66',ls='--', lw=2, alpha=1.0)
+ax1.plot(np.nan,np.nan,label = r' ',color='none')
+
 
 for i,key in enumerate(ksu_medians.keys()):
     ax1.semilogy(ksu_medians[key]['radial_velocity_bin_centers'],
@@ -834,6 +1454,7 @@ ax1.semilogy(M12_TNG100_starforming['478037']['radial_velocity_bin_centers'],
     np.nanmedian(dMdvr_02r04_median_M12_TNG100_quenched_unshifted, axis=0),
     label = r'TNG Q average',
     color = palettable.cartocolors.qualitative.Bold_10.hex_colors[4], lw=2, alpha=1.0)
+ax1.plot(np.nan,np.nan,label = r' ',color='none')
 
 
 
@@ -843,10 +1464,10 @@ ax1.set_ylim(bottom=1e-3)
 ax1.set_xlim((-220,220))
 
 handles, labels = ax1.get_legend_handles_labels()
-handles=np.roll(handles,2)
-labels=np.roll(labels,2)
+handles=np.roll(handles,3)
+labels=np.roll(labels,3)
 l4 = ax1.legend(handles,labels,bbox_to_anchor=(0,1.02,1,0.2), loc="lower left",
-                mode="expand", borderaxespad=0, ncol=2, fontsize=6)
+                mode="expand", borderaxespad=0, ncol=4, fontsize=4, frameon=False)
 
 ax1.text(0.95, 0.95, r"$0.2 \leq {r}/{r_{200m}} \leq 0.4$",
          ha="right", va="top", transform=ax1.transAxes, fontsize=7,
@@ -962,6 +1583,8 @@ ax1.plot(drummond_M12_ref_time_averaged_medians['radial_velocity_bin_centers'],
             drummond_M12_ref_time_averaged_medians['dMdvr_02r04'],
             label = r"DF high eta",
             color = '0.0',ls='--', lw=2, alpha=1.0)
+ax1.plot(np.nan,np.nan,label = r' ',color='none')
+
 ax1.plot(MLi_SFR3_time_averaged_medians['radial_velocity_bin_centers'],
             MLi_SFR3_time_averaged_medians['dMdvr_02r04'],
             label = r"MLi SFR3",
@@ -970,6 +1593,8 @@ ax1.plot(MLi_SFR10_time_averaged_medians['radial_velocity_bin_centers'],
             MLi_SFR10_time_averaged_medians['dMdvr_02r04'],
             label = r"MLi SFR10",
             color = '0.66',ls='--', lw=2, alpha=1.0)
+ax1.plot(np.nan,np.nan,label = r' ',color='none')
+
 
 for i,key in enumerate(ksu_medians.keys()):
     ax1.semilogy(ksu_medians[key]['radial_velocity_bin_centers'],
@@ -1019,6 +1644,7 @@ ax1.semilogy(M12_TNG100_starforming['478037']['radial_velocity_bin_centers'],
     np.nanmedian(dMdvr_02r04_median_M12_TNG100_quenched_unshifted, axis=0),
     label = r'TNG Q average',
     color = palettable.cartocolors.qualitative.Bold_10.hex_colors[4], lw=2, alpha=1.0)
+ax1.plot(np.nan,np.nan,label = r' ',color='none')
 
 
 ax1.set_ylabel(r'$dM / d v_r$')
@@ -1026,8 +1652,12 @@ ax1.set_ylabel(r'$dM / d v_r$')
 ax1.set_ylim(bottom=1e-3)
 ax1.set_xlim((-220,220))
 
-l4 = ax1.legend(bbox_to_anchor=(0,1.02,1,0.2), loc="lower left",
-                mode="expand", borderaxespad=0, ncol=3, fontsize=10)
+handles, labels = ax1.get_legend_handles_labels()
+handles=np.roll(handles,3)
+labels=np.roll(labels,3)
+
+l4 = ax1.legend(handles, labels, bbox_to_anchor=(0,1.02,1,0.2), loc="lower left",
+                mode="expand", borderaxespad=0, ncol=4, fontsize=10, frameon=False)
 
 ax1.text(0.95, 0.95, r"$0.2 \leq {r}/{r_{200m}} \leq 0.4$",
          ha="right", va="top", transform=ax1.transAxes, fontsize=10,
@@ -1164,6 +1794,8 @@ ax1.plot(drummond_M12_ref_time_averaged_medians['pressure_bin_centers']/drummond
             drummond_M12_ref_time_averaged_medians['dMdlogP_02r04'],
             label = r"DF high eta",
             color = '0.0',ls='--', lw=2, alpha=1.0)
+ax1.plot(np.nan,np.nan,label = r' ',color='none')
+
 ax1.plot(MLi_SFR3_time_averaged_medians['pressure_bin_centers']/MLi_SFR3_time_averaged_medians['pressure_bin_centers'][np.argmax(MLi_SFR3_time_averaged_medians['dMdlogP_02r04'])],
             MLi_SFR3_time_averaged_medians['dMdlogP_02r04'],
             label = r"MLi SFR3",
@@ -1172,6 +1804,8 @@ ax1.plot(MLi_SFR10_time_averaged_medians['pressure_bin_centers']/MLi_SFR10_time_
             MLi_SFR10_time_averaged_medians['dMdlogP_02r04'],
             label = r"MLi SFR10",
             color = '0.66',ls='--', lw=2, alpha=1.0)
+ax1.plot(np.nan,np.nan,label = r' ',color='none')
+
 
 for i,key in enumerate(ksu_medians.keys()):
     ax1.loglog(ksu_medians[key]['pressure_bin_centers']/ksu_medians[key]['pressure_bin_centers'][np.argmax(ksu_medians[key]['dMdlogP_02r04'])],
@@ -1220,6 +1854,7 @@ ax1.loglog(aligned_Pbins,
     label = r'TNG Q average',
     color = palettable.cartocolors.qualitative.Bold_10.hex_colors[4], lw=2, alpha=1.0)
 
+ax1.plot(np.nan,np.nan,label = r' ',color='none')
 
 
 ax1.set_ylabel(r'$dM / d\log P$')
@@ -1228,10 +1863,10 @@ ax1.set_xlim((10**-2.5,10**2.5))
 ax1.set_xticks([1e-2,1e-1,1e0,1e1,1e2])
 
 handles, labels = ax1.get_legend_handles_labels()
-handles=np.roll(handles,2)
-labels=np.roll(labels,2)
+handles=np.roll(handles,3)
+labels=np.roll(labels,3)
 l4 = ax1.legend(handles,labels,bbox_to_anchor=(0,1.02,1,0.2), loc="lower left",
-                mode="expand", borderaxespad=0, ncol=2, fontsize=6)
+                mode="expand", borderaxespad=0, ncol=4, fontsize=4, frameon=False)
 
 ax1.text(0.95, 0.95, r"$0.2 \leq {r}/{r_{200m}} \leq 0.4$",
          ha="right", va="top", transform=ax1.transAxes, fontsize=7,
@@ -1370,6 +2005,8 @@ ax1.plot(drummond_M12_ref_time_averaged_medians['pressure_bin_centers']/drummond
             drummond_M12_ref_time_averaged_medians['dMdlogP_02r04'],
             label = r"DF high eta",
             color = '0.0',ls='--', lw=2, alpha=1.0)
+ax1.plot(np.nan,np.nan,label = r' ',color='none')
+
 ax1.plot(MLi_SFR3_time_averaged_medians['pressure_bin_centers']/MLi_SFR3_time_averaged_medians['pressure_bin_centers'][np.argmax(MLi_SFR3_time_averaged_medians['dMdlogP_02r04'])],
             MLi_SFR3_time_averaged_medians['dMdlogP_02r04'],
             label = r"MLi SFR3",
@@ -1378,6 +2015,8 @@ ax1.plot(MLi_SFR10_time_averaged_medians['pressure_bin_centers']/MLi_SFR10_time_
             MLi_SFR10_time_averaged_medians['dMdlogP_02r04'],
             label = r"MLi SFR10",
             color = '0.66',ls='--', lw=2, alpha=1.0)
+ax1.plot(np.nan,np.nan,label = r' ',color='none')
+
 
 for i,key in enumerate(ksu_medians.keys()):
     ax1.loglog(ksu_medians[key]['pressure_bin_centers']/ksu_medians[key]['pressure_bin_centers'][np.argmax(ksu_medians[key]['dMdlogP_02r04'])],
@@ -1427,6 +2066,7 @@ ax1.loglog(aligned_Pbins,
     label = r'TNG Q average',
     color = palettable.cartocolors.qualitative.Bold_10.hex_colors[4], lw=2, alpha=1.0)
 
+ax1.plot(np.nan,np.nan,label = r' ',color='none')
 
 
 ax1.set_ylabel(r'$dM / d\log P$')
@@ -1435,10 +2075,10 @@ ax1.set_xlim((10**-2.5,10**2.5))
 ax1.set_xticks([1e-2,1e-1,1e0,1e1,1e2])
 
 handles, labels = ax1.get_legend_handles_labels()
-handles=np.roll(handles,2)
-labels=np.roll(labels,2)
+handles=np.roll(handles,3)
+labels=np.roll(labels,3)
 l4 = ax1.legend(handles,labels,bbox_to_anchor=(0,1.02,1,0.2), loc="lower left",
-                mode="expand", borderaxespad=0, ncol=3, fontsize=10)
+                mode="expand", borderaxespad=0, ncol=4, fontsize=10, frameon=False)
 
 ax1.text(0.95, 0.95, r"$0.2 \leq {r}/{r_{200m}} \leq 0.4$",
          ha="right", va="top", transform=ax1.transAxes, fontsize=10,
@@ -1546,6 +2186,8 @@ ax1.plot(drummond_M12_ref_time_averaged_medians['entropy_bin_centers']/drummond_
             drummond_M12_ref_time_averaged_medians['dMdlogK_02r04'],
             label = r"DF high eta",
             color = '0.0',ls='--', lw=2, alpha=1.0)
+ax1.plot(np.nan,np.nan,label = r' ',color='none')
+
 ax1.plot(MLi_SFR3_time_averaged_medians['entropy_bin_centers']/MLi_SFR3_time_averaged_medians['entropy_bin_centers'][np.argmax(MLi_SFR3_time_averaged_medians['dMdlogK_02r04'])],
             MLi_SFR3_time_averaged_medians['dMdlogK_02r04'],
             label = r"MLi SFR3",
@@ -1554,6 +2196,8 @@ ax1.plot(MLi_SFR10_time_averaged_medians['entropy_bin_centers']/MLi_SFR10_time_a
             MLi_SFR10_time_averaged_medians['dMdlogK_02r04'],
             label = r"MLi SFR10",
             color = '0.66',ls='--', lw=2, alpha=1.0)
+ax1.plot(np.nan,np.nan,label = r' ',color='none')
+
 
 for i,key in enumerate(ksu_medians.keys()):
     ax1.loglog(ksu_medians[key]['entropy_bin_centers']/ksu_medians[key]['entropy_bin_centers'][np.argmax(ksu_medians[key]['dMdlogK_02r04'])],
@@ -1603,6 +2247,7 @@ ax1.loglog(aligned_Pbins,
     color = palettable.cartocolors.qualitative.Bold_10.hex_colors[4], lw=2, alpha=1.0)
 
 
+ax1.plot(np.nan,np.nan,label = r' ',color='none')
 
 ax1.set_ylabel(r'$dM / d\log K$')
 ax1.set_ylim(bottom=1e-3)
@@ -1610,10 +2255,10 @@ ax1.set_xlim((1e-4,1e2))
 ax1.set_xticks([1e-4,1e-3,1e-2,1e-1,1e0,1e1,1e2])
 
 handles, labels = ax1.get_legend_handles_labels()
-handles=np.roll(handles,2)
-labels=np.roll(labels,2)
+handles=np.roll(handles,3)
+labels=np.roll(labels,3)
 l4 = ax1.legend(handles,labels,bbox_to_anchor=(0,1.02,1,0.2), loc="lower left",
-                mode="expand", borderaxespad=0, ncol=2, fontsize=6)
+                mode="expand", borderaxespad=0, ncol=4, fontsize=4, frameon=False)
 
 ax1.text(0.95, 0.95, r"$0.2 \leq {r}/{r_{200m}} \leq 0.4$",
          ha="right", va="top", transform=ax1.transAxes, fontsize=7,
@@ -1761,6 +2406,8 @@ ax1.plot(drummond_M12_ref_time_averaged_medians['entropy_bin_centers']/drummond_
             drummond_M12_ref_time_averaged_medians['dMdlogK_02r04'],
             label = r"DF high eta",
             color = '0.0',ls='--', lw=2, alpha=1.0)
+ax1.plot(np.nan,np.nan,label = r' ',color='none')
+
 ax1.plot(MLi_SFR3_time_averaged_medians['entropy_bin_centers']/MLi_SFR3_time_averaged_medians['entropy_bin_centers'][np.argmax(MLi_SFR3_time_averaged_medians['dMdlogK_02r04'])],
             MLi_SFR3_time_averaged_medians['dMdlogK_02r04'],
             label = r"MLi SFR3",
@@ -1769,6 +2416,8 @@ ax1.plot(MLi_SFR10_time_averaged_medians['entropy_bin_centers']/MLi_SFR10_time_a
             MLi_SFR10_time_averaged_medians['dMdlogK_02r04'],
             label = r"MLi SFR10",
             color = '0.66',ls='--', lw=2, alpha=1.0)
+ax1.plot(np.nan,np.nan,label = r' ',color='none')
+
 
 for i,key in enumerate(ksu_medians.keys()):
     ax1.loglog(ksu_medians[key]['entropy_bin_centers']/ksu_medians[key]['entropy_bin_centers'][np.argmax(ksu_medians[key]['dMdlogK_02r04'])],
@@ -1818,6 +2467,7 @@ ax1.loglog(aligned_Pbins,
     color = palettable.cartocolors.qualitative.Bold_10.hex_colors[4], lw=2, alpha=1.0)
 
 
+ax1.plot(np.nan,np.nan,label = r' ',color='none')
 
 
 ax1.set_ylabel(r'$dM / d\log K$')
@@ -1826,10 +2476,10 @@ ax1.set_xlim((1e-4,1e2))
 ax1.set_xticks([1e-4,1e-3,1e-2,1e-1,1e0,1e1,1e2])
 
 handles, labels = ax1.get_legend_handles_labels()
-handles=np.roll(handles,2)
-labels=np.roll(labels,2)
+handles=np.roll(handles,3)
+labels=np.roll(labels,3)
 l4 = ax1.legend(handles,labels,bbox_to_anchor=(0,1.02,1,0.2), loc="lower left",
-                mode="expand", borderaxespad=0, ncol=3, fontsize=10)
+                mode="expand", borderaxespad=0, ncol=4, fontsize=10, frameon=False)
 
 ax1.text(0.95, 0.95, r"$0.2 \leq {r}/{r_{200m}} \leq 0.4$",
          ha="right", va="top", transform=ax1.transAxes, fontsize=10,
@@ -1937,6 +2587,8 @@ ax1.plot(drummond_M12_ref_time_averaged_medians['temperature_bin_centers']/drumm
             drummond_M12_ref_time_averaged_medians['dMdlogT_02r04'],
             label = r"DF high eta",
             color = '0.0',ls='--', lw=2, alpha=1.0)
+ax1.plot(np.nan,np.nan,label = r' ',color='none')
+
 ax1.plot(MLi_SFR3_time_averaged_medians['temperature_bin_centers']/MLi_SFR3_time_averaged_medians['temperature_bin_centers'][np.argmax(MLi_SFR3_time_averaged_medians['dMdlogT_02r04'])],
             MLi_SFR3_time_averaged_medians['dMdlogT_02r04'],
             label = r"MLi SFR3",
@@ -1945,6 +2597,8 @@ ax1.plot(MLi_SFR10_time_averaged_medians['temperature_bin_centers']/MLi_SFR10_ti
             MLi_SFR10_time_averaged_medians['dMdlogT_02r04'],
             label = r"MLi SFR10",
             color = '0.66',ls='--', lw=2, alpha=1.0)
+ax1.plot(np.nan,np.nan,label = r' ',color='none')
+
 
 for i,key in enumerate(ksu_medians.keys()):
     ax1.loglog(ksu_medians[key]['temperature_bin_centers']/ksu_medians[key]['temperature_bin_centers'][np.argmax(ksu_medians[key]['dMdlogT_02r04'])],
@@ -1995,16 +2649,17 @@ ax1.loglog(aligned_Pbins,
 
 
 
+ax1.plot(np.nan,np.nan,label = r' ',color='none')
 
 ax1.set_ylabel(r'$dM / d\log T$')
 ax1.set_ylim(bottom=1e-3)
 ax1.set_xlim((10**-2.5,10**1))
 
 handles, labels = ax1.get_legend_handles_labels()
-handles=np.roll(handles,2)
-labels=np.roll(labels,2)
+handles=np.roll(handles,3)
+labels=np.roll(labels,3)
 l4 = ax1.legend(handles,labels,bbox_to_anchor=(0,1.02,1,0.2), loc="lower left",
-                mode="expand", borderaxespad=0, ncol=2, fontsize=6)
+                mode="expand", borderaxespad=0, ncol=4, fontsize=4, frameon=False)
 
 ax1.text(0.95, 0.95, r"$0.2 \leq {r}/{r_{200m}} \leq 0.4$",
          ha="right", va="top", transform=ax1.transAxes, fontsize=7,
@@ -2135,6 +2790,8 @@ ax1.plot(drummond_M12_ref_time_averaged_medians['temperature_bin_centers']/drumm
             drummond_M12_ref_time_averaged_medians['dMdlogT_02r04'],
             label = r"DF high eta",
             color = '0.0',ls='--', lw=2, alpha=1.0)
+ax1.plot(np.nan,np.nan,label = r' ',color='none')
+
 ax1.plot(MLi_SFR3_time_averaged_medians['temperature_bin_centers']/MLi_SFR3_time_averaged_medians['temperature_bin_centers'][np.argmax(MLi_SFR3_time_averaged_medians['dMdlogT_02r04'])],
             MLi_SFR3_time_averaged_medians['dMdlogT_02r04'],
             label = r"MLi SFR3",
@@ -2143,6 +2800,8 @@ ax1.plot(MLi_SFR10_time_averaged_medians['temperature_bin_centers']/MLi_SFR10_ti
             MLi_SFR10_time_averaged_medians['dMdlogT_02r04'],
             label = r"MLi SFR10",
             color = '0.66',ls='--', lw=2, alpha=1.0)
+ax1.plot(np.nan,np.nan,label = r' ',color='none')
+
 
 for i,key in enumerate(ksu_medians.keys()):
     ax1.loglog(ksu_medians[key]['temperature_bin_centers']/ksu_medians[key]['temperature_bin_centers'][np.argmax(ksu_medians[key]['dMdlogT_02r04'])],
@@ -2191,6 +2850,7 @@ ax1.loglog(aligned_Pbins,
     np.nanmedian(dMdlogT_02r04_median_M12_TNG100_quenched, axis=0),
     label = r'TNG Q average',
     color = palettable.cartocolors.qualitative.Bold_10.hex_colors[4], lw=2, alpha=1.0)
+ax1.plot(np.nan,np.nan,label = r' ',color='none')
 
 
 ax1.set_ylabel(r'$dM / d\log T$')
@@ -2198,10 +2858,10 @@ ax1.set_ylim(bottom=1e-3)
 ax1.set_xlim((10**-2.5,10**1))
 
 handles, labels = ax1.get_legend_handles_labels()
-handles=np.roll(handles,2)
-labels=np.roll(labels,2)
+handles=np.roll(handles,3)
+labels=np.roll(labels,3)
 l4 = ax1.legend(handles,labels,bbox_to_anchor=(0,1.02,1,0.2), loc="lower left",
-                mode="expand", borderaxespad=0, ncol=3, fontsize=10)
+                mode="expand", borderaxespad=0, ncol=4, fontsize=10, frameon=False)
 
 ax1.text(0.95, 0.95, r"$0.2 \leq {r}/{r_{200m}} \leq 0.4$",
          ha="right", va="top", transform=ax1.transAxes, fontsize=10,
@@ -2310,6 +2970,8 @@ ax1.plot(drummond_M12_ref_time_averaged_medians['number_density_bin_centers']/dr
             drummond_M12_ref_time_averaged_medians['dMdlogn_02r04'],
             label = r"DF high eta",
             color = '0.0',ls='--', lw=2, alpha=1.0)
+ax1.plot(np.nan,np.nan,label = r' ',color='none')
+
 ax1.plot(MLi_SFR3_time_averaged_medians['number_density_bin_centers']/MLi_SFR3_time_averaged_medians['number_density_bin_centers'][np.argmax(MLi_SFR3_time_averaged_medians['dMdlogn_02r04'])],
             MLi_SFR3_time_averaged_medians['dMdlogn_02r04'],
             label = r"MLi SFR3",
@@ -2318,6 +2980,8 @@ ax1.plot(MLi_SFR10_time_averaged_medians['number_density_bin_centers']/MLi_SFR10
             MLi_SFR10_time_averaged_medians['dMdlogn_02r04'],
             label = r"MLi SFR10",
             color = '0.66',ls='--', lw=2, alpha=1.0)
+ax1.plot(np.nan,np.nan,label = r' ',color='none')
+
 
 for i,key in enumerate(ksu_medians.keys()):
     ax1.loglog(ksu_medians[key]['number_density_bin_centers']/ksu_medians[key]['number_density_bin_centers'][np.argmax(ksu_medians[key]['dMdlogn_02r04'])],
@@ -2368,16 +3032,17 @@ ax1.loglog(aligned_Pbins,
 
 
 
+ax1.plot(np.nan,np.nan,label = r' ',color='none')
 
 ax1.set_ylabel(r'$dM / d\log n$')
 ax1.set_ylim(bottom=1e-3)
 ax1.set_xlim((10**-2.5, 10**2.5))
 
 handles, labels = ax1.get_legend_handles_labels()
-handles=np.roll(handles,2)
-labels=np.roll(labels,2)
+handles=np.roll(handles,3)
+labels=np.roll(labels,3)
 l4 = ax1.legend(handles,labels,bbox_to_anchor=(0,1.02,1,0.2), loc="lower left",
-                mode="expand", borderaxespad=0, ncol=2, fontsize=6)
+                mode="expand", borderaxespad=0, ncol=4, fontsize=4, frameon=False)
 
 ax1.text(0.95, 0.95, r"$0.2 \leq {r}/{r_{200m}} \leq 0.4$",
          ha="right", va="top", transform=ax1.transAxes, fontsize=7,
@@ -2508,6 +3173,8 @@ ax1.plot(drummond_M12_ref_time_averaged_medians['number_density_bin_centers']/dr
             drummond_M12_ref_time_averaged_medians['dMdlogn_02r04'],
             label = r"DF high eta",
             color = '0.0',ls='--', lw=2, alpha=1.0)
+ax1.plot(np.nan,np.nan,label = r' ',color='none')
+
 ax1.plot(MLi_SFR3_time_averaged_medians['number_density_bin_centers']/MLi_SFR3_time_averaged_medians['number_density_bin_centers'][np.argmax(MLi_SFR3_time_averaged_medians['dMdlogn_02r04'])],
             MLi_SFR3_time_averaged_medians['dMdlogn_02r04'],
             label = r"MLi SFR3",
@@ -2516,6 +3183,8 @@ ax1.plot(MLi_SFR10_time_averaged_medians['number_density_bin_centers']/MLi_SFR10
             MLi_SFR10_time_averaged_medians['dMdlogn_02r04'],
             label = r"MLi SFR10",
             color = '0.66',ls='--', lw=2, alpha=1.0)
+ax1.plot(np.nan,np.nan,label = r' ',color='none')
+
 
 for i,key in enumerate(ksu_medians.keys()):
     ax1.loglog(ksu_medians[key]['number_density_bin_centers']/ksu_medians[key]['number_density_bin_centers'][np.argmax(ksu_medians[key]['dMdlogn_02r04'])],
@@ -2564,6 +3233,7 @@ ax1.loglog(aligned_Pbins,
     label = r'TNG Q average',
     color = palettable.cartocolors.qualitative.Bold_10.hex_colors[4], lw=2, alpha=1.0)
 
+ax1.plot(np.nan,np.nan,label = r' ',color='none')
 
 
 ax1.set_ylabel(r'$dM / d\log n$')
@@ -2571,10 +3241,10 @@ ax1.set_ylim(bottom=1e-3)
 ax1.set_xlim((10**-2.5, 10**2.5))
 
 handles, labels = ax1.get_legend_handles_labels()
-handles=np.roll(handles,2)
-labels=np.roll(labels,2)
+handles=np.roll(handles,3)
+labels=np.roll(labels,3)
 l4 = ax1.legend(handles,labels,bbox_to_anchor=(0,1.02,1,0.2), loc="lower left",
-                mode="expand", borderaxespad=0, ncol=3, fontsize=10)
+                mode="expand", borderaxespad=0, ncol=4, fontsize=10, frameon=False)
 
 ax1.text(0.95, 0.95, r"$0.2 \leq {r}/{r_{200m}} \leq 0.4$",
          ha="right", va="top", transform=ax1.transAxes, fontsize=10,
@@ -2741,7 +3411,7 @@ ax3.set_ylabel(r'$M_{sat, gas} \, [M_\odot]$')
 
 ax1.set_xlabel(r'$N_{sat}$')
 ax2.set_xlabel(r'$N_{sat}$')
-ax3.set_xlabel(r'$M_{sat, gas} \, [M_\odot]$')
+ax3.set_xlabel(r'$M_{sat, tot} \, [M_\odot]$')
 
 fig.set_size_inches((3.25,7))
 fig.tight_layout()
@@ -2875,7 +3545,7 @@ handles, labels = ax1.get_legend_handles_labels()
 handles=np.roll(handles,2)
 labels=np.roll(labels,2)
 l4 = ax1.legend(handles,labels,bbox_to_anchor=(0,1.02,1,0.2), loc="lower left",
-                mode="expand", borderaxespad=0, ncol=2, fontsize=6)
+                mode="expand", borderaxespad=0, ncol=2, fontsize=7, frameon=False)
 
 ax1.text(0.95, 0.95, r"$0.2 \leq {r}/{r_{200m}} \leq 0.4$",
          ha="right", va="top", transform=ax1.transAxes, fontsize=7,
@@ -3044,7 +3714,7 @@ handles, labels = ax1.get_legend_handles_labels()
 handles=np.roll(handles,2)
 labels=np.roll(labels,2)
 l4 = ax1.legend(handles,labels,bbox_to_anchor=(0,1.02,1,0.2), loc="lower left",
-                mode="expand", borderaxespad=0, ncol=2, fontsize=6)
+                mode="expand", borderaxespad=0, ncol=2, fontsize=7, frameon=False)
 
 ax1.text(0.95, 0.95, r"$0.2 \leq {r}/{r_{200m}} \leq 0.4$",
          ha="right", va="top", transform=ax1.transAxes, fontsize=7,
@@ -3212,7 +3882,7 @@ handles, labels = ax1.get_legend_handles_labels()
 handles=np.roll(handles,2)
 labels=np.roll(labels,2)
 l4 = ax1.legend(handles,labels,bbox_to_anchor=(0,1.02,1,0.2), loc="lower left",
-                mode="expand", borderaxespad=0, ncol=2, fontsize=6)
+                mode="expand", borderaxespad=0, ncol=2, fontsize=7, frameon=False)
 
 ax1.text(0.95, 0.95, r"$0.2 \leq {r}/{r_{200m}} \leq 0.4$",
          ha="right", va="top", transform=ax1.transAxes, fontsize=7,
@@ -3387,7 +4057,7 @@ handles, labels = ax1.get_legend_handles_labels()
 handles=np.roll(handles,2)
 labels=np.roll(labels,2)
 l4 = ax1.legend(handles,labels,bbox_to_anchor=(0,1.02,1,0.2), loc="lower left",
-                mode="expand", borderaxespad=0, ncol=2, fontsize=6)
+                mode="expand", borderaxespad=0, ncol=2, fontsize=7, frameon=False)
 
 ax1.text(0.95, 0.95, r"$0.2 \leq {r}/{r_{200m}} \leq 0.4$",
          ha="right", va="top", transform=ax1.transAxes, fontsize=7,
@@ -3556,7 +4226,7 @@ handles, labels = ax1.get_legend_handles_labels()
 handles=np.roll(handles,2)
 labels=np.roll(labels,2)
 l4 = ax1.legend(handles,labels,bbox_to_anchor=(0,1.02,1,0.2), loc="lower left",
-                mode="expand", borderaxespad=0, ncol=2, fontsize=6)
+                mode="expand", borderaxespad=0, ncol=2, fontsize=7, frameon=False)
 
 ax1.text(0.95, 0.95, r"$0.2 \leq {r}/{r_{200m}} \leq 0.4$",
          ha="right", va="top", transform=ax1.transAxes, fontsize=7,
@@ -3724,7 +4394,7 @@ handles, labels = ax1.get_legend_handles_labels()
 handles=np.roll(handles,2)
 labels=np.roll(labels,2)
 l4 = ax1.legend(handles,labels,bbox_to_anchor=(0,1.02,1,0.2), loc="lower left",
-                mode="expand", borderaxespad=0, ncol=2, fontsize=6)
+                mode="expand", borderaxespad=0, ncol=2, fontsize=7, frameon=False)
 
 ax1.text(0.95, 0.95, r"$0.2 \leq {r}/{r_{200m}} \leq 0.4$",
          ha="right", va="top", transform=ax1.transAxes, fontsize=7,
@@ -3903,7 +4573,7 @@ handles, labels = ax1.get_legend_handles_labels()
 handles=np.roll(handles,2)
 labels=np.roll(labels,2)
 l4 = ax1.legend(handles,labels,bbox_to_anchor=(0,1.02,1,0.2), loc="lower left",
-                mode="expand", borderaxespad=0, ncol=2, fontsize=6)
+                mode="expand", borderaxespad=0, ncol=2, fontsize=7, frameon=False)
 
 ax1.text(0.95, 0.95, r"$0.2 \leq {r}/{r_{200m}} \leq 0.4$",
          ha="right", va="top", transform=ax1.transAxes, fontsize=7,
@@ -4072,7 +4742,7 @@ handles, labels = ax1.get_legend_handles_labels()
 handles=np.roll(handles,2)
 labels=np.roll(labels,2)
 l4 = ax1.legend(handles,labels,bbox_to_anchor=(0,1.02,1,0.2), loc="lower left",
-                mode="expand", borderaxespad=0, ncol=2, fontsize=6)
+                mode="expand", borderaxespad=0, ncol=2, fontsize=7, frameon=False)
 
 ax1.text(0.95, 0.95, r"$0.2 \leq {r}/{r_{200m}} \leq 0.4$",
          ha="right", va="top", transform=ax1.transAxes, fontsize=7,
@@ -4240,7 +4910,7 @@ handles, labels = ax1.get_legend_handles_labels()
 handles=np.roll(handles,2)
 labels=np.roll(labels,2)
 l4 = ax1.legend(handles,labels,bbox_to_anchor=(0,1.02,1,0.2), loc="lower left",
-                mode="expand", borderaxespad=0, ncol=2, fontsize=6)
+                mode="expand", borderaxespad=0, ncol=2, fontsize=7, frameon=False)
 
 ax1.text(0.95, 0.95, r"$0.2 \leq {r}/{r_{200m}} \leq 0.4$",
          ha="right", va="top", transform=ax1.transAxes, fontsize=7,
@@ -4316,6 +4986,100 @@ fig.set_size_inches(3.25,4)
 fig.tight_layout()
 plt.savefig('./plots/dMdlogK_aligned_Msats_gas.pdf',dpi=300,bbox_inches='tight')
 plt.clf()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
